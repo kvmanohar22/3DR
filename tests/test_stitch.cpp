@@ -7,5 +7,10 @@ int main() {
     std::string left("../imgs/yosemite1.jpg");
     std::string right("../imgs/yosemite2.jpg");
 
-    stitcher.process(left, right);
+    std::cout << "Focal length: " << stitcher.get_focal_length() << std::endl;
+    std::cout << "K1: " << stitcher.get_k1() << std::endl;
+    std::cout << "K2: " << stitcher.get_k2() << std::endl;
+
+    cv::Mat img = stitcher.process(left, right);
+    utils::save_image("../imgs/yosemite_stitch.jpg", img);
 }

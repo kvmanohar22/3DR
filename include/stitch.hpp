@@ -48,8 +48,12 @@ public:
     ~Stitch() {}
 
     static inline bool comparator(cv::DMatch m1, cv::DMatch m2) {
-        return m1.distance > m2.distance;
+        return m1.distance < m2.distance;
     }
+
+    inline float get_focal_length() { return this->_focal_length; }
+    inline float get_k1() { return this->_k1; }
+    inline float get_k2() { return this->_k2; }
 
     inline int is_valid() {
         return _focal_length != utils::INF && 
@@ -65,7 +69,7 @@ public:
         _right_img = utils::load_image(file);
     }
 
-    int process(std::string left_image_file,
+    cv::Mat process(std::string left_image_file,
         std::string right_image_file);
 
     cv::Mat align_pair(std::vector<cv::KeyPoint> left_keypoints,

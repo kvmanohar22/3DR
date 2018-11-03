@@ -41,7 +41,7 @@ cv::Mat compute_homography(std::vector<cv::KeyPoint> f1,
     int n_rows = 2 * n_matches;
     int n_cols = 9;
     cv::Size A_shape(n_cols, n_rows);
-    cv::Mat A = cv::Mat::zeros(A_shape, CV_32FC1);
+    cv::Mat A = cv::Mat::zeros(A_shape, CV_32F);
 
     int index = 0;
 
@@ -69,7 +69,6 @@ cv::Mat compute_homography(std::vector<cv::KeyPoint> f1,
         index += 2;
     }
 
-
     // SVD
     cv::SVD svd(A, cv::SVD::FULL_UV | cv::SVD::MODIFY_A);
     cv::Mat Vt = svd.vt;
@@ -96,6 +95,10 @@ void view_image(std::string win_name, cv::Mat img) {
     cv::namedWindow(win_name, CV_WINDOW_FREERATIO);
     cv::imshow(win_name, img);
     cv::waitKey(0);
+}
+
+void save_image(std::string file_name, cv::Mat img) {
+    cv::imwrite(file_name, img);
 }
 
 } // namespace utils

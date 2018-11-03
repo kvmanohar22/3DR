@@ -2,12 +2,11 @@
 
 namespace reconstruct {
 
-int Stitch::process(std::string left_image_file,
+cv::Mat Stitch::process(std::string left_image_file,
     std::string right_image_file) {
 
     if (!is_valid()) {
         std::cerr << "Invalid camera parameters" << std::endl;
-        return -1;
     }
 
     // Load images
@@ -26,11 +25,16 @@ int Stitch::process(std::string left_image_file,
     orb->detectAndCompute(left_gray, cv::noArray(), left_keypoints, left_descriptors);
     orb->detectAndCompute(right_gray, cv::noArray(), right_keypoints, right_descriptors);
 
-    std::vector<cv::DMatch> matches;
-    cv::BFMatcher bf = cv::BFMatcher(cv::NORM_HAMMING);
-    bf.match(left_descriptors, right_descriptors, matches);
+    std::vector<cv::DMatch> mmatches;
+    cv::BFMatcher bf = cv::BFMatcher(cv::NORM_HAMMING, true);
+    bf.match(left_descriptors, right_descriptors, mmatches);
 
-    std::sort(matches.begin(), matches.end(), Stitch::comparator);
+    std::sort(mmatches.begin(), mmatches.end(), Stitch::comparator);
+
+    // Note: To reduce the noise in the matches, we consider only top 
+    //       few percent of matches.
+    int top_matches = int((20 * mmatches.size()) / 100);
+    std::vector<cv::DMatch> matches(mmatches.begin(), mmatches.begin()+top_matches);
 
     cv::Mat H = Stitch::align_pair(left_keypoints, right_keypoints, matches);
     cv::Size right_size = right_gray.size();
@@ -38,7 +42,7 @@ int Stitch::process(std::string left_image_file,
 
     // TODO: Handle the case when the matrix is singular
     cv::Mat Hinv = H.inv();
-    Hinv = Hinv * (1.0 / H.at<float>(2, 2));
+    Hinv = Hinv * (1.0 / Hinv.at<float>(2, 2));
 
     float points[][3] = {0, 0, 1, w, 0, 1, 0, h, 1, w, h, 1};
     cv::Mat points_mat(cv::Size(3, 4), CV_32F, &points);
@@ -70,9 +74,6 @@ int Stitch::process(std::string left_image_file,
     int new_width  = int(std::ceil(max_X) - std::floor(min_X));
     int new_height = int(std::ceil(max_Y) - std::floor(min_Y));
 
-    std::cout << new_width << std::endl;
-    std::cout << new_height << std::endl;
-
     float translate_top_left[][3] = {1, 0, -min_X, 0, 1, -min_Y, 0, 0, 1};
     cv::Mat translate_top_left_mat(cv::Size(3, 3), CV_32F, &translate_top_left);
 
@@ -87,11 +88,7 @@ int Stitch::process(std::string left_image_file,
     cv::Mat final_image;
     cv::addWeighted(warped_left_image, alpha, warped_right_image, beta, gamma, final_image);
 
-    cv::namedWindow("final_image", CV_WINDOW_FREERATIO);
-    cv::imshow("final_image", final_image);
-    cv::waitKey(0);
-
-    return 0;
+    return final_image;
 }
 
 
@@ -101,12 +98,12 @@ cv::Mat Stitch::align_pair(std::vector<cv::KeyPoint> left_keypoints,
 
     size_t max_inliers = 0;
     std::vector<int> best_inliers;
+    int max_index = matches.size();
 
     for (int i = 0; i < ransac_iters; ++i) {
         // Generate random subset of matches
         std::set<int> indexes;
         std::vector<cv::DMatch> match_subset_sample;
-        int max_index = matches.size();
         while (indexes.size() < std::min(min_matches, max_index)) {
             int random_index = rand() % max_index;
             if (indexes.find(random_index) == indexes.end()) {
@@ -134,6 +131,7 @@ cv::Mat Stitch::align_pair(std::vector<cv::KeyPoint> left_keypoints,
     
     return H_best;
 }
+
 
 std::vector<int> Stitch::get_inliers(std::vector<cv::KeyPoint> f1,
     std::vector<cv::KeyPoint> f2,
@@ -164,6 +162,7 @@ std::vector<int> Stitch::get_inliers(std::vector<cv::KeyPoint> f1,
 
     return inlier_indices;
 }
+
 
 cv::Mat Stitch::least_squares_fit(std::vector<cv::KeyPoint> f1,
     std::vector<cv::KeyPoint> f2,
