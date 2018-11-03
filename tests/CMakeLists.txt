@@ -1,7 +1,12 @@
 add_executable(scale test_scale.cpp)
 add_executable(rotate test_rotate.cpp)
 add_executable(translate test_translate.cpp)
+add_executable(test_math test_math.cpp)
+add_executable(test_svd test_SVD.cpp)
+add_executable(test_stitch test_stitch.cpp)
 
 target_link_libraries(scale ${LIBS})
 target_link_libraries(rotate ${LIBS})
-target_link_libraries(translate ${LIBS})
+target_link_libraries(test_math ${LIBS})
+target_link_libraries(test_svd ${LIBS})
+target_link_libraries(test_stitch ${LIBS})
