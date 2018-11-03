@@ -92,6 +92,12 @@ cv::Mat load_image(std::string file) {
     return img;
 }
 
+void view_image(std::string win_name, cv::Mat img) {
+    cv::namedWindow(win_name, CV_WINDOW_FREERATIO);
+    cv::imshow(win_name, img);
+    cv::waitKey(0);
+}
+
 } // namespace utils
 
 #endif
