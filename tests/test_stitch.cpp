@@ -11,6 +11,12 @@ int main() {
     std::cout << "K1: " << stitcher.get_k1() << std::endl;
     std::cout << "K2: " << stitcher.get_k2() << std::endl;
 
-    cv::Mat img = stitcher.process(left, right);
-    utils::save_image("../imgs/yosemite_stitch.jpg", img);
+    int flag = stitcher.process(left, right);
+    
+    if (flag == 0) {
+        cv::Mat img = stitcher.get_final_img();
+        utils::view_image("stitch", img);
+    } else {
+        std::cerr << "Stitching couldn't be performed";
+    }
 }

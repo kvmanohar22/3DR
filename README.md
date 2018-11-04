@@ -1,13 +1,18 @@
 # 3D Reconstruction
 
-## TODO
+# TODO
 - [x] Image Alignment
 - [ ] Panorama stitching
-- [ ] Stereo Statching
+- [ ] Stereo Stitching
 - [ ] SfM (Structure from motion)
 - [ ] Point Cloud generation
 
-## Current Progress
+# Requirements
+- C++14
+- Linux (tested only on 18.04 LTS)
+- OpenCV
+
+# Current Progress
 Aligning the following two images generates the bottom image
 
 <div class="fig figcenter fighighlight">

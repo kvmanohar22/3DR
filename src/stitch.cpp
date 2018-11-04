@@ -2,17 +2,7 @@
 
 namespace reconstruct {
 
-cv::Mat Stitch::process(std::string left_image_file,
-    std::string right_image_file) {
-
-    if (!is_valid()) {
-        std::cerr << "Invalid camera parameters" << std::endl;
-    }
-
-    // Load images
-    this->load_left_image(left_image_file);
-    this->load_right_image(right_image_file);
-
+int Stitch::process(cv::Mat _left_img, cv::Mat _right_img) {
 
     cv::Mat left_gray, right_gray;
     cv::cvtColor(_left_img, left_gray, cv::COLOR_BGR2GRAY);
@@ -31,10 +21,10 @@ cv::Mat Stitch::process(std::string left_image_file,
 
     std::sort(mmatches.begin(), mmatches.end(), Stitch::comparator);
 
-    // Note: To reduce the noise in the matches, we consider only top 
+    // Note: To reduce the noise in the matches, we consider only top
     //       few percent of matches.
     int top_matches = int((20 * mmatches.size()) / 100);
-    std::vector<cv::DMatch> matches(mmatches.begin(), mmatches.begin()+top_matches);
+    std::vector<cv::DMatch> matches(mmatches.begin(), mmatches.begin() + top_matches);
 
     cv::Mat H = Stitch::align_pair(left_keypoints, right_keypoints, matches);
     cv::Size right_size = right_gray.size();
@@ -44,24 +34,30 @@ cv::Mat Stitch::process(std::string left_image_file,
     cv::Mat Hinv = H.inv();
     Hinv = Hinv * (1.0 / Hinv.at<float>(2, 2));
 
+    this->H = Hinv;
+
     float points[][3] = {0, 0, 1, w, 0, 1, 0, h, 1, w, h, 1};
     cv::Mat points_mat(cv::Size(3, 4), CV_32F, &points);
 
     cv::Mat tr_points = (Hinv * points_mat.t()).t();
 
-    for (int i = 0; i < tr_points.rows; ++i) {
+    for (int i = 0; i < tr_points.rows; ++i)
+    {
         float weight = tr_points.at<float>(i, 2);
-        for (int j = 0; j < tr_points.cols-1; ++j) {
+        for (int j = 0; j < tr_points.cols - 1; ++j)
+        {
             tr_points.at<float>(i, j) /= weight;
         }
     }
 
     std::vector<float> X, Y;
-    for (int i = 0; i < tr_points.rows; ++i) {
+    for (int i = 0; i < tr_points.rows; ++i)
+    {
         X.push_back(tr_points.at<float>(i, 0));
         Y.push_back(tr_points.at<float>(i, 1));
     }
-    for (int i = 0; i < points_mat.rows; ++i) {
+    for (int i = 0; i < points_mat.rows; ++i)
+    {
         X.push_back(points_mat.at<float>(i, 0));
         Y.push_back(points_mat.at<float>(i, 1));
     }
@@ -71,7 +67,7 @@ cv::Mat Stitch::process(std::string left_image_file,
     auto max_X = *std::max_element(std::begin(X), std::end(X));
     auto max_Y = *std::max_element(std::begin(Y), std::end(Y));
 
-    int new_width  = int(std::ceil(max_X) - std::floor(min_X));
+    int new_width = int(std::ceil(max_X) - std::floor(min_X));
     int new_height = int(std::ceil(max_Y) - std::floor(min_Y));
 
     float translate_top_left[][3] = {1, 0, -min_X, 0, 1, -min_Y, 0, 0, 1};
@@ -85,10 +81,24 @@ cv::Mat Stitch::process(std::string left_image_file,
     float beta = 1.0f - alpha;
     float gamma = 0.0f;
 
-    cv::Mat final_image;
-    cv::addWeighted(warped_left_image, alpha, warped_right_image, beta, gamma, final_image);
+    cv::addWeighted(warped_left_image, alpha, warped_right_image, beta, gamma, this->final_stitched_img);
 
-    return final_image;
+    return 0;
+}
+
+int Stitch::process(std::string left_image_file,
+    std::string right_image_file) {
+
+    if (!is_valid()) {
+        std::cerr << "Invalid camera parameters" << std::endl;
+        return -1;
+    }
+
+    // Load images
+    this->load_left_image(left_image_file);
+    this->load_right_image(right_image_file);
+
+    return this->process(this->_left_img, this->_right_img);
 }
 
 

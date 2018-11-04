@@ -1,5 +1,5 @@
-#ifndef _HOMOGRAPHIES_HPP_
-#define _HOMOGRAPHIES_HPP_
+#ifndef _UTILS_HPP_
+#define _UTILS_HPP_
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>

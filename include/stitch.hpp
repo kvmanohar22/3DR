@@ -25,6 +25,13 @@ private:
     float ransac_thresh;
     int min_matches;
 
+    // Best homography
+    // Note: This is the homography from right image to left image
+    cv::Mat H;
+
+    // This is the final stitched image
+    cv::Mat final_stitched_img;
+
 public:
     Stitch() : _focal_length(utils::INF), _k1(utils::INF), _k2(utils::INF) {
         _focal_length = utils::INF;
@@ -69,8 +76,16 @@ public:
         _right_img = utils::load_image(file);
     }
 
-    cv::Mat process(std::string left_image_file,
+    inline cv::Mat get_final_img() { return this->final_stitched_img; }
+
+    inline cv::Mat get_H() { return this->H; }
+    inline int get_final_h() { return this->final_stitched_img.rows; }
+    inline int get_final_c() { return this->final_stitched_img.cols; }
+
+    int process(std::string left_image_file,
         std::string right_image_file);
+
+    int process(cv::Mat left_image, cv::Mat right_image);
 
     cv::Mat align_pair(std::vector<cv::KeyPoint> left_keypoints,
         std::vector<cv::KeyPoint> right_keypoints,
