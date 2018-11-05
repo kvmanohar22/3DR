@@ -35,7 +35,6 @@ int Panorama::process(const char *dir_name) {
 
     // Paste images
     cv::Mat weighted_canvas = this->paste_images(_info, top_left);
-    std::cout << ".>>>>>>>>>>>>>>>>>>.\n";
 
     // Normalize the canvas
     this->normalize_canvas(weighted_canvas);
@@ -147,22 +146,24 @@ void Panorama::add_img_to_canvas(cv::Mat img, cv::Mat M, int feathering_width,
     left_blend.insert(left_blend.end(), mid_blend.begin(), mid_blend.end());
     left_blend.insert(left_blend.end(), right_blend.begin(), right_blend.end());
 
-
-    cv::Mat weighted_img = cv::Mat(cv::Size(w, h), CV_8UC3);
+    cv::Mat weighted_img = cv::Mat::ones(cv::Size(w, h), CV_32FC4);
+    cv::Mat img32f;
+    img.convertTo(img32f, CV_32FC3);
 
     for (int ii = 0; ii < h; ++ii) {
         for (int jj = 0; jj < w; ++jj) {
-            cv::Vec3f vv = img.at<cv::Vec3b>(ii, jj);
-            weighted_img.at<cv::Vec3b>(ii, jj)[0] = vv[0];
-            weighted_img.at<cv::Vec3b>(ii, jj)[1] = vv[1];
-            weighted_img.at<cv::Vec3b>(ii, jj)[2] = vv[2];
+            cv::Vec3f vv = img32f.at<cv::Vec3f>(ii, jj);
+            // weighted_img.at<cv::Vec3f>(ii, jj)[0] = vv[0];
+            // weighted_img.at<cv::Vec3f>(ii, jj)[1] = vv[1];
+            // weighted_img.at<cv::Vec3f>(ii, jj)[2] = vv[2];
+            weighted_img.at<cv::Vec4f>(ii, jj)[0] = vv[0];
+            weighted_img.at<cv::Vec4f>(ii, jj)[1] = vv[1];
+            weighted_img.at<cv::Vec4f>(ii, jj)[2] = vv[2];
         }
     }
 
     cv::Mat warped_img;
     cv::warpPerspective(weighted_img, warped_img, M, this->get_final_size(), CV_INTER_NN);
-
-    utils::view_image("warped image", warped_img);
 
     for (int i = min_x; i != max_x; ++i) {
         for (int j = 0; j < warped_img.size().height; ++j) {
@@ -175,10 +176,9 @@ void Panorama::add_img_to_canvas(cv::Mat img, cv::Mat M, int feathering_width,
             warped_img.at<cv::Vec4f>(j, i)[3]  = left_blend[i-min_x];
 
             // Update the original canvas
-            if (warped_img.at<cv::Vec4f>(j, i)[0] == 0 && warped_img.at<cv::Vec4f>(j, i)[1] == 0 && warped_img.at<cv::Vec4f>(j, i)[2] == 0) {
+            if (warped_img.at<cv::Vec4f>(j, i)[0] == 0 && warped_img.at<cv::Vec4f>(j, i)[1] == 0 && warped_img.at<cv::Vec4f>(j, i)[2] == 0)
                 warped_img.at<cv::Vec4f>(j, i)[3] = 0.0f;
-                weighted_panorama.at<cv::Vec4f>(j, i) += warped_img.at<cv::Vec4f>(j, i);
-            }
+            weighted_panorama.at<cv::Vec4f>(j, i) += warped_img.at<cv::Vec4f>(j, i);
         }
     }
 }
@@ -189,20 +189,17 @@ void Panorama::normalize_canvas(cv::Mat &weighted_panorama) {
         for (int j = 0; j < this->_W; ++j) {
             float alpha_sum = weighted_panorama.at<cv::Vec4f>(i, j)[3];
             if (alpha_sum > 0.0f) {
-                std::cout << "here " << std::endl;
-                cv::Vec3f vec(0.0f);
+                // std::cout << "here " << std::endl;
+                cv::Vec3b vec;
                 for (int c = 0; c < 3; ++c) {
                     vec[c] = (int)weighted_panorama.at<cv::Vec4f>(i, j)[c] / alpha_sum;
-                    std::cout << vec[c] << std::endl;
                 }
                 this->_final_panorama.at<cv::Vec3b>(i, j) = vec;
             } else {
-                std::cout << "all zero?" << std::endl;
+                // std::cout << "all zero?" << std::endl;
             }
         }
     }
-
-    // utils::view_image("final_pan", this->_final_panorama);
 }
 
 } // namespace reconstruct

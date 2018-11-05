@@ -104,6 +104,7 @@ public:
                       << dir_name << std::endl;
         }
 
+        std::cout << "Found a total of " << files.size() << " images" << std::endl;
         std::sort(files.begin(), files.end());
         for (auto &file : files)
             this->_images.push_back(utils::load_image(file));
