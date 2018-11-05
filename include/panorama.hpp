@@ -5,7 +5,6 @@
 #include <vector>
 #include "dirent.h"
 
-#include "utils.hpp"
 #include "stitch.hpp"
 
 namespace reconstruct {
@@ -20,8 +19,16 @@ class ImageInfo {
         cv::Mat _H;
 
     public:
-        inline cv::Mat get_img() { return this->_img; }
-        inline cv::Mat get_H() { return this->_H; }
+        ImageInfo() {}
+        ImageInfo(cv::Mat _img, cv::Mat _H) {
+            this->_img = _img;
+            this->_H   = _H;
+        }
+
+        ~ImageInfo() {}
+
+        inline const cv::Mat get_img() const { return this->_img; }
+        inline const cv::Mat get_H() const { return this->_H; }
 
         inline void set_img(cv::Mat _img) { this->_img = _img; }
         inline void set_H(cv::Mat _H) { this->_H = _H; }
@@ -64,6 +71,7 @@ public:
             this->_k1 = _k1;
             this->_k2 = _k2;
             this->_feathering_width = _feathering_width;
+            this->H_top_left = cv::Mat::zeros(cv::Size(3, 3), CV_32F);
         }
 
     ~Panorama() {}
@@ -73,15 +81,21 @@ public:
     inline float get_k2() { return this->_k2; }
     inline int get_feathering_width() { return this->_feathering_width; }
     inline cv::Mat get_final_panorama() { return this->_final_panorama; }
+    inline cv::Size get_final_size() { return cv::Size(this->_W, this->_H); }
 
-    inline void load_images(char *dir_name) {
+    inline void set_top_left(cv::Mat H_top_left) { this->H_top_left = H_top_left; }
+    inline cv::Mat get_top_left() const { return this->H_top_left; }
+
+    inline void load_images(const char *dir_name) {
+        std::vector<std::string> files;
         DIR *dir;
         struct dirent *ent;
         if ((dir = opendir(dir_name)) != NULL) {
             while ((ent = readdir(dir)) != NULL) {
-                this->_images.push_back(
-                    utils::load_image(
-                        std::string(ent->d_name)));
+                if (std::string(ent->d_name) == "." || std::string(ent->d_name) == "..")
+                    continue;
+                std::string img_file = std::string(dir_name)+std::string("/")+std::string(ent->d_name);
+                files.push_back(img_file);
             }
             closedir(dir);
         }
@@ -89,14 +103,20 @@ public:
             std::cerr << "Couldn't open the directory"
                       << dir_name << std::endl;
         }
+
+        std::sort(files.begin(), files.end());
+        for (auto &file : files)
+            this->_images.push_back(utils::load_image(file));
     }
 
-    int process(char *dir_name);
-    void set_canvas_size(std::vector<ImageInfo> _info);
-    void set_bbox(cv::Mat &img, cv::Mat &M,
+    int process(const char *dir_name);
+    void set_canvas_size(const std::vector<ImageInfo> &_info, cv::Mat *h_top_left);
+    void set_bbox(const cv::Mat &img, const cv::Mat &M,
         int &_min_x, int &_min_y, int &_max_x, int &_max_y);
-    void paste_images(std::vector<ImageInfo> _info);
-
+    cv::Mat paste_images(std::vector<ImageInfo> _info, cv::Mat top_left);
+    void add_img_to_canvas(cv::Mat img, cv::Mat M, int feathering_width, 
+        cv::Mat &weighted_panorama);
+    void normalize_canvas(cv::Mat &weighted_panorama);
 
 }; // Class Panorama
 

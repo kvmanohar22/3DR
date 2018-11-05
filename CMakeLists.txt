@@ -8,8 +8,11 @@ find_package(OpenCV REQUIRED)
 set(HEADERS "include")
 include_directories(${HEADERS} ${OpenCV_INCLUDE_DIRS})
 
-set(SRCS src/stitch.cpp)
-add_library(RECONSTRUCT_LIBS SHARED ${SRCS})
+set(SRCS1 src/panorama.cpp)
+add_library(RECONSTRUCT_LIBS1 SHARED ${SRCS1})
 
-list(APPEND LIBS ${OpenCV_LIBRARIES} RECONSTRUCT_LIBS)
+set(SRCS2 src/stitch.cpp)
+add_library(RECONSTRUCT_LIBS2 SHARED ${SRCS2})
+
+list(APPEND LIBS ${OpenCV_LIBRARIES} RECONSTRUCT_LIBS1 RECONSTRUCT_LIBS2)
 add_subdirectory(tests)
