@@ -20,3 +20,4 @@ Collection of tools ranging from image alignment, panorama generation, point clo
 
 ### Panorama Generation
 <img src="./imgs/yosemite_panorama.jpg" width="100%">
+<img src="./imgs/rainer_panorama.jpg" width="100%">
