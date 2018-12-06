@@ -9,6 +9,7 @@ find_package(glfw3 REQUIRED)
 
 set(HEADERS "include")
 set(GLAD_SRC src/glad.c)
+set(LIBS ${OpenCV_LIBRARIES} glfw)
 include_directories(${HEADERS} ${OpenCV_INCLUDE_DIRS} ${GLFW3_INCLUDE_DIRS})
 
 set(SRCS1 src/panorama.cpp)
@@ -20,5 +21,5 @@ add_library(RECONSTRUCT_LIBS2 SHARED ${SRCS2})
 list(APPEND LIBS ${OpenCV_LIBRARIES} RECONSTRUCT_LIBS1 RECONSTRUCT_LIBS2)
 add_subdirectory(tests)
 
-add_executable(slam src/slam.cpp ${GLAD_SRC}) 
-target_link_libraries(slam glfw)
+add_executable(slam src/slam/slam.cpp ${GLAD_SRC} src/slam/utils.cpp) 
+target_link_libraries(slam ${LIBS})

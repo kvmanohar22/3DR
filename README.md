@@ -12,6 +12,9 @@ Collection of tools ranging from image alignment, panorama generation, point clo
 - C++14
 - Linux (tested only on 18.04 LTS)
 - OpenCV
+- glad
+- glfw
+- OpenGL
 
 ## Current Progress
 

@@ -5,3 +5,4 @@ bin/**
 *.ipynb_checkpoints
 __pycache__/
 utils/**
+videos/**
