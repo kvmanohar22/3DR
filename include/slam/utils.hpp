@@ -8,6 +8,11 @@
 
 namespace utils {
 
+static inline bool comparator(cv::DMatch m1, cv::DMatch m2)
+{
+    return m1.distance < m2.distance;
+}
+
 void frame_buffer_size_callback(GLFWwindow *window, int height, int width)
 {
     glViewport(0, 0, width, height);
@@ -69,7 +74,7 @@ class Frame
   public:
     Frame(cv::Mat frame)
     {
-        int MAX_CORNERS = 1000;
+        int MAX_CORNERS = 3000;
         cv::Mat des, gray;
         cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 
@@ -97,5 +102,22 @@ class Frame
     std::vector<cv::KeyPoint> get_kps() { return this->kps; }
     cv::Mat get_des() { return this->des; }
 };
+
+void match_frames(Frame f1, Frame f2, std::vector<int> &idx1, std::vector<int> &idx2) {
+
+    std::vector<cv::DMatch> mmatches;
+    cv::BFMatcher bf = cv::BFMatcher(cv::NORM_HAMMING, true);
+    bf.match(f1.get_des(), f2.get_des(), mmatches);
+
+    std::sort(mmatches.begin(), mmatches.end(), comparator);
+
+    int top_matches = int((60 * mmatches.size()) / 100);
+    std::vector<cv::DMatch> matches(mmatches.begin(), mmatches.begin() + top_matches);
+
+    for (auto itr : matches) {
+        idx1.push_back(itr.queryIdx);
+        idx2.push_back(itr.trainIdx);
+    }
+}
 
 }
