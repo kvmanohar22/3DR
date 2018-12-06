@@ -120,4 +120,28 @@ void match_frames(Frame f1, Frame f2, std::vector<int> &idx1, std::vector<int> &
     }
 }
 
+cv::Mat estimate_fundamental_matrix(Frame f1, 
+    Frame f2, const std::vector<int> idx1, 
+    const std::vector<int> idx2, std::vector<uchar> &inliers) {
+
+    std::vector<cv::KeyPoint> kps1 = f1.get_kps();
+    std::vector<cv::KeyPoint> kps2 = f2.get_kps();
+
+    std::vector<cv::Point2f> ps1, ps2;
+    for (auto i : idx1) {
+        float x = kps1[i].pt.x;
+        float y = kps1[i].pt.y;
+        ps1.push_back(cv::Point2f(x, y));
+    }
+    for (auto i : idx2) {
+        float x = kps2[i].pt.x;
+        float y = kps2[i].pt.y;
+        ps2.push_back(cv::Point2f(x, y));
+    }
+
+    cv::Mat fmat = cv::findFundamentalMat(cv::Mat(ps1), cv::Mat(ps2), inliers);
+
+    return fmat;
+}
+
 }

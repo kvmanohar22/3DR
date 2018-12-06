@@ -36,6 +36,21 @@ int process_frame(cv::Mat framein) {
   std::vector<int> idx1, idx2;
   utils::match_frames(f1, f2, idx1, idx2);
 
+  std::vector<uchar> inliers(idx1.size(), 0);
+  cv::Mat fmat = utils::estimate_fundamental_matrix(f1, f2, idx1, idx2, inliers);
+
+  // delete the outliers. TODO: optimize this using lambdas
+  size_t last = 0;
+  for (size_t i = 0; i < idx1.size(); i++) {
+    if (inliers[i]) {
+      idx1[last] = idx1[i];
+      idx2[last] = idx2[i];
+      ++last;
+    }
+  }
+  idx1.erase(idx1.begin() + last, idx1.end());
+  idx2.erase(idx2.begin() + last, idx2.end());
+
   for (int i = 0; i < idx1.size(); ++i) {
     int ii = idx1[i];
     int jj = idx2[i];
