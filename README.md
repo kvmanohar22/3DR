@@ -4,9 +4,8 @@ Collection of tools ranging from image alignment, panorama generation, point clo
 ## TODO
 - [x] Image Alignment
 - [x] Panorama stitching
-- [ ] Stereo Stitching
-- [ ] SfM (Structure from motion)
-- [ ] Point Cloud generation
+- [ ] Stereo Stitching (Estimate Fundamental/Essential matrix)
+- [ ] Estimate scene structure (point cloud generation)
 
 ## Requirements
 - C++14
@@ -16,11 +15,4 @@ Collection of tools ranging from image alignment, panorama generation, point clo
 - glfw
 - OpenGL
 
-## Current Progress
 
-### Image Alignment
-<img src="./imgs/yosemite_stitch.jpg" width="100%">
-
-### Panorama Generation
-<img src="./imgs/yosemite_panorama.jpg" width="100%">
-<img src="./imgs/rainer_panorama.jpg" width="100%">
