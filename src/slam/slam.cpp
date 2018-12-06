@@ -25,6 +25,13 @@ int process_frame(cv::Mat framein) {
   cv::Ptr<cv::FeatureDetector> orb = cv::ORB::create();
   orb->detectAndCompute(gray, cv::noArray(), kps, des);
 
+  std::vector<cv::Point2f> corners;
+  cv::goodFeaturesToTrack(gray, corners, MAX_CORNERS, 0.01, 3);
+
+  for (auto itr : corners) {
+    kps.push_back(cv::KeyPoint(itr, 20));
+  }
+
   for (auto kp : kps) {
     cv::circle(frame, cv::Point(kp.pt.x, kp.pt.y), 2, cv::Scalar(0, 255, 0));
   }
