@@ -7,6 +7,8 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 
+#include <pangolin/pangolin.h>
+
 #include <iostream>
 #include <vector>
 
@@ -55,9 +57,39 @@ int process_frame(cv::Mat framein) {
   cv::Mat Rt(cv::Size(4, 3), CV_32F);
   Rt = utils::extractRt(fmat);
   f1.pose = Rt * f2.pose;
-  exit(-2);
 
-
+  // Extract homogenous coordinates (scene points)
+  std::vector<cv::Point2f> kps1, kps2;
+  std::vector<cv::KeyPoint> kpa1 = f1.get_kps();
+  std::vector<cv::KeyPoint> kpa2 = f2.get_kps();
+  for (auto i : idx1) {
+    float x = kpa1[i].pt.x;
+    float y = kpa1[i].pt.y;
+    kps1.push_back(cv::Point2f(x, y));
+  }
+  for (auto i : idx2) {
+    float x = kpa2[i].pt.x;
+    float y = kpa2[i].pt.y;
+    kps2.push_back(cv::Point2f(x, y));
+  }
+  cv::Mat pts4d = cv::Mat::zeros(cv::Size(4, kps1.size()), CV_64FC1);
+  cv::Mat f1pose = cv::Mat::zeros(cv::Size(4, 3), CV_64F);
+  cv::Mat f2pose = cv::Mat::zeros(cv::Size(4, 3), CV_64F);
+  for (int i = 0; i < 3; ++i) {
+      f1.pose.row(i).copyTo(f1pose.row(i));
+      f2.pose.row(i).copyTo(f2pose.row(i));
+    }
+  cv::triangulatePoints(f1pose, f2pose, kps1, kps2, pts4d);
+  for (int i = 0; i < pts4d.cols; ++i) {
+    double w = pts4d.at<double>(3, i);
+    for (int j = 0; j < 3; ++j)
+      pts4d.at<double>(j, i) /= w;
+  }
+  std::vector<int> good_pts(pts4d.cols, 0);
+  for (int i = 0; i < pts4d.cols; ++i)
+    if (std::abs(pts4d.at<double>(3, i)) > 0.005 && pts4d.at<double>(2, i) > 0)
+      good_pts[i] = 1;
+  exit(1);
 
   for (int i = 0; i < idx1.size(); ++i) {
     int ii = idx1[i];
@@ -85,7 +117,6 @@ int main() {
 
   cv::Mat frame;
   cv::namedWindow("SLAM", 1);
-  int i = 0;
   while (true) {
     capture >> frame;
     if (frame.empty())

@@ -164,8 +164,6 @@ cv::Mat extractRt(cv::Mat F) {
     W.at<double>(1, 0) =  1;
     W.at<double>(2, 2) =  1;
 
-    std::cout << w << std::endl;
-
     // This condition should hold?
     // if (cv::determinant(U) < 0) {
     //     std::cerr << "det(U) < 0\n";

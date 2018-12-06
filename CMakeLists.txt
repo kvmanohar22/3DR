@@ -3,9 +3,11 @@ cmake_minimum_required(VERSION 3.0)
 project(3DReconstruction)
 
 set(OpenCV_DIR /usr/local/share/OpenCV)
+set(Pangolin_DIR /usr/local/share/Pangolin/)
 find_package(OpenCV REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
+find_package(Pangolin REQUIRED)
 
 set(HEADERS "include")
 set(GLAD_SRC src/glad.c)
