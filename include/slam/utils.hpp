@@ -1,9 +1,12 @@
 #include <opencv2/core.hpp>
+#include <opencv2/opencv.hpp>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+
+namespace utils {
 
 void frame_buffer_size_callback(GLFWwindow *window, int height, int width)
 {
@@ -55,4 +58,44 @@ int gl_renderer()
 
     glfwTerminate();
     return 0;
+}
+
+class Frame
+{
+  private:
+    std::vector<cv::KeyPoint> kps;
+    cv::Mat des;
+
+  public:
+    Frame(cv::Mat frame)
+    {
+        int MAX_CORNERS = 1000;
+        cv::Mat des, gray;
+        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+
+        std::vector<cv::Point2f> corners;
+        cv::goodFeaturesToTrack(gray, corners, MAX_CORNERS, 0.01, 3);
+
+        std::vector<cv::KeyPoint> kps;
+        for (auto itr : corners)
+        {
+            kps.push_back(cv::KeyPoint(itr, 20));
+        }
+
+        std::vector<std::vector<cv::KeyPoint>> kpss;
+        std::vector<cv::Mat> dess, imgs;
+        imgs.push_back(gray);
+        kpss.push_back(kps);
+
+        cv::Ptr<cv::FeatureDetector> orb = cv::ORB::create();
+        orb->compute(imgs, kpss, dess);
+
+        this->kps = kpss[0];
+        this->des = dess[0];
+    }
+
+    std::vector<cv::KeyPoint> get_kps() { return this->kps; }
+    cv::Mat get_des() { return this->des; }
+};
+
 }

@@ -21,5 +21,5 @@ add_library(RECONSTRUCT_LIBS2 SHARED ${SRCS2})
 list(APPEND LIBS ${OpenCV_LIBRARIES} RECONSTRUCT_LIBS1 RECONSTRUCT_LIBS2)
 add_subdirectory(tests)
 
-add_executable(slam src/slam/slam.cpp ${GLAD_SRC} src/slam/utils.cpp) 
+add_executable(slam src/slam/slam.cpp ${GLAD_SRC} include/slam/utils.hpp) 
 target_link_libraries(slam ${LIBS})

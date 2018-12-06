@@ -10,6 +10,8 @@
 #include <iostream>
 #include <vector>
 
+#include "slam/utils.hpp"
+
 static const int W = 1920/2;
 static const int H = 1080/2;
 static const int MAX_CORNERS = 1000;
@@ -18,19 +20,8 @@ int process_frame(cv::Mat framein) {
   cv::Mat frame;
   cv::resize(framein, frame, cv::Size(W, H));
 
-  // detect features in each image
-  std::vector<cv::KeyPoint> kps;
-  cv::Mat des, gray;
-  cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
-  cv::Ptr<cv::FeatureDetector> orb = cv::ORB::create();
-  orb->detectAndCompute(gray, cv::noArray(), kps, des);
-
-  std::vector<cv::Point2f> corners;
-  cv::goodFeaturesToTrack(gray, corners, MAX_CORNERS, 0.01, 3);
-
-  for (auto itr : corners) {
-    kps.push_back(cv::KeyPoint(itr, 20));
-  }
+  utils::Frame fr(frame);
+  std::vector<cv::KeyPoint> kps = fr.get_kps();
 
   for (auto kp : kps) {
     cv::circle(frame, cv::Point(kp.pt.x, kp.pt.y), 2, cv::Scalar(0, 255, 0));

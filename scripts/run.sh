@@ -2,5 +2,10 @@
 
 cd ../build
 make slam
-./slam
+
+if [ $? -eq 0 ]; then
+  ./slam
+else
+  echo "Error occured in compilation"
+fi
 
