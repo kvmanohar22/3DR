@@ -72,8 +72,15 @@ class Frame
     cv::Mat des;
 
   public:
+    cv::Mat pose;
+
+    void init() {
+        this->pose = cv::Mat::eye(cv::Size(4, 4), CV_64F);
+    }
+
     Frame(cv::Mat frame)
     {
+        this->init();
         int MAX_CORNERS = 3000;
         cv::Mat des, gray;
         cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
@@ -111,7 +118,7 @@ void match_frames(Frame f1, Frame f2, std::vector<int> &idx1, std::vector<int> &
 
     std::sort(mmatches.begin(), mmatches.end(), comparator);
 
-    int top_matches = int((60 * mmatches.size()) / 100);
+    int top_matches = int((70 * mmatches.size()) / 100);
     std::vector<cv::DMatch> matches(mmatches.begin(), mmatches.begin() + top_matches);
 
     for (auto itr : matches) {
@@ -142,6 +149,47 @@ cv::Mat estimate_fundamental_matrix(Frame f1,
     cv::Mat fmat = cv::findFundamentalMat(cv::Mat(ps1), cv::Mat(ps2), inliers);
 
     return fmat;
+}
+
+cv::Mat extractRt(cv::Mat F) {
+    cv::Mat ret = cv::Mat::eye(cv::Size(4, 4), CV_64F);
+
+    cv::SVD svd(F, cv::SVD::FULL_UV | cv::SVD::MODIFY_A);
+    cv::Mat V = svd.vt.t();
+    cv::Mat w = svd.w;
+    cv::Mat U = svd.u;
+
+    cv::Mat W = cv::Mat::zeros(cv::Size(3,3), CV_64F);
+    W.at<double>(0, 1) = -1;
+    W.at<double>(1, 0) =  1;
+    W.at<double>(2, 2) =  1;
+
+    std::cout << w << std::endl;
+
+    // This condition should hold?
+    // if (cv::determinant(U) < 0) {
+    //     std::cerr << "det(U) < 0\n";
+    //     exit(-2);
+    // }
+    if (cv::determinant(V) < 0)
+        V *= -1;
+    cv::Mat R = (U * W) * V.t();
+
+    double sum = 0;
+    for (int i = 0; i < 3; ++i)
+        sum += R.at<double>(i,i);
+    if (sum < 0)
+        R = (U * W.t()) * V.t();
+    cv::Mat t = U.col(2);
+
+    // set the final matrix
+    for (int i = 0; i < 3; ++i)
+        for (int j = 0;  j < 3; ++j)
+            ret.at<double>(i, j) = R.at<double>(i, j);
+    for (int i = 0; i < 3; ++i)
+        ret.at<double>(i, 3) = t.at<double>(i, 0);
+    
+    return ret;
 }
 
 }

@@ -15,6 +15,7 @@
 static const int W = 1920/2;
 static const int H = 1080/2;
 static const int MAX_CORNERS = 3000;
+static const int F = 400;
 
 using namespace std;
 std::vector<utils::Frame> frames;
@@ -39,7 +40,6 @@ int process_frame(cv::Mat framein) {
   std::vector<uchar> inliers(idx1.size(), 0);
   cv::Mat fmat = utils::estimate_fundamental_matrix(f1, f2, idx1, idx2, inliers);
 
-  // delete the outliers. TODO: optimize this using lambdas
   size_t last = 0;
   for (size_t i = 0; i < idx1.size(); i++) {
     if (inliers[i]) {
@@ -50,6 +50,14 @@ int process_frame(cv::Mat framein) {
   }
   idx1.erase(idx1.begin() + last, idx1.end());
   idx2.erase(idx2.begin() + last, idx2.end());
+
+  // extract R,t matrices
+  cv::Mat Rt(cv::Size(4, 3), CV_32F);
+  Rt = utils::extractRt(fmat);
+  f1.pose = Rt * f2.pose;
+  exit(-2);
+
+
 
   for (int i = 0; i < idx1.size(); ++i) {
     int ii = idx1[i];
@@ -77,6 +85,7 @@ int main() {
 
   cv::Mat frame;
   cv::namedWindow("SLAM", 1);
+  int i = 0;
   while (true) {
     capture >> frame;
     if (frame.empty())
