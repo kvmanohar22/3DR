@@ -4,9 +4,12 @@ project(3DReconstruction)
 
 set(OpenCV_DIR /usr/local/share/OpenCV)
 find_package(OpenCV REQUIRED)
+find_package(OpenGL REQUIRED)
+find_package(glfw3 REQUIRED)
 
 set(HEADERS "include")
-include_directories(${HEADERS} ${OpenCV_INCLUDE_DIRS})
+set(GLAD_SRC src/glad.c)
+include_directories(${HEADERS} ${OpenCV_INCLUDE_DIRS} ${GLFW3_INCLUDE_DIRS})
 
 set(SRCS1 src/panorama.cpp)
 add_library(RECONSTRUCT_LIBS1 SHARED ${SRCS1})
@@ -16,3 +19,6 @@ add_library(RECONSTRUCT_LIBS2 SHARED ${SRCS2})
 
 list(APPEND LIBS ${OpenCV_LIBRARIES} RECONSTRUCT_LIBS1 RECONSTRUCT_LIBS2)
 add_subdirectory(tests)
+
+add_executable(slam src/slam.cpp ${GLAD_SRC}) 
+target_link_libraries(slam glfw)
