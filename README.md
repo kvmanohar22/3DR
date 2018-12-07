@@ -11,6 +11,9 @@ Collection of tools ranging from image alignment, panorama generation, point clo
 - [ ] Bundle Adjustment
 - [ ] SLAM graph optimization
 
+### Bugs (to be fixed)
+- point cloud is not dense enough 
+
 ## Requirements
 - C++14
 - Linux (tested only on 18.04 LTS)

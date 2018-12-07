@@ -6,13 +6,10 @@ from skimage.measure import ransac
 
 H = 1080//2
 W = 1920//2
-F = 270
 
+# Normalization matrices used during F-estimation
 N = np.array([[2./W, 0, -1], [0, 2./H, -1], [0, 0, 1]])
 Ninv = np.linalg.inv(N)
-
-K = np.array([[F, 0, W//2], [0, F, H//2], [0, 0, 1]])
-Kinv = np.linalg.inv(K)
 
 orb = cv2.ORB_create()
 
@@ -31,6 +28,7 @@ def drawkps(img, kps, color=(0, 0, 255)):
   for kp in kps:
     cv2.circle(img, (int(kp[0]), int(kp[1])), radius=2, color=color)
 
+# Draw lines
 def drawlines(img, f1, f2, idx1, idx2, color=(0, 0, 255)):
   for i1, i2 in zip(idx1, idx2):
     p1 = tuple(f1.kpus[i1].astype(np.int32))
@@ -58,7 +56,6 @@ def match_frames(f1, f2):
                     max_trials=100)
 
   idx1, idx2 = idx1[inliers], idx2[inliers]
-  # F = np.dot(np.dot(N.transpose(), model.params), N)
   F = model.params
 
   # Extract rotation and translation matrices from F

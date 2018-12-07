@@ -7,7 +7,7 @@ from utils import drawkps
 from utils import drawlines
 from utils import extract
 from utils import add_ones
-from utils import K, Kinv, N, Ninv
+from utils import N, Ninv
 
 class Display3D(object):
   def __init__(self, H, W):
@@ -39,10 +39,13 @@ class Display3D(object):
     cameras = []
     for cam in self.cameras:
       cameras.append(cam.pose)
-    xyzs = []
+    xyzs, cols = [], []
     for xyz in self.points:
       xyzs.append(xyz.xyz)
-
+      cols.append(xyz.col)
+    xyzs = np.array(xyzs)
+    cols = np.array(cols)
+    
     # Relative poses
     gl.glPointSize(10)
     gl.glColor3f(0.0, 1.0, 0.0)
@@ -51,7 +54,7 @@ class Display3D(object):
     # Point Cloud
     gl.glPointSize(2)
     gl.glColor3f(1.0, 0.0, 0.0)
-    pgl.DrawPoints(xyzs)
+    pgl.DrawPoints(xyzs, cols/256.0)
 
     pgl.FinishFrame()
 
@@ -75,7 +78,7 @@ class Frame(object):
   '''
   kpus: Unnormalized keypoints
   kpns: Normalized keypoints
-  pose: (R, t) matrix relative to the first frame
+  pose: (R, t) matrix transformation relative to first frame
   '''
   def __init__(self, display3d, frame):
     self.h, self.w = frame.shape[:2]
@@ -85,7 +88,8 @@ class Frame(object):
     display3d.cameras.append(self)
 
 class Point(object):
-  def __init__(self, display3d, pt):
-    self.xyz = pt
+  def __init__(self, display3d, pt, col):
+    self.xyz = np.copy(pt)
+    self.col = np.copy(col)
     display3d.points.append(self)
 

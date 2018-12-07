@@ -45,7 +45,8 @@ def process_frame(frame):
   for i, xyz in enumerate(pts4d):
     if not good_pts4d[i]:
       continue
-    pp = Point(display3d, xyz)
+    u, v = f1.kpus[i].astype(np.int32)
+    pp = Point(display3d, xyz, frame[v, u])
    
   # spit out some stats
   print('pts4d: {} -> {:3d}'.format(pts4d.shape, pts4d[good_pts4d].shape[0]))
@@ -55,7 +56,7 @@ def process_frame(frame):
   display3d.refresh()
   
   # 2D display
-  display2d.refresh(frame, f1, f2, idx1, idx2)
+  # display2d.refresh(frame, f1, f2, idx1, idx2)
 
 if __name__ == '__main__':
   cap = cv2.VideoCapture("../../videos/test.mp4")
