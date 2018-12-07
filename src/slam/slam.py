@@ -14,7 +14,6 @@ orb = cv2.ORB_create()
 
 frames = []
 
-
 def get_pose(R, t):
   Rt = np.eye(4)
   Rt[:3, :3] = R
@@ -85,11 +84,13 @@ class Frame(object):
   '''
   kpus: Unnormalized keypoints
   kpns: Normalized keypoints
+  pose: (R, t) matrix relative to the first frame
   '''
   def __init__(self, frame):
     self.h, self.w = frame.shape[:2]
     self.kpus, self.des  = extract(frame) 
     self.kpns = np.dot(N, add_ones(self.kpus).transpose()).transpose()[:, :-1]
+    self.pose = np.eye(4)
 
 def process_frame(frame):
   frame = cv2.resize(frame, (W, H))
@@ -103,10 +104,18 @@ def process_frame(frame):
   f2 = frames[-2]
   idx1, idx2, Rt = match_frames(f1, f2)
   
+  # update the pose of the frame
+  f1.pose = np.dot(Rt, f2.pose)
+
+  # triangulate the points
+  pts4d = cv2.triangulatePoints(f1.pose[:3], f2.pose[:3], f1.kpus[idx1].T, f2.kpus[idx2].T).T
+ 
+  pts4d[:, :3] /= pts4d[:, -1:]
+
+  # Draw the keypoints and matches
   drawkps(frame, f1.kpus, color=(0, 255, 0))
   drawkps(frame, f2.kpus, color=(255, 0, 0))
   drawlines(frame, f1, f2, idx1, idx2, color=(0, 0, 255))
-
   cv2.imshow('SLAM', frame)
   cv2.waitKey(20)
 
