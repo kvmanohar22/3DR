@@ -2,6 +2,8 @@
 
 import cv2
 import numpy as np
+from skimage.transform import FundamentalMatrixTransform
+from skimage.measure import ransac
 
 H = 1080//2
 W = 1920//2
@@ -25,18 +27,25 @@ def drawlines(img, f1, f2, idx1, idx2, color=(0, 0, 255)):
   for i1, i2 in zip(idx1, idx2):
     p1 = tuple(f1.kpus[i1].astype(np.int32))
     p2 = tuple(f2.kpus[i2].astype(np.int32))
-    cv2.line(img, p1, p2, color=color)
+    cv2.line(img, p1, p2, color=color, thickness=2)
 
 def match_frames(f1, f2):
   bf = cv2.BFMatcher(cv2.NORM_HAMMING)
   matches = bf.match(f1.des, f2.des)
   matches = np.array(sorted(matches, key=lambda x: x.distance))
  
-  matches = matches[:int(0.99 * matches.shape[0])]
   # extract the points which match
   idx1 = np.array([k.queryIdx for k in matches])
   idx2 = np.array([k.trainIdx for k in matches])
-  
+
+  # Use the fundamental matrix to remove outliers
+  pts1, pts2 = f1.kpns[idx1], f2.kpns[idx2]
+  model, inliers = ransac((pts1, pts2),
+                    FundamentalMatrixTransform,
+                    min_samples=8, residual_threshold=.005,
+                    max_trials=300)
+
+  idx1, idx2 = idx1[inliers], idx2[inliers]
   return idx1, idx2
 
 def extract(img):
@@ -56,7 +65,7 @@ class Frame(object):
   def __init__(self, frame):
     self.h, self.w = frame.shape[:2]
     self.kpus, self.des  = extract(frame) 
-    self.kpns = np.dot(N, add_ones(self.kpus).transpose()).transpose()
+    self.kpns = np.dot(N, add_ones(self.kpus).transpose()).transpose()[:, :-1]
 
 def process_frame(frame):
   frame = cv2.resize(frame, (W, H))
