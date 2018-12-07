@@ -53,8 +53,8 @@ def match_frames(f1, f2):
                     max_trials=300)
 
   idx1, idx2 = idx1[inliers], idx2[inliers]
-  # F = np.dot(np.dot(N.transpose(), model.params), N)
-  F = model.params
+  F = np.dot(np.dot(N.transpose(), model.params), N)
+  # F = model.params
 
   # Extract rotation and translation matrices from F
   W = np.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]], dtype=np.float)
