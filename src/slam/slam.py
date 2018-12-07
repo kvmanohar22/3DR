@@ -10,6 +10,7 @@ import OpenGL.GL as gl
 from core import Frame
 from core import Display2D
 from core import Display3D
+from core import Point
 from utils import match_frames, H, W
 
 frames = []
@@ -20,7 +21,7 @@ display3d = Display3D(H, W)
 
 def process_frame(frame):
   frame = cv2.resize(frame, (W, H))
-  fr = Frame(frame)
+  fr = Frame(display3d, frame)
   frames.append(fr)  
   print('\n*** frame {} ***'.format(len(frames)))
 
@@ -35,16 +36,21 @@ def process_frame(frame):
   f1.pose = np.dot(Rt, f2.pose)
 
   # triangulate the points
-  pts4d = cv2.triangulatePoints(f1.pose[:3], f2.pose[:3], f1.kpus[idx1].T, f2.kpus[idx2].T).T
+  pts4d = cv2.triangulatePoints(f1.pose[:3], f2.pose[:3], f1.kpns[idx1].T, f2.kpns[idx2].T).T
   pts4d[:, :3] /= pts4d[:, -1:]
 
   # filter points
   good_pts4d = (np.abs(pts4d[:, 3] > 0.005)) & (pts4d[:, 2] > 0)
   final_pts4d = pts4d[good_pts4d][:, :3]
 
+  for xyz in final_pts4d:
+    pp = Point(display3d, xyz)
+   
+  # spit out some stats
   print('pts4d: {:3d} -> {:3d}'.format(pts4d.shape[0], final_pts4d.shape[0]))
+  print('#cameras: ', np.array(display3d.cameras).shape, '#points: {}'.format(np.array(display3d.points).shape))
+
   # 3D display
-  display3d.add_observation(Rt, final_pts4d)
   display3d.refresh()
   
   # 2D display

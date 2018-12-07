@@ -7,7 +7,7 @@ from utils import drawkps
 from utils import drawlines
 from utils import extract
 from utils import add_ones
-from utils import N
+from utils import K, Kinv, N, Ninv
 
 class Display3D(object):
   def __init__(self, H, W):
@@ -30,25 +30,28 @@ class Display3D(object):
     self.dcam.SetBounds(0.0, 1.0, 0.0, 1.0, (-1.0 * W)/H)
     self.dcam.SetHandler(self.handler)
 
-  def add_observation(self, camera, points):
-    self.cameras.append(camera)
-    for point in points:
-      self.points.append(point)
-
   def refresh(self):
     gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
     gl.glClearColor(0.0, 0.0, 0.0, 1.0)
     self.dcam.Activate(self.scam)
+    
+    # get the latest data
+    cameras = []
+    for cam in self.cameras:
+      cameras.append(cam.pose)
+    xyzs = []
+    for xyz in self.points:
+      xyzs.append(xyz.xyz)
 
     # Relative poses
     gl.glPointSize(10)
     gl.glColor3f(0.0, 1.0, 0.0)
-    pgl.DrawCameras(self.cameras)
+    pgl.DrawCameras(cameras)
 
     # Point Cloud
     gl.glPointSize(2)
     gl.glColor3f(1.0, 0.0, 0.0)
-    pgl.DrawPoints(self.points)
+    pgl.DrawPoints(xyzs)
 
     pgl.FinishFrame()
 
@@ -74,9 +77,15 @@ class Frame(object):
   kpns: Normalized keypoints
   pose: (R, t) matrix relative to the first frame
   '''
-  def __init__(self, frame):
+  def __init__(self, display3d, frame):
     self.h, self.w = frame.shape[:2]
     self.kpus, self.des  = extract(frame) 
-    self.kpns = np.dot(N, add_ones(self.kpus).transpose()).transpose()[:, :-1]
+    self.kpns = np.dot(Kinv, add_ones(self.kpus).T).T[:, :-1]
     self.pose = np.eye(4)
+    display3d.cameras.append(self)
+
+class Point(object):
+  def __init__(self, display3d, pt):
+    self.xyz = pt
+    display3d.points.append(self)
 

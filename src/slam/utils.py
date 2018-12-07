@@ -6,9 +6,14 @@ from skimage.measure import ransac
 
 H = 1080//2
 W = 1920//2
+F = 270
 
 N = np.array([[2./W, 0, -1], [0, 2./H, -1], [0, 0, 1]])
 Ninv = np.linalg.inv(N)
+
+K = np.array([[F, 0, W//2], [0, F, H//2], [0, 0, 1]])
+Kinv = np.linalg.inv(K)
+
 orb = cv2.ORB_create()
 
 # convert [[x, y]] -> [[x, y, 1]]
@@ -50,11 +55,11 @@ def match_frames(f1, f2):
   model, inliers = ransac((pts1, pts2),
                     FundamentalMatrixTransform,
                     min_samples=8, residual_threshold=.005,
-                    max_trials=300)
+                    max_trials=100)
 
   idx1, idx2 = idx1[inliers], idx2[inliers]
-  F = np.dot(np.dot(N.transpose(), model.params), N)
-  # F = model.params
+  # F = np.dot(np.dot(N.transpose(), model.params), N)
+  F = model.params
 
   # Extract rotation and translation matrices from F
   W = np.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]], dtype=np.float)
