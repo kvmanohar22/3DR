@@ -21,9 +21,23 @@ def drawkps(img, kps, color=(0, 0, 255)):
   for kp in kps:
     cv2.circle(img, (int(kp[0]), int(kp[1])), radius=2, color=color)
 
-def drawlines(img, pts1, pts2, color=(0, 0, 255)):
-  for p1, p2 in zip(pts1, pts2):
+def drawlines(img, f1, f2, idx1, idx2, color=(0, 0, 255)):
+  for i1, i2 in zip(idx1, idx2):
+    p1 = tuple(f1.kpus[i1].astype(np.int32))
+    p2 = tuple(f2.kpus[i2].astype(np.int32))
     cv2.line(img, p1, p2, color=color)
+
+def match_frames(f1, f2):
+  bf = cv2.BFMatcher(cv2.NORM_HAMMING)
+  matches = bf.match(f1.des, f2.des)
+  matches = np.array(sorted(matches, key=lambda x: x.distance))
+ 
+  matches = matches[:int(0.99 * matches.shape[0])]
+  # extract the points which match
+  idx1 = np.array([k.queryIdx for k in matches])
+  idx2 = np.array([k.trainIdx for k in matches])
+  
+  return idx1, idx2
 
 def extract(img):
   # extract good keypoints
@@ -54,9 +68,11 @@ def process_frame(frame):
 
   f1 = frames[-1]
   f2 = frames[-2]
+  idx1, idx2 = match_frames(f1, f2)
   
   drawkps(frame, f1.kpus, color=(0, 0, 255))
   drawkps(frame, f2.kpus, color=(0, 255, 0))
+  drawlines(frame, f1, f2, idx1, idx2, color=(255, 0, 0))
 
   cv2.imshow('SLAM', frame)
   cv2.waitKey(20)
