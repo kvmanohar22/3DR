@@ -37,17 +37,18 @@ def process_frame(frame):
 
   # triangulate the points
   pts4d = cv2.triangulatePoints(f1.pose[:3], f2.pose[:3], f1.kpns[idx1].T, f2.kpns[idx2].T).T
-  pts4d[:, :3] /= pts4d[:, -1:]
+  pts4d /= pts4d[:, -1:]
 
   # filter points
   good_pts4d = (np.abs(pts4d[:, 3] > 0.005)) & (pts4d[:, 2] > 0)
-  final_pts4d = pts4d[good_pts4d][:, :3]
 
-  for xyz in final_pts4d:
+  for i, xyz in enumerate(pts4d):
+    if not good_pts4d[i]:
+      continue
     pp = Point(display3d, xyz)
    
   # spit out some stats
-  print('pts4d: {:3d} -> {:3d}'.format(pts4d.shape[0], final_pts4d.shape[0]))
+  print('pts4d: {} -> {:3d}'.format(pts4d.shape, pts4d[good_pts4d].shape[0]))
   print('#cameras: ', np.array(display3d.cameras).shape, '#points: {}'.format(np.array(display3d.points).shape))
 
   # 3D display

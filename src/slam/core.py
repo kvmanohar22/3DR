@@ -80,7 +80,7 @@ class Frame(object):
   def __init__(self, display3d, frame):
     self.h, self.w = frame.shape[:2]
     self.kpus, self.des  = extract(frame) 
-    self.kpns = np.dot(Kinv, add_ones(self.kpus).T).T[:, :-1]
+    self.kpns = np.dot(N, add_ones(self.kpus).T).T[:, :-1]
     self.pose = np.eye(4)
     display3d.cameras.append(self)
 
