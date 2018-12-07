@@ -4,6 +4,8 @@ import cv2
 import numpy as np
 from skimage.transform import FundamentalMatrixTransform
 from skimage.measure import ransac
+import pangolin as pgl
+import OpenGL.GL as gl
 
 H = 1080//2
 W = 1920//2
@@ -13,6 +15,23 @@ Ninv = np.linalg.inv(N)
 orb = cv2.ORB_create()
 
 frames = []
+cameras = []
+point_cloud = []
+
+pgl.CreateWindowAndBind('SLAM', W, H)
+gl.glEnable(gl.GL_DEPTH_TEST) 
+scam = pgl.OpenGlRenderState(
+        pgl.ProjectionMatrix(W, H, 420, 420, W//2, H//2, 0.2, 100), 
+        pgl.ModelViewLookAt(0, -10, -8, 
+                            0, 0, 0, 
+                            0, -1, 0
+                            )
+        )
+handler = pgl.Handler3D(scam)
+
+dcam = pgl.CreateDisplay()
+dcam.SetBounds(0.0, 1.0, 0.0, 1.0, (-1.0 * W)/H)
+dcam.SetHandler(handler)
 
 def get_pose(R, t):
   Rt = np.eye(4)
@@ -109,15 +128,41 @@ def process_frame(frame):
 
   # triangulate the points
   pts4d = cv2.triangulatePoints(f1.pose[:3], f2.pose[:3], f1.kpus[idx1].T, f2.kpus[idx2].T).T
- 
   pts4d[:, :3] /= pts4d[:, -1:]
+  
+  # filter points
+  good_pts4d = (np.abs(pts4d[:, 3] > 0.005)) & (pts4d[:, 2] > 0)
+  pts4d = pts4d[good_pts4d][:, :3]
 
-  # Draw the keypoints and matches
+  cameras.append(Rt)
+  point_cloud.append(pts4d)
+
+  # 2D display
   drawkps(frame, f1.kpus, color=(0, 255, 0))
   drawkps(frame, f2.kpus, color=(255, 0, 0))
   drawlines(frame, f1, f2, idx1, idx2, color=(0, 0, 255))
   cv2.imshow('SLAM', frame)
   cv2.waitKey(20)
+
+  # 3D display
+  gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
+  gl.glClearColor(0.0, 0.0, 0.0, 1.0)
+  dcam.Activate(scam)
+
+  # Relative poses
+  gl.glPointSize(10)
+  gl.glColor3f(0.0, 1.0, 0.0)
+  pgl.DrawCameras(cameras)
+  print(np.array(cameras).shape)
+
+  # Point Cloud
+  gl.glPointSize(2)
+  gl.glColor3f(1.0, 0.0, 0.0)
+  points = np.array(point_cloud)
+  #print(points.shape)
+  #pgl.DrawPoints()
+
+  pgl.FinishFrame()
 
 if __name__ == '__main__':
   cap = cv2.VideoCapture("../../videos/test.mp4")
