@@ -14,6 +14,13 @@ orb = cv2.ORB_create()
 
 frames = []
 
+
+def get_pose(R, t):
+  Rt = np.eye(4)
+  Rt[:3, :3] = R
+  Rt[:3, -1] = t
+  return Rt
+
 # convert [[x, y]] -> [[x, y, 1]]
 def add_ones(x):
   return np.concatenate((x, np.ones((x.shape[0], 1))), axis=1)
@@ -27,16 +34,20 @@ def drawlines(img, f1, f2, idx1, idx2, color=(0, 0, 255)):
   for i1, i2 in zip(idx1, idx2):
     p1 = tuple(f1.kpus[i1].astype(np.int32))
     p2 = tuple(f2.kpus[i2].astype(np.int32))
-    cv2.line(img, p1, p2, color=color, thickness=2)
+    cv2.line(img, p1, p2, color=color, thickness=1)
 
 def match_frames(f1, f2):
   bf = cv2.BFMatcher(cv2.NORM_HAMMING)
-  matches = bf.match(f1.des, f2.des)
-  matches = np.array(sorted(matches, key=lambda x: x.distance))
+  matches = bf.knnMatch(f1.des, f2.des, k=2)
  
-  # extract the points which match
-  idx1 = np.array([k.queryIdx for k in matches])
-  idx2 = np.array([k.trainIdx for k in matches])
+  idx1, idx2 = [], []
+  for m, n in matches:
+    if m.distance < 0.75 * n.distance:
+      idx1.append(m.queryIdx)
+      idx2.append(m.trainIdx)
+
+  idx1 = np.array(idx1)
+  idx2 = np.array(idx2)
 
   # Use the fundamental matrix to remove outliers
   pts1, pts2 = f1.kpns[idx1], f2.kpns[idx2]
@@ -46,7 +57,20 @@ def match_frames(f1, f2):
                     max_trials=300)
 
   idx1, idx2 = idx1[inliers], idx2[inliers]
-  return idx1, idx2
+  F = np.dot(np.dot(N.transpose(), model.params), N)
+
+  # Extract rotation and translation matrices from F
+  W = np.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]], dtype=np.float)
+
+  U, D, Vt = np.linalg.svd(F)
+  assert np.linalg.det(U) > 0
+  if np.linalg.det(Vt) < 0:
+    Vt *= -1;
+  R = np.dot(np.dot(U, W), Vt)
+  if np.sum(R.diagonal()) < 0:
+    R = np.dot(np.dot(U, W.T), Vt)
+  t = U[:, -1]
+  return idx1, idx2, get_pose(R, t)
 
 def extract(img):
   # extract good keypoints
@@ -77,11 +101,11 @@ def process_frame(frame):
 
   f1 = frames[-1]
   f2 = frames[-2]
-  idx1, idx2 = match_frames(f1, f2)
+  idx1, idx2, Rt = match_frames(f1, f2)
   
-  drawkps(frame, f1.kpus, color=(0, 0, 255))
-  drawkps(frame, f2.kpus, color=(0, 255, 0))
-  drawlines(frame, f1, f2, idx1, idx2, color=(255, 0, 0))
+  drawkps(frame, f1.kpus, color=(0, 255, 0))
+  drawkps(frame, f2.kpus, color=(255, 0, 0))
+  drawlines(frame, f1, f2, idx1, idx2, color=(0, 0, 255))
 
   cv2.imshow('SLAM', frame)
   cv2.waitKey(20)
