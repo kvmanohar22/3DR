@@ -1,11 +1,15 @@
 # 3DR
 Collection of tools ranging from image alignment, panorama generation, point cloud generation, optical flow estimation to single view 3D reconstruction
 
+---
 ## TODO
 - [x] Image Alignment
 - [x] Panorama stitching
-- [ ] Stereo Stitching (Estimate Fundamental/Essential matrix)
-- [ ] Estimate scene structure (point cloud generation)
+- [x] Stereo Stitching (Estimate Fundamental/Essential matrix)
+- [x] Estimate scene structure (point cloud generation)
+- [ ] Custom implementations of (F estimation, triangulation)
+- [ ] Bundle Adjustment
+- [ ] SLAM graph optimization
 
 ## Requirements
 - C++14
@@ -14,5 +18,4 @@ Collection of tools ranging from image alignment, panorama generation, point clo
 - glad
 - glfw
 - OpenGL
-
-
+- pangolin
