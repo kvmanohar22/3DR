@@ -19,8 +19,27 @@ frames = []
 display2d = Display2D()
 display3d = Display3D(H, W)
 
-def process_frame(frame):
-  frame = cv2.resize(frame, (W, H))
+def triangulate(pose1, pose2, pts1, pts2):
+  return cv2.triangulatePoints(pose1[:3], pose2[:3], pts1.T, pts2.T).T
+  ret = np.zeros((pts1.shape[0], 4))
+
+  pose1 = np.linalg.inv(pose1)
+  pose2 = np.linalg.inv(pose2)
+
+  for i, p in enumerate(zip(pose1, pose2)):
+    A = np.zeros((4, 4))
+    A[0] = p[0][0] * pose1[2] - pose1[0]
+    A[1] = p[0][1] * pose1[2] - pose1[1]
+    A[2] = p[1][0] * pose2[2] - pose1[0]
+    A[3] = p[1][1] * pose2[2] - pose1[1]
+
+    _, _, vt = np.linalg.svd(A)
+    ret[i] = vt[3]
+
+  return ret
+
+def process_frame(img):
+  frame = cv2.resize(img, (W, H))
   fr = Frame(display3d, frame)
   frames.append(fr)  
   print('\n*** frame {} ***'.format(len(frames)))
@@ -36,22 +55,27 @@ def process_frame(frame):
   f1.pose = np.dot(Rt, f2.pose)
 
   # triangulate the points
-  pts4d = cv2.triangulatePoints(f1.pose[:3], f2.pose[:3], f1.kpns[idx1].T, f2.kpns[idx2].T).T
-  pts4d /= pts4d[:, -1:]
+  pts4d = triangulate(f1.pose, f2.pose, f1.kpns[idx1], f2.kpns[idx2])
+  pts4d /= pts4d[:, 3:]
 
   # filter points
-  good_pts4d = (np.abs(pts4d[:, 3] > 0.005)) & (pts4d[:, 2] > 0)
+  good_pts4d1 = np.abs(pts4d[:, 3]) > 0.005 
+  good_pts4d2 = good_pts4d1 & (pts4d[:, 2] < 0)
+
+  # spit out some stats
+  print('pts4d: {} -> {:3d} -> {:3d}'.format(pts4d.shape[0], 
+      pts4d[good_pts4d1].shape[0],
+      pts4d[good_pts4d2].shape[0]))
+
+  print('#cameras: ', np.array(display3d.cameras).shape[0], end=' ') 
+  print('#points: ', np.array(display3d.points).shape[0])
 
   for i, xyz in enumerate(pts4d):
-    if not good_pts4d[i]:
+    if not good_pts4d2[i]:
       continue
     u, v = f1.kpus[i].astype(np.int32)
     pp = Point(display3d, xyz, frame[v, u])
    
-  # spit out some stats
-  print('pts4d: {} -> {:3d}'.format(pts4d.shape, pts4d[good_pts4d].shape[0]))
-  print('#cameras: ', np.array(display3d.cameras).shape, '#points: {}'.format(np.array(display3d.points).shape))
-
   # 3D display
   display3d.refresh()
   
