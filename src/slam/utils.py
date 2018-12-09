@@ -6,12 +6,11 @@ from skimage.measure import ransac
 
 H = 1080//2
 W = 1920//2
+F = 400
 
 # Normalization matrices used during F-estimation
-N = np.array([[2./W, 0, -1], [0, 2./H, -1], [0, 0, 1]])
-Ninv = np.linalg.inv(N)
-
-orb = cv2.ORB_create()
+K = np.array([[F, 0, W//2], [0, F, H//2], [0, 0, 1]])
+Kinv = np.linalg.inv(K)
 
 # convert [[x, y]] -> [[x, y, 1]]
 def add_ones(x):
@@ -20,13 +19,13 @@ def add_ones(x):
 def get_pose(R, t):
   Rt = np.eye(4)
   Rt[:3, :3] = R
-  Rt[:3, -1] = t
+  Rt[:3, 3] = t
   return Rt
 
 # Draw keypoints
 def drawkps(img, kps, color=(0, 0, 255)):
   for kp in kps:
-    cv2.circle(img, (int(kp[0]), int(kp[1])), radius=2, color=color)
+    cv2.circle(img, (int(kp[0]), int(kp[1])), radius=3, color=color)
 
 # Draw lines
 def drawlines(img, f1, f2, idx1, idx2, color=(0, 0, 255)):
@@ -52,7 +51,8 @@ def match_frames(f1, f2):
   pts1, pts2 = f1.kpns[idx1], f2.kpns[idx2]
   model, inliers = ransac((pts1, pts2),
                     FundamentalMatrixTransform,
-                    min_samples=8, residual_threshold=.005,
+                    min_samples=8,
+                    residual_threshold=0.005,
                     max_trials=100)
 
   idx1, idx2 = idx1[inliers], idx2[inliers]
@@ -73,10 +73,11 @@ def match_frames(f1, f2):
 
 def extract(img):
   # extract good keypoints
+  orb = cv2.ORB_create()
+ 
   kpts = cv2.goodFeaturesToTrack(np.mean(img, axis=-1).astype(np.uint8),
               3000, qualityLevel=0.01, minDistance=3)
-  kpts = np.squeeze(kpts)
-  kptsK = [cv2.KeyPoint(x=kp[0], y=kp[1], _size=20) for kp in kpts]
+  kptsK = [cv2.KeyPoint(x=kp[0][0], y=kp[0][1], _size=20) for kp in kpts]
   kps, des = orb.compute(img, kptsK)
   return np.array([[kp.pt[0], kp.pt[1]] for kp in kps]), des
 

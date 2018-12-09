@@ -7,19 +7,20 @@ from utils import drawkps
 from utils import drawlines
 from utils import extract
 from utils import add_ones
-from utils import N, Ninv
+from utils import K, Kinv
 
 class Display3D(object):
-  def __init__(self, H, W):
+  def __init__(self):
     self.cameras = []
     self.points = []
-    self.viewer_init(H, W)
+    self.H, self.W = 900, 1600
+    self.viewer_init()
 
-  def viewer_init(self, H, W):
-    pgl.CreateWindowAndBind('SLAM', W, H)
+  def viewer_init(self):
+    pgl.CreateWindowAndBind('SLAM', self.W, self.H)
     gl.glEnable(gl.GL_DEPTH_TEST) 
     self.scam = pgl.OpenGlRenderState(
-            pgl.ProjectionMatrix(W, H, 420, 420, W//2, H//2, 0.2, 100), 
+            pgl.ProjectionMatrix(self.W, self.H, 420, 420, self.W//2, self.H//2, 0.2, 100), 
             pgl.ModelViewLookAt(0, -10, -8, 
                                 0, 0, 0, 
                                 0, -1, 0
@@ -27,7 +28,7 @@ class Display3D(object):
     self.handler = pgl.Handler3D(self.scam)
 
     self.dcam = pgl.CreateDisplay()
-    self.dcam.SetBounds(0.0, 1.0, 0.0, 1.0, (-1.0 * W)/H)
+    self.dcam.SetBounds(0.0, 1.0, 0.0, 1.0, self.W/self.H)
     self.dcam.SetHandler(self.handler)
 
   def refresh(self):
@@ -43,6 +44,7 @@ class Display3D(object):
     for xyz in self.points:
       xyzs.append(xyz.xyz)
       cols.append(xyz.col)
+
     xyzs = np.array(xyzs)
     cols = np.array(cols)
     
@@ -64,8 +66,8 @@ class Display2D(object):
 
   def refresh(self, frame, f1, f2, idx1, idx2):
     # Draw keypoints
-    drawkps(frame, f1.kpus, color=(0, 255, 0))
-    drawkps(frame, f2.kpus, color=(255, 0, 0))
+    drawkps(frame, f1.kpus[idx1], color=(0, 255, 0))
+    drawkps(frame, f2.kpus[idx2], color=(255, 0, 0))
     
     # Draw matching lines
     drawlines(frame, f1, f2, idx1, idx2, color=(0, 0, 255))
@@ -83,7 +85,7 @@ class Frame(object):
   def __init__(self, display3d, frame):
     self.h, self.w = frame.shape[:2]
     self.kpus, self.des  = extract(frame) 
-    self.kpns = np.dot(N, add_ones(self.kpus).T).T[:, :-1]
+    self.kpns = np.dot(Kinv, add_ones(self.kpus).T).T[:, :2]
     self.pose = np.eye(4)
     display3d.cameras.append(self)
 
