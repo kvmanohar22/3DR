@@ -12,7 +12,7 @@ Collection of tools ranging from image alignment, panorama generation, point clo
 - [ ] SLAM graph optimization
 
 ### Bugs (to be fixed)
-- point cloud is not dense enough 
+- ~~point cloud is not dense enough~~ (turned out opencv's triangulation isn't that accurate) 
 
 ## Requirements
 - C++14
