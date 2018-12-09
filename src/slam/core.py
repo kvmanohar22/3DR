@@ -7,7 +7,7 @@ from utils import drawkps
 from utils import drawlines
 from utils import extract
 from utils import add_ones
-from utils import K, Kinv
+from utils import N, Ninv
 
 class Display3D(object):
   def __init__(self):
@@ -85,7 +85,7 @@ class Frame(object):
   def __init__(self, display3d, frame):
     self.h, self.w = frame.shape[:2]
     self.kpus, self.des  = extract(frame) 
-    self.kpns = np.dot(Kinv, add_ones(self.kpus).T).T[:, :2]
+    self.kpns = np.dot(N, add_ones(self.kpus).T).T[:, :2]
     self.pose = np.eye(4)
     display3d.cameras.append(self)
 

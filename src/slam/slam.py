@@ -20,7 +20,6 @@ display2d = Display2D()
 display3d = Display3D()
 
 def triangulate(pose1, pose2, pts1, pts2):
-  # return cv2.triangulatePoints(pose1[:3], pose2[:3], pts1.T, pts2.T).T
   ret = np.zeros((pts1.shape[0], 4))
 
   pose1 = np.linalg.inv(pose1)
