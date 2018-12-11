@@ -6,9 +6,13 @@ from skimage.measure import ransac
 
 H = 1080//2
 W = 1920//2
+F = 700
 
 # Normalization matrices used during F-estimation
-N = np.array([[2./W, 0, -1], [0, 2./H, -1], [0, 0, 1]])
+# N = np.array([[2./W, 0, -1], [0, 2./H, -1], [0, 0, 1]])
+# Ninv = np.linalg.inv(N)
+
+N = np.array([[F, 0, W//2], [0, F, H//2], [0, 0, 1]])
 Ninv = np.linalg.inv(N)
 
 # convert [[x, y]] -> [[x, y, 1]]

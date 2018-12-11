@@ -90,7 +90,6 @@ def process_frame(img):
   # optimize the map
   if fr.idx >= 4:
     optimizer.optimize()
-    exit(-1)
   
   # 3D display
   display3d.updateQ()
