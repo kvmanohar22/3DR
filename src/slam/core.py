@@ -9,18 +9,29 @@ from utils import extract
 from utils import add_ones
 from utils import N, Ninv
 
+from multiprocessing import Queue, Process
+
 class Display3D(object):
   def __init__(self):
     self.cameras = []
     self.points = []
-    self.H, self.W = 900, 1600
-    self.viewer_init()
+    self.q = None
 
-  def viewer_init(self):
-    pgl.CreateWindowAndBind('SLAM', self.W, self.H)
+  def create_viewer(self):
+    self.q = Queue()
+    self.viewer_init(1600, 900)
+    self.viewer = Process(target=self.viewer_thread, args=(self.q, ))
+    self.viewer.start()
+
+  def viewer_thread(self, q):
+    while True:
+      self.refresh(q) 
+
+  def viewer_init(self, w, h):
+    pgl.CreateWindowAndBind('SLAM', w, h)
     gl.glEnable(gl.GL_DEPTH_TEST) 
     self.scam = pgl.OpenGlRenderState(
-            pgl.ProjectionMatrix(self.W, self.H, 420, 420, self.W//2, self.H//2, 0.2, 100), 
+            pgl.ProjectionMatrix(w, h, 420, 420, w//2, h//2, 0.2, 100), 
             pgl.ModelViewLookAt(0, -10, -8, 
                                 0, 0, 0, 
                                 0, -1, 0
@@ -28,25 +39,18 @@ class Display3D(object):
     self.handler = pgl.Handler3D(self.scam)
 
     self.dcam = pgl.CreateDisplay()
-    self.dcam.SetBounds(0.0, 1.0, 0.0, 1.0, self.W/self.H)
+    self.dcam.SetBounds(0.0, 1.0, 0.0, 1.0, w/h)
     self.dcam.SetHandler(self.handler)
 
-  def refresh(self):
+  def refresh(self, q):
+    if not q.empty():
+      return
+       
+    cameras, xyzs, cols = q.get()  
+
     gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
     gl.glClearColor(0.0, 0.0, 0.0, 1.0)
     self.dcam.Activate(self.scam)
-    
-    # get the latest data
-    cameras = []
-    for cam in self.cameras:
-      cameras.append(cam.pose)
-    xyzs, cols = [], []
-    for xyz in self.points:
-      xyzs.append(xyz.xyz)
-      cols.append(xyz.col)
-
-    xyzs = np.array(xyzs)
-    cols = np.array(cols)
     
     # Relative poses
     gl.glPointSize(10)
@@ -56,9 +60,30 @@ class Display3D(object):
     # Point Cloud
     gl.glPointSize(2)
     gl.glColor3f(1.0, 0.0, 0.0)
-    pgl.DrawPoints(xyzs, cols/256.0)
+    pgl.DrawPoints(xyzs, cols)
 
     pgl.FinishFrame()
+
+  def updateQ(self):
+    if self.q is None:
+      return
+    
+    cameras, xyzs, cols = [], [], []
+    for cam in self.cameras:
+      cameras.append(cam.pose)
+    for xyz in self.points:
+      xyzs.append(xyz.xyz)
+      cols.append(xyz.col)
+
+    cameras = np.array(cameras)
+    xyzs = np.array(xyzs)
+    cols = np.array(cols)/256.0
+
+    print('#cameras: {}'.format(cameras.shape))
+    print('#xyzs: {}'.format(xyzs.shape))
+    print('#cols: {}'.format(cols.shape))
+    
+    self.q.put((cameras, xyzs, cols))
 
 class Display2D(object):
   def __init__(self):

@@ -19,6 +19,9 @@ frames = []
 display2d = Display2D()
 display3d = Display3D()
 
+# initialize viewer thread
+display3d.create_viewer()
+
 def triangulate(pose1, pose2, pts1, pts2):
   ret = np.zeros((pts1.shape[0], 4))
 
@@ -71,7 +74,7 @@ def process_frame(img):
     pp = Point(display3d, xyz, frame[v, u])
    
   # 3D display
-  display3d.refresh()
+  display3d.updateQ()
   
   # 2D display
   display2d.refresh(frame, f1, f2, idx1, idx2)
