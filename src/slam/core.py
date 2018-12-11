@@ -15,15 +15,14 @@ class Display3D(object):
   def __init__(self):
     self.cameras = []
     self.points = []
-    self.q = None
 
   def create_viewer(self):
     self.q = Queue()
-    self.viewer_init(1600, 900)
     self.viewer = Process(target=self.viewer_thread, args=(self.q, ))
     self.viewer.start()
 
   def viewer_thread(self, q):
+    self.viewer_init(1600, 900)
     while True:
       self.refresh(q) 
 
@@ -65,9 +64,6 @@ class Display3D(object):
     pgl.FinishFrame()
 
   def updateQ(self):
-    if self.q is None:
-      return
-    
     cameras, xyzs, cols = [], [], []
     for cam in self.cameras:
       cameras.append(cam.pose)
@@ -79,10 +75,6 @@ class Display3D(object):
     xyzs = np.array(xyzs)
     cols = np.array(cols)/256.0
 
-    print('#cameras: {}'.format(cameras.shape))
-    print('#xyzs: {}'.format(xyzs.shape))
-    print('#cols: {}'.format(cols.shape))
-    
     self.q.put((cameras, xyzs, cols))
 
 class Display2D(object):
