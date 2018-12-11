@@ -1,7 +1,7 @@
 # 3DR
 Collection of tools ranging from image alignment, panorama generation, point cloud generation, optical flow estimation to single view 3D reconstruction
 
-<p align="center"><img width="100%" src="imgs/point_cloud.png"/></p>
+<p align="center"><img width="100%" height="50%" src="imgs/point_cloud.png"/></p>
 
 ---
 ## TODO
@@ -12,6 +12,7 @@ Collection of tools ranging from image alignment, panorama generation, point clo
 - [ ] Custom implementations of (F estimation, triangulation)
 - [x] Bundle Adjustment
 - [x] SLAM graph optimization
+- [ ] Global bundle adjustment is run for every frame (make it locally to gain some speed)
 
 ### Bugs (to be fixed)
 - ~~point cloud is not dense enough~~ (turned out opencv's triangulation isn't that accurate) 
