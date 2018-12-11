@@ -6,3 +6,5 @@ bin/**
 __pycache__/
 utils/**
 videos/**
+*.swp
+*.txt

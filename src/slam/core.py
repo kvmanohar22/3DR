@@ -51,7 +51,14 @@ class Display3D(object):
     gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
     gl.glClearColor(0.0, 0.0, 0.0, 1.0)
     self.dcam.Activate(self.scam)
-    
+   
+
+    # Draw axes
+    # gl.glColor3f(1.0, 1.0, 1.0)
+    # pgl.DrawLines(np.array([[0.0, 0.0, 0.0, 100.0, 0.0, 0.0]]))
+    # pgl.DrawLines(np.array([[0.0, 0.0, 0.0, 0.0, 100.0, 0.0]]))
+    # pgl.DrawLines(np.array([[0.0, 0.0, 0.0, 10.0, 0.0, 100.0]]))
+
     # Relative poses
     gl.glPointSize(10)
     gl.glColor3f(0.0, 1.0, 0.0)

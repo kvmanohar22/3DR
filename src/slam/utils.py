@@ -1,12 +1,13 @@
 import numpy as np
 import cv2
+import os
 
 from skimage.transform import FundamentalMatrixTransform
 from skimage.measure import ransac
 
 H = 1080//2
 W = 1920//2
-F = 700
+F = int(os.getenv('F', '800'))
 
 # Normalization matrices used during F-estimation
 # N = np.array([[2./W, 0, -1], [0, 2./H, -1], [0, 0, 1]])

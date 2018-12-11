@@ -57,8 +57,9 @@ class Optimizer(object):
       R = est.rotation().matrix()
       t = est.translation()
       f.pose = get_pose(R, t)
-      print(get_pose(R, t))
 
     # put points back
     for p in self.mapp.points:
       est = opt.vertex(PI_ID_OFFSET + p.idx).estimate()
+      p.xyz = np.array(est)
+
