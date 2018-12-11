@@ -40,8 +40,9 @@ def match_frames(f1, f2):
   idx1, idx2 = [], []
   for m, n in matches:
     if m.distance < 0.75 * n.distance:
-      idx1.append(m.queryIdx)
-      idx2.append(m.trainIdx)
+      if m.queryIdx not in idx1 and m.trainIdx not in idx2:
+        idx1.append(m.queryIdx)
+        idx2.append(m.trainIdx)
 
   idx1 = np.array(idx1)
   idx2 = np.array(idx2)

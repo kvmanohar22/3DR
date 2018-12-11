@@ -15,6 +15,7 @@ class Display3D(object):
   def __init__(self):
     self.cameras = []
     self.points = []
+    self.q = None
 
   def create_viewer(self):
     self.q = Queue()
@@ -64,6 +65,9 @@ class Display3D(object):
     pgl.FinishFrame()
 
   def updateQ(self):
+    if self.q is None:
+      return
+
     cameras, xyzs, cols = [], [], []
     for cam in self.cameras:
       cameras.append(cam.pose)
@@ -105,10 +109,31 @@ class Frame(object):
     self.kpns = np.dot(N, add_ones(self.kpus).T).T[:, :2]
     self.pose = np.eye(4)
     display3d.cameras.append(self)
+    self.idx = len(display3d.cameras)
+    self.pts = [None] * len(self.kpns)
 
 class Point(object):
+  '''
+  xyz   : 3D location of the point
+  col   : col of the point
+  idx   : unique id of the point
+  
+  frames: Different frames from which this point was observed in
+  idxs  : unique ids of the frames
+  '''
   def __init__(self, display3d, pt, col):
     self.xyz = np.copy(pt)
     self.col = np.copy(col)
     display3d.points.append(self)
+    self.idx = len(display3d.points)
+    self.frames = []
+    self.idxs = []
+
+  def add_observation(self, frame, idx):
+    '''
+    This particular point was seen in this frame with given idx
+    '''
+    frame.pts[idx] = self
+    self.frames.append(frame)
+    self.idxs.append(idx)
 
