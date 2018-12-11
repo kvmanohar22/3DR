@@ -18,8 +18,8 @@ class Optimizer(object):
     # add frames to graph
     for f in self.mapp.cameras:
       sbacam = g2o.SBACam(g2o.SE3Quat(f.pose[:3, :3], f.pose[:3, 3]))
-      # sbacam.set_cam(f.K[0][0], f.K[1][1], f.K[2][0], f.K[2][1], 1.0)
-      sbacam.set_cam(1.0, 1.0, 0.0, 0.0, 1.0)
+      sbacam.set_cam(f.K[0][0], f.K[1][1], f.K[0][2], f.K[1][2], 1.0)
+      # sbacam.set_cam(1.0, 1.0, 0.0, 0.0, 1.0)
 
       v_se3 = g2o.VertexCam()
       v_se3.set_id(f.idx)
@@ -41,7 +41,7 @@ class Optimizer(object):
         edge = g2o.EdgeProjectP2MC()
         edge.set_vertex(0, pt)
         edge.set_vertex(1, opt.vertex(f.idx))
-        uv = f.kpns[f.pts.index(p)]
+        uv = f.kpus[f.pts.index(p)]
         edge.set_measurement(uv)
         edge.set_information(np.eye(2))
         edge.set_robust_kernel(robust_kernel)
