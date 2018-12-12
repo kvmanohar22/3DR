@@ -61,5 +61,14 @@ class Optimizer(object):
     # put points back
     for p in self.mapp.points:
       est = opt.vertex(PI_ID_OFFSET + p.idx).estimate()
-      p.xyz = np.array(est)
+      errs = []
+      for f in p.frames:
+        p.xyz = np.array(est)
+        # compute the reprojection error
+        proj = np.dot(f.K, est)
+        proj /= proj[2]
+        uv = f.kpus[f.pts.index(p)]
+        errs.append(np.linalg.norm(uv - proj[:2]))
+      print(np.mean(errs))
+
 
