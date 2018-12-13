@@ -18,7 +18,6 @@ from utils import N, Ninv
 from optimizer import Optimizer 
 
 frames = []
-errs50 = []
 
 # core classes
 display2d = None
@@ -93,14 +92,13 @@ def process_frame(img):
                   xyz))
     proj = proj[:2] / proj[-1]
     err = np.linalg.norm(proj-uv)
-    # print(proj, uv, err)
     errs.append(err)
-  errs50.append(np.mean(errs))
-  print('Reprojection error: {}'.format(np.mean(errs)))
 
   # optimize the map
-  # if fr.idx >= 4:
-  #   optimizer.optimize()
+  if fr.idx >= 4:
+    err = optimizer.optimize()
+  
+  print('Reprojection error: before opt: {} after opt: {}'.format(np.mean(errs), err))
   
   # 3D display
   display3d.updateQ()

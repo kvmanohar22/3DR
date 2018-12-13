@@ -2,6 +2,7 @@ import numpy as np
 import g2o
 
 from utils import get_pose
+from utils import N, Ninv, K, Kinv
 
 class Optimizer(object):
   def __init__(self, mapp):
@@ -41,16 +42,16 @@ class Optimizer(object):
         edge = g2o.EdgeProjectP2MC()
         edge.set_vertex(0, pt)
         edge.set_vertex(1, opt.vertex(f.idx))
-        uv = f.kpus[f.pts.index(p)]
+        uv = f.kpns[f.pts.index(p)]
         edge.set_measurement(uv)
         edge.set_information(np.eye(2))
         edge.set_robust_kernel(robust_kernel)
         opt.add_edge(edge)
 
-    opt.set_verbose(True)
+    # opt.set_verbose(True)
     opt.initialize_optimization()
-    opt.optimize(10)
-       
+    opt.optimize(50)
+  
     # put frames back
     for f in self.mapp.cameras:
       est = opt.vertex(f.idx).estimate()
@@ -59,16 +60,17 @@ class Optimizer(object):
       f.pose = get_pose(R, t)
 
     # put points back
+    errs = []
     for p in self.mapp.points:
       est = opt.vertex(PI_ID_OFFSET + p.idx).estimate()
-      errs = []
       for f in p.frames:
         p.xyz = np.array(est)
         # compute the reprojection error
-        proj = np.dot(f.K, est)
-        proj /= proj[2]
+        proj = np.dot(Ninv, np.dot(np.dot(f.K, np.linalg.inv(f.pose)[:3]),
+                      np.array([est[0], est[1], est[2], 1.0])))
+        proj = proj[:2] / proj[2]
         uv = f.kpus[f.pts.index(p)]
-        errs.append(np.linalg.norm(uv - proj[:2]))
-      print(np.mean(errs))
-
+        errs.append(np.linalg.norm(uv - proj))
+ 
+    return np.mean(errs)
 
