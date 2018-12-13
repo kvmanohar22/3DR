@@ -5,16 +5,27 @@ import os
 from skimage.transform import FundamentalMatrixTransform
 from skimage.measure import ransac
 
+# video 1
 H = 1080//2
 W = 1920//2
 F = int(os.getenv('F', '800'))
+
+# video 2
+# H = 375
+# W = 1242
+# F = int(os.getenv('F', '800'))
+
+# video 3
+# H = 720
+# W = 1280
+# F = int(os.getenv('F', '800'))
 
 # Normalization matrices used during F-estimation
 # N = np.array([[2./W, 0, -1], [0, 2./H, -1], [0, 0, 1]])
 # Ninv = np.linalg.inv(N)
 
-N = np.array([[F, 0, W//2], [0, F, H//2], [0, 0, 1]])
-Ninv = np.linalg.inv(N)
+K = np.array([[F, 0, W//2], [0, F, H//2], [0, 0, 1]])
+Kinv = np.linalg.inv(K)
 
 # convert [[x, y]] -> [[x, y, 1]]
 def add_ones(x):
@@ -58,7 +69,7 @@ def match_frames(f1, f2):
                     FundamentalMatrixTransform,
                     min_samples=8,
                     residual_threshold=0.005,
-                    max_trials=100)
+                    max_trials=300)
 
   idx1, idx2 = idx1[inliers], idx2[inliers]
   F = model.params

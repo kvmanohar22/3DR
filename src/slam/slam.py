@@ -2,6 +2,7 @@
 
 import cv2
 import os
+import sys
 import numpy as np
 from skimage.transform import FundamentalMatrixTransform
 from skimage.measure import ransac
@@ -18,13 +19,8 @@ from optimizer import Optimizer
 frames = []
 
 # core classes
-display2d = Display2D() if os.getenv('D2D') is not None else None
-display3d = Display3D() 
-optimizer = Optimizer(display3d)
-
-# initialize viewer thread
-if os.getenv('D3D') is not None:
-  display3d.create_viewer()
+display2d = None
+display3d = None
 
 def triangulate(pose1, pose2, pts1, pts2):
   ret = np.zeros((pts1.shape[0], 4))
@@ -87,9 +83,22 @@ def process_frame(img):
     pt.add_observation(f1, idx1[i])
     pt.add_observation(f2, idx2[i])
 
+  # compute the reprojection error
+  errs = []
+  for idx, xyz in enumerate(pts4d):
+    uv = f1.kpus[idx1[idx]]
+    proj = np.dot(np.dot(f1.K, np.linalg.inv(f1.pose)[:3]),
+                  xyz)
+    proj = proj[:2] / proj[-1]
+    proj = [int(round(p)) for p in proj]
+    err = np.linalg.norm(proj-uv)
+    print(proj, uv, err)
+    errs.append(err)
+  print('Reprojection error: {}'.format(np.mean(errs)))
+
   # optimize the map
-  if fr.idx >= 4:
-    optimizer.optimize()
+  # if fr.idx >= 4:
+  #   optimizer.optimize()
   
   # 3D display
   display3d.updateQ()
@@ -99,7 +108,20 @@ def process_frame(img):
     display2d.refresh(frame, f1, f2, idx1, idx2)
 
 if __name__ == '__main__':
-  cap = cv2.VideoCapture("../../videos/test.mp4")
+  
+  if len(sys.argv) < 2:
+    print('Usage: ./slam.py <video>')
+    exit(0)
+  
+  display2d = Display2D() if os.getenv('D2D') is not None else None
+  display3d = Display3D() 
+  optimizer = Optimizer(display3d)
+
+  # initialize viewer thread
+  if os.getenv('D3D') is not None:
+    display3d.create_viewer()
+  
+  cap = cv2.VideoCapture(sys.argv[1])
 
   while cap.isOpened():
     ret, frame = cap.read()

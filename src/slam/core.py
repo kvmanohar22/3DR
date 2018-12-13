@@ -7,7 +7,7 @@ from utils import drawkps
 from utils import drawlines
 from utils import extract
 from utils import add_ones
-from utils import N, Ninv
+from utils import K, Kinv
 
 from multiprocessing import Queue, Process
 
@@ -52,13 +52,6 @@ class Display3D(object):
     gl.glClearColor(0.0, 0.0, 0.0, 1.0)
     self.dcam.Activate(self.scam)
    
-
-    # Draw axes
-    # gl.glColor3f(1.0, 1.0, 1.0)
-    # pgl.DrawLines(np.array([[0.0, 0.0, 0.0, 100.0, 0.0, 0.0]]))
-    # pgl.DrawLines(np.array([[0.0, 0.0, 0.0, 0.0, 100.0, 0.0]]))
-    # pgl.DrawLines(np.array([[0.0, 0.0, 0.0, 10.0, 0.0, 100.0]]))
-
     # Relative poses
     gl.glPointSize(10)
     gl.glColor3f(0.0, 1.0, 0.0)
@@ -113,12 +106,12 @@ class Frame(object):
   def __init__(self, display3d, frame):
     self.h, self.w = frame.shape[:2]
     self.kpus, self.des  = extract(frame) 
-    self.kpns = np.dot(Ninv, add_ones(self.kpus).T).T[:, :2]
+    self.kpns = np.dot(Kinv, add_ones(self.kpus).T).T[:, :2]
     self.pose = np.eye(4)
     display3d.cameras.append(self)
     self.idx = len(display3d.cameras)
     self.pts = [None] * len(self.kpns)
-    self.K = np.copy(N)
+    self.K = np.copy(K)
 
 class Point(object):
   '''
