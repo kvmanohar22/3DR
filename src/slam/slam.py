@@ -14,9 +14,11 @@ from core import Display2D
 from core import Display3D
 from core import Point
 from utils import match_frames, H, W
+from utils import N, Ninv
 from optimizer import Optimizer 
 
 frames = []
+errs50 = []
 
 # core classes
 display2d = None
@@ -87,13 +89,13 @@ def process_frame(img):
   errs = []
   for idx, xyz in enumerate(pts4d):
     uv = f1.kpus[idx1[idx]]
-    proj = np.dot(np.dot(f1.K, np.linalg.inv(f1.pose)[:3]),
-                  xyz)
+    proj = np.dot(Ninv, np.dot(np.dot(f1.K, np.linalg.inv(f1.pose)[:3]),
+                  xyz))
     proj = proj[:2] / proj[-1]
-    proj = [int(round(p)) for p in proj]
     err = np.linalg.norm(proj-uv)
-    print(proj, uv, err)
+    # print(proj, uv, err)
     errs.append(err)
+  errs50.append(np.mean(errs))
   print('Reprojection error: {}'.format(np.mean(errs)))
 
   # optimize the map
@@ -102,7 +104,10 @@ def process_frame(img):
   
   # 3D display
   display3d.updateQ()
-  
+ 
+  if fr.idx > 50:
+    np.save('my_errs', errs50)
+
   # 2D display
   if display2d is not None:
     display2d.refresh(frame, f1, f2, idx1, idx2)

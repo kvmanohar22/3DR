@@ -8,7 +8,7 @@ from skimage.measure import ransac
 # video 1
 H = 1080//2
 W = 1920//2
-F = int(os.getenv('F', '800'))
+F = int(os.getenv('F', '1'))
 
 # video 2
 # H = 375
@@ -21,10 +21,10 @@ F = int(os.getenv('F', '800'))
 # F = int(os.getenv('F', '800'))
 
 # Normalization matrices used during F-estimation
-# N = np.array([[2./W, 0, -1], [0, 2./H, -1], [0, 0, 1]])
-# Ninv = np.linalg.inv(N)
+N = np.array([[2./W, 0, -1], [0, 2./H, -1], [0, 0, 1]])
+Ninv = np.linalg.inv(N)
 
-K = np.array([[F, 0, W//2], [0, F, H//2], [0, 0, 1]])
+K = np.array([[F, 0, 0], [0, F, 0], [0, 0, 1]])
 Kinv = np.linalg.inv(K)
 
 # convert [[x, y]] -> [[x, y, 1]]
