@@ -1,0 +1,2 @@
+- `field/`, `helens/`, `'rainer/`, `sun/` images are taken from the CSE455 course at University of Washington.
+- `yosemite/` images are taken from CS5670 course at Cornell.

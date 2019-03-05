@@ -1,27 +1,19 @@
 # 3DR
-Collection of tools ranging from image alignment, panorama generation, point cloud generation, optical flow estimation to single view 3D reconstruction
+Collection of tools ranging from image alignment, panorama generation, point cloud generation, optical flow estimation to single view 3D reconstruction.
 
-<p align="center"><img width="100%" height="50%" src="imgs/point_cloud.png"/></p>
+<p align="center"><img width="100%" height="50%" src="imgs/results/panorama/field_spherical.png"/></p>
 
 ---
 ## TODO
 - [x] Image Alignment
+- [x] Image Warping
 - [x] Panorama stitching
-- [x] Stereo Stitching (Estimate Fundamental/Essential matrix)
-- [x] Estimate scene structure (point cloud generation)
-- [ ] Custom implementations of (F estimation, triangulation)
-- [x] Bundle Adjustment
-- [x] SLAM graph optimization
-- [ ] Global bundle adjustment is run for every frame (make it locally to gain some speed)
-
-### Bugs (to be fixed)
-- ~~point cloud is not dense enough~~ (turned out opencv's triangulation isn't that accurate) 
+- [ ] Optical Flow
+- [ ] SfM
+- [ ] Bundle Adjustment
+- [ ] SLAM graph optimization
 
 ## Requirements
 - C++14
-- Linux (tested only on 18.04 LTS)
+- Linux (tested only on Ubuntu 18.10)
 - OpenCV
-- glad
-- glfw
-- OpenGL
-- pangolin
