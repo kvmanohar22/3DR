@@ -14,7 +14,7 @@ class ImageInfo {
         // Image
         cv::Mat _img;
 
-        // Homography wrt first image
+        // Homography wrt first image (forward warping)
         // (in global co-ordinates of final image frame)
         cv::Mat _H;
 
@@ -86,30 +86,7 @@ public:
     inline void set_top_left(cv::Mat H_top_left) { this->H_top_left = H_top_left; }
     inline cv::Mat get_top_left() const { return this->H_top_left; }
 
-    inline void load_images(const char *dir_name) {
-        std::vector<std::string> files;
-        DIR *dir;
-        struct dirent *ent;
-        if ((dir = opendir(dir_name)) != NULL) {
-            while ((ent = readdir(dir)) != NULL) {
-                if (std::string(ent->d_name) == "." || std::string(ent->d_name) == "..")
-                    continue;
-                std::string img_file = std::string(dir_name)+std::string("/")+std::string(ent->d_name);
-                files.push_back(img_file);
-            }
-            closedir(dir);
-        }
-        else {
-            std::cerr << "Couldn't open the directory"
-                      << dir_name << std::endl;
-        }
-
-        std::cout << "Found a total of " << files.size() << " images" << std::endl;
-        std::sort(files.begin(), files.end());
-        for (auto &file : files)
-            this->_images.push_back(utils::load_image(file));
-    }
-
+    void load_images(const char *dir_name);
     int process(const char *dir_name);
     void set_canvas_size(const std::vector<ImageInfo> &_info, cv::Mat *h_top_left);
     void set_bbox(const cv::Mat &img, const cv::Mat &M,

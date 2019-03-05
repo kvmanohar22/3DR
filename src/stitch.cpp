@@ -41,23 +41,19 @@ int Stitch::process(cv::Mat _left_img, cv::Mat _right_img) {
 
     cv::Mat tr_points = (Hinv * points_mat.t()).t();
 
-    for (int i = 0; i < tr_points.rows; ++i)
-    {
+    for (int i = 0; i < tr_points.rows; ++i) {
         float weight = tr_points.at<float>(i, 2);
-        for (int j = 0; j < tr_points.cols - 1; ++j)
-        {
+        for (int j = 0; j < tr_points.cols - 1; ++j) {
             tr_points.at<float>(i, j) /= weight;
         }
     }
 
     std::vector<float> X, Y;
-    for (int i = 0; i < tr_points.rows; ++i)
-    {
+    for (int i = 0; i < tr_points.rows; ++i) {
         X.push_back(tr_points.at<float>(i, 0));
         Y.push_back(tr_points.at<float>(i, 1));
     }
-    for (int i = 0; i < points_mat.rows; ++i)
-    {
+    for (int i = 0; i < points_mat.rows; ++i) {
         X.push_back(points_mat.at<float>(i, 0));
         Y.push_back(points_mat.at<float>(i, 1));
     }
@@ -125,10 +121,10 @@ cv::Mat Stitch::align_pair(std::vector<cv::KeyPoint> left_keypoints,
         cv::Mat H_estimate = cv::Mat::eye(cv::Size(3, 3), CV_32F);
         H_estimate = utils::compute_homography(left_keypoints, 
             right_keypoints, match_subset_sample);
-        
+
         std::vector<int> inliers = get_inliers(left_keypoints,
             right_keypoints, matches, H_estimate);
-        
+
         size_t n_inliers = inliers.size();
         if (n_inliers > max_inliers) {
             max_inliers = n_inliers;
@@ -138,7 +134,7 @@ cv::Mat Stitch::align_pair(std::vector<cv::KeyPoint> left_keypoints,
 
     cv::Mat H_best = least_squares_fit(left_keypoints,
         right_keypoints, matches, best_inliers);
-    
+
     return H_best;
 }
 

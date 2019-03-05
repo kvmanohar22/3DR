@@ -2,6 +2,30 @@
 
 namespace reconstruct {
 
+void Panorama::load_images(const char *dir_name) {
+    std::vector<std::string> files;
+    DIR *dir;
+    struct dirent *ent;
+    if ((dir = opendir(dir_name)) != NULL) {
+        while ((ent = readdir(dir)) != NULL) {
+            if (std::string(ent->d_name) == "." || std::string(ent->d_name) == "..")
+                continue;
+            std::string img_file = std::string(dir_name)+std::string("/")+std::string(ent->d_name);
+            files.push_back(img_file);
+        }
+        closedir(dir);
+    }
+    else {
+        std::cerr << "Couldn't open the directory"
+                  << dir_name << std::endl;
+    }
+
+    std::cout << "Found a total of " << files.size() << " images" << std::endl;
+    std::sort(files.begin(), files.end());
+    for (auto &file : files)
+        this->_images.push_back(utils::load_image(file));
+}
+
 int Panorama::process(const char *dir_name) {
 
     // Load the images
@@ -82,7 +106,6 @@ void Panorama::set_canvas_size(const std::vector<ImageInfo> &_info, cv::Mat *top
 
     std::cout << "Canvas H: " << _H << " " << " Canvas W: " << _W << std::endl;
 }
-
 
 void Panorama::set_bbox(const cv::Mat &img, const cv::Mat &M,
     int &min_x, int &min_y, int &max_x, int &max_y) {
@@ -175,7 +198,7 @@ void Panorama::add_img_to_canvas(cv::Mat img, cv::Mat M, int feathering_width,
             // Update the original canvas
             if (warped_img.at<cv::Vec4f>(j, i)[0] == 0 && warped_img.at<cv::Vec4f>(j, i)[1] == 0 && warped_img.at<cv::Vec4f>(j, i)[2] == 0) {
                 warped_img.at<cv::Vec4f>(j, i)[3] = 0.0f;
-                weighted_panorama.at<cv::Vec4f>(j, i) += cv::Vec4f(255.f);
+                weighted_panorama.at<cv::Vec4f>(j, i) += cv::Vec4f(0.0f);
             } else {
                 weighted_panorama.at<cv::Vec4f>(j, i) += warped_img.at<cv::Vec4f>(j, i);
             }
