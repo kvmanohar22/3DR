@@ -6,9 +6,8 @@ int main()
     reconstruct::Panorama pan_gen(595.0f, -0.15f, 0.00f, 50);
 
     // std::string dir("../imgs/yosemite");
-    // std::string dir("../imgs/campus");
-    // std::string dir("../imgs/field");
-    std::string dir("../imgs/rainer");
+    std::string dir("../imgs/field");
+    // std::string dir("../imgs/rainer");
 
     std::cout << "Focal length: " << pan_gen.get_focal_length() << std::endl;
     std::cout << "K1: " << pan_gen.get_k1() << std::endl;
@@ -21,6 +20,6 @@ int main()
     if (flag == 0) {
         cv::Mat pan = pan_gen.get_final_panorama();
         utils::view_image("panorama", pan);
-        utils::save_image("panorama.jpg", pan);
+        utils::save_image("../imgs/results/panorama/field.jpg", pan);
     }
 }
