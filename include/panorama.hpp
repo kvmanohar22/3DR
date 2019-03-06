@@ -34,6 +34,7 @@ class ImageInfo {
         inline void set_H(cv::Mat _H) { this->_H = _H; }
 }; // class ImageInfo
 
+
 class Panorama {
 
 private:
@@ -57,21 +58,26 @@ private:
     // final panorama
     cv::Mat _final_panorama;
 
+    // Type of motion model
+    PanType _type;
+
 public:
     Panorama() {
         this->_focal_length = utils::INF;
         this->_k1 = utils::INF;
         this->_k2 = utils::INF;
         this->_feathering_width = utils::INF;
+        this->_type = PanType::Homography;
     }
 
-    Panorama(float _focal_length, float _k1, float _k2, 
-        int _feathering_width) {
+    Panorama(float _focal_length, float _k1, float _k2,
+        int _feathering_width, PanType _type = PanType::Homography) {
             this->_focal_length = _focal_length;
             this->_k1 = _k1;
             this->_k2 = _k2;
             this->_feathering_width = _feathering_width;
             this->H_top_left = cv::Mat::zeros(cv::Size(3, 3), CV_32F);
+            this->_type = _type;
         }
 
     ~Panorama() {}

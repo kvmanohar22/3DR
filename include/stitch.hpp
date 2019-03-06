@@ -8,6 +8,12 @@
 
 namespace reconstruct {
 
+enum class PanType {
+    Homography,
+    Translate
+};
+
+
 class Stitch {
 
 private:
@@ -32,6 +38,9 @@ private:
     // This is the final stitched image
     cv::Mat final_stitched_img;
 
+    // Type of stitching
+    PanType _type;
+
 public:
     Stitch() : _focal_length(utils::INF), _k1(utils::INF), _k2(utils::INF) {
         _focal_length = utils::INF;
@@ -40,16 +49,18 @@ public:
         ransac_iters = 500;
         ransac_thresh = 5.0f;
         min_matches = 4;
+        _type = PanType::Homography;
     }
 
-    Stitch(float _focal_length, float _k1, float _k2) : ransac_iters(500), 
+    Stitch(float _focal_length, float _k1, float _k2, PanType _type = PanType::Homography) : ransac_iters(500),
         ransac_thresh(5.0) {
         this->_focal_length = _focal_length;
         this->_k1 = _k1;
         this->_k2 = _k2;
         this->ransac_iters = 500;
         this->ransac_thresh = 5.0f;
-        this->min_matches = 4;
+        this->_type = _type;
+        this->min_matches = _type == PanType::Homography ? 4 : 1;
     }
 
     ~Stitch() {}
