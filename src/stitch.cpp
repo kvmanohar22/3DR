@@ -106,6 +106,11 @@ cv::Mat Stitch::align_pair(std::vector<cv::KeyPoint> left_keypoints,
     std::vector<int> best_inliers;
     int max_index = matches.size();
 
+    if (_type == PanType::Homography)
+        min_matches = 4;
+    else
+        min_matches = 1;
+
     for (int i = 0; i < ransac_iters; ++i) {
         // Generate random subset of matches
         std::set<int> indexes;
@@ -119,8 +124,17 @@ cv::Mat Stitch::align_pair(std::vector<cv::KeyPoint> left_keypoints,
         }
 
         cv::Mat H_estimate = cv::Mat::eye(cv::Size(3, 3), CV_32F);
-        H_estimate = utils::compute_homography(left_keypoints, 
-            right_keypoints, match_subset_sample);
+        if (_type == PanType::Homography) {
+            H_estimate = utils::compute_homography(left_keypoints, 
+                right_keypoints, match_subset_sample);
+        } else {
+            float dx = right_keypoints[match_subset_sample[0].trainIdx].pt.x - \
+                       left_keypoints[match_subset_sample[0].queryIdx].pt.x;
+            float dy = right_keypoints[match_subset_sample[0].trainIdx].pt.y - \
+                       left_keypoints[match_subset_sample[0].queryIdx].pt.y;
+            H_estimate.at<float>(0, 2) = dx;
+            H_estimate.at<float>(1, 2) = dy;
+        }
 
         std::vector<int> inliers = get_inliers(left_keypoints,
             right_keypoints, matches, H_estimate);
@@ -175,12 +189,30 @@ cv::Mat Stitch::least_squares_fit(std::vector<cv::KeyPoint> f1,
     std::vector<cv::DMatch> matches,
     std::vector<int> best_inliers) {
 
-    std::vector<cv::DMatch> inlier_subset_samples;
-    for (std::vector<int>::const_iterator itr = best_inliers.begin();
-            itr != best_inliers.end(); ++itr)
-        inlier_subset_samples.push_back(matches[*itr]);
+    cv::Mat H_best = cv::Mat::eye(cv::Size(3, 3), CV_32F);
+    if (_type == PanType::Homography) {
+        std::vector<cv::DMatch> inlier_subset_samples;
+        for (std::vector<int>::const_iterator itr = best_inliers.begin();
+                itr != best_inliers.end(); ++itr)
+            inlier_subset_samples.push_back(matches[*itr]);
 
-    cv::Mat H_best = utils::compute_homography(f1, f2, inlier_subset_samples);
+        H_best = utils::compute_homography(f1, f2, inlier_subset_samples);
+    } else {
+        float u = 0.0f, v = 0.0f;
+        for (std::vector<int>::const_iterator itr = best_inliers.begin();
+                itr != best_inliers.end(); ++itr) {
+            cv::Point2f pt1 = f1[matches[*itr].queryIdx].pt;
+            cv::Point2f pt2 = f2[matches[*itr].trainIdx].pt;
+
+            u += pt2.x - pt1.x;
+            v += pt2.y - pt1.y;
+        }
+        u /= best_inliers.size();
+        v /= best_inliers.size();
+
+        H_best.at<float>(0, 2) = u;
+        H_best.at<float>(1, 2) = v;
+    }
 
     return H_best;
 }

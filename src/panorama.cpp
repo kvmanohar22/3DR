@@ -23,7 +23,10 @@ void Panorama::load_images(const char *dir_name) {
     std::cout << "Found a total of " << files.size() << " images" << std::endl;
     std::sort(files.begin(), files.end());
     for (auto &file : files)
-        this->_images.push_back(utils::load_image(file));
+        if (_type == PanType::Translate)
+            this->_images.push_back(utils::warp_spherical(utils::load_image(file), _focal_length));
+        else
+            this->_images.push_back(utils::load_image(file));
 }
 
 int Panorama::process(const char *dir_name) {
@@ -37,7 +40,7 @@ int Panorama::process(const char *dir_name) {
     _info.push_back(img_info0);
 
     for (int i = 0; i < this->_images.size()-1; ++i) {
-        reconstruct::Stitch stitcher(_focal_length, _k1, _k2);
+        reconstruct::Stitch stitcher(_focal_length, _k1, _k2, _type);
         int flag = stitcher.process(_images[i], _images[i+1]);
 
         cv::Mat H;
