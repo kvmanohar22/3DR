@@ -104,7 +104,7 @@ void save_image(std::string file_name, cv::Mat img) {
 
 template <typename T>
 std::vector<T> linspace(T a, T b, size_t N) {
-    T h = (b - a) / (N - 1);
+    T h = (b - a) / static_cast<T>(N - 1);
     std::vector<T> xs(N);
     T val = a;
     for (auto &itr : xs) {
