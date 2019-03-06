@@ -78,53 +78,6 @@ cv::Mat compute_homography(std::vector<cv::KeyPoint> f1,
     return H;
 }
 
-cv::Mat compute_translation(std::vector<cv::KeyPoint> f1,
-    std::vector<cv::KeyPoint> f2,
-    std::vector<cv::DMatch> matches) {
-
-    int n_matches = matches.size();
-
-    int n_rows = 2 * n_matches;
-    int n_cols = 9;
-    cv::Size A_shape(n_cols, n_rows);
-    cv::Mat A = cv::Mat::zeros(A_shape, CV_32F);
-
-    int index = 0;
-
-    for (int i = 0; i < n_matches; ++i) {
-        cv::DMatch match = matches[i];
-
-        cv::Point2f p1 = f1[match.queryIdx].pt;
-        cv::Point2f p2 = f2[match.trainIdx].pt;
-
-        float ax = p1.x;
-        float ay = p1.y;
-
-        float bx = p2.x;
-        float by = p2.y;
-
-        float row1[] = {ax, ay, 1, 0, 0, 0, -bx*ax, -bx*ay, -bx};
-        float row2[] = {0, 0, 0, ax, ay, 1, -by*ax, -by*ay, -by};
-
-        cv::Mat r1(cv::Size(9, 1), CV_32F, &row1);
-        cv::Mat r2(cv::Size(9, 1), CV_32F, &row2);
-
-        r1.copyTo(A.row(index));
-        r2.copyTo(A.row(index+1));
-
-        index += 2;
-    }
-
-    // SVD
-    cv::SVD svd(A, cv::SVD::FULL_UV | cv::SVD::MODIFY_A);
-    cv::Mat Vt = svd.vt;
-    cv::Mat H = cv::Mat::eye(cv::Size(3, 3), CV_32F);
-    H = Vt.row(Vt.rows-1).reshape(1, 3);
-
-    // Transforms the points from `f1` to `f2`
-    return H;
-}
-
 cv::Mat load_image(std::string file) {
     cv::Mat img = cv::imread(file, CV_LOAD_IMAGE_COLOR);
     

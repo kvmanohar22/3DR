@@ -17,9 +17,6 @@ cv::Mat scale(double Sx = 1.0, double Sy = 1.0);
 cv::Mat compute_homography(std::vector<cv::KeyPoint> f1,
     std::vector<cv::KeyPoint> f2,
     std::vector<cv::DMatch> matches);
-cv::Mat compute_translation(std::vector<cv::KeyPoint> f1,
-    std::vector<cv::KeyPoint> f2,
-    std::vector<cv::DMatch> matches);
 
 // Image I/O
 cv::Mat load_image(std::string file);
