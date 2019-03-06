@@ -101,7 +101,7 @@ void Panorama::set_canvas_size(const std::vector<ImageInfo> &_info, cv::Mat *top
     this->_W = int(std::ceil(max_X) - std::floor(min_X));
     this->_C = C;
 
-    float h_top_left[][3] = {1, 0, float(min_X), 0, 1, float(min_Y), 0, 0, 1};
+    float h_top_left[][3] = {1, 0, float(-1.0f * min_X), 0, 1, float(-1.0f * min_Y), 0, 0, 1};
     *top_left = cv::Mat(cv::Size(3, 3), CV_32F, &h_top_left).clone();
 
     std::cout << "Canvas H: " << _H << " " << " Canvas W: " << _W << std::endl;
@@ -114,9 +114,9 @@ void Panorama::set_bbox(const cv::Mat &img, const cv::Mat &M,
     int h = size.height, w = size.width;
 
     float corners[][3] = {0.0, 0.0, 1.0, 
-                          float(w), 0.0, 
-                          1.0, 0.0, float(h), 
-                          1.0, float(w), float(h), 1.0};
+                          float(w), 0.0, 1.0,
+                          0.0, float(h), 1.0,
+                          float(w), float(h), 1.0};
     cv::Mat corners_mat(cv::Size(3, 4), CV_32F, &corners);
     cv::Mat corners_transformed_mat = (M * corners_mat.t()).t();
 
