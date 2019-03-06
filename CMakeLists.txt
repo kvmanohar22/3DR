@@ -8,7 +8,7 @@ set(Pangolin_DIR /usr/local/share/Pangolin/)
 find_package(OpenCV REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
-# find_package(Pangolin REQUIRED)
+find_package(Pangolin REQUIRED)
 
 set(HEADERS "include")
 set(GLAD_SRC src/glad.c)
@@ -26,4 +26,3 @@ add_library(RECONSTRUCT_LIBS2 SHARED ${SRCS2})
 
 list(APPEND LIBS ${OpenCV_LIBRARIES} RECONSTRUCT_LIBS1 RECONSTRUCT_LIBS2 RECONSTRUCT_UTILS)
 add_subdirectory(tests)
-
