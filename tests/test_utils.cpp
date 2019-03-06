@@ -22,7 +22,6 @@ int main() {
     A = utils::linspace<float>(0, 2, 0);
     print_vec<float>(A);
 
-
     // CONCAT
     cout << "Testing concat...\n";
     std::vector<int> v1(10, 1);
@@ -51,10 +50,18 @@ int main() {
     utils::compute_spherical_warping(cv::Size2i(10, 10), 1.0f, u, v);
     #undef DEBUG
 
-    // TEST WARPING
+    // TEST SPHERICAL WARPING
     cout << "Testing spherical warping...\n";
-    cv::Mat img = utils::load_image("../imgs/field/field1.jpg");
+    cv::Mat img, warped;
+    img = utils::load_image("../imgs/field/field1.jpg");
     utils::view_image("Field", img);
-    cv::Mat warped = utils::warp_spherical(img, 700.0f);
-    utils::view_image("Warped Field", warped);
+    warped = utils::warp_spherical(img, 700.0f);
+    utils::view_image("Spherical Warped Field", warped);
+
+    // TEST CYLINDRICAL WARPING
+    cout << "Testing cylindrical warping...\n";
+    img = utils::load_image("../imgs/field/field1.jpg");
+    utils::view_image("Field", img);
+    warped = utils::warp_cylindrical(img, 700.0f);
+    utils::view_image("Cylindrical Warped Field", warped);
 }

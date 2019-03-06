@@ -103,18 +103,6 @@ void save_image(std::string file_name, cv::Mat img) {
 }
 
 template <typename T>
-std::vector<T> linspace(T a, T b, size_t N) {
-    T h = (b - a) / static_cast<T>(N - 1);
-    std::vector<T> xs(N);
-    T val = a;
-    for (auto &itr : xs) {
-        itr = val;
-        val += h;
-    }
-    return xs;
-}
-
-template <typename T>
 std::vector<T> arange(int start, int end) {
     const int N = end - start + 1; 
     std::vector<T> xs(N);
@@ -205,39 +193,39 @@ cv::Mat warp_spherical(cv::Mat img, float f) {
 void compute_cylindrical_warping(cv::Size2i out_shape, float f, cv::Mat &u, cv::Mat &v) {
     const int h = out_shape.height;
     const int w = out_shape.width;
-    cv::Mat xf  = cv::Mat::zeros(cv::Size(w, h), CV_32F);
-    cv::Mat yf  = cv::Mat::zeros(cv::Size(w, h), CV_32F);
+    cv::Mat theta  = cv::Mat::zeros(cv::Size(w, h), CV_32F);
+    cv::Mat height  = cv::Mat::zeros(cv::Size(w, h), CV_32F);
 
-    for (int idx = 0; idx < xf.rows; ++idx) {
+    for (int idx = 0; idx < theta.rows; ++idx) {
         std::vector<float> vec = utils::arange<float>(0, w);
         float data[vec.size()];
         std::copy(vec.begin(), vec.end(), data);
-        cv::Mat row(cv::Size(xf.cols, 1), CV_32F, &data);
-        row.copyTo(xf.row(idx));
+        cv::Mat row(cv::Size(theta.cols, 1), CV_32F, &data);
+        row.copyTo(theta.row(idx));
     }
-    for (int idx = 0; idx < yf.cols; ++idx) {
+    for (int idx = 0; idx < height.cols; ++idx) {
         std::vector<float> vec = utils::arange<float>(0, h);
         float data[vec.size()];
         std::copy(vec.begin(), vec.end(), data);
-        cv::Mat col(cv::Size(1, yf.rows), CV_32F, &data);
-        col.copyTo(yf.col(idx));
+        cv::Mat col(cv::Size(1, height.rows), CV_32F, &data);
+        col.copyTo(height.col(idx));
     }
 
     #ifdef DEBUG
-        std::cout << xf << std::endl;
-        std::cout << yf << std::endl;
+        std::cout << theta << std::endl;
+        std::cout << height << std::endl;
     #endif
 
     for (int i = 0; i < h; ++i)
         for (int j = 0; j < w; ++j)
-            xf.at<float>(i, j) = (xf.at<float>(i, j) - 0.5 * w) / f;
+            theta.at<float>(i, j) = (theta.at<float>(i, j) - 0.5 * w) / f;
     for (int i = 0; i < h; ++i)
         for (int j = 0; j < w; ++j)
-            yf.at<float>(i, j) = (yf.at<float>(i, j) - 0.5 * h) / f;
+            height.at<float>(i, j) = (height.at<float>(i, j) - 0.5 * h) / f;
 
     #ifdef DEBUG
-        std::cout << xf << std::endl;
-        std::cout << yf << std::endl;
+        std::cout << theta << std::endl;
+        std::cout << height << std::endl;
     #endif
 
     cv::Mat xhat(cv::Mat::zeros(cv::Size(w, h), CV_32F));
@@ -246,11 +234,11 @@ void compute_cylindrical_warping(cv::Size2i out_shape, float f, cv::Mat &u, cv::
 
     for (int i = 0; i < h; ++i) {
         for (int j = 0; j < w; ++j) {
-            const float _xf = xf.at<float>(i, j); 
-            const float _yf = yf.at<float>(i, j); 
-            xhat.at<float>(i, j) = sin(_xf);
-            yhat.at<float>(i, j) = _yf;
-            zhat.at<float>(i, j) = cos(_xf);
+            const float _theta = theta.at<float>(i, j);
+            const float _height = height.at<float>(i, j);
+            xhat.at<float>(i, j) = sin(_theta);
+            yhat.at<float>(i, j) = _height;
+            zhat.at<float>(i, j) = cos(_theta);
         }
     }
 
