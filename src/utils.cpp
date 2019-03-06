@@ -145,7 +145,7 @@ void compute_spherical_warping(cv::Size2i out_shape, float f, cv::Mat &u, cv::Ma
         col.copyTo(yf.col(idx));
     }
 
-    #ifdef TEST
+    #ifdef DEBUG
         std::cout << xf << std::endl;
         std::cout << yf << std::endl;
     #endif
@@ -157,7 +157,7 @@ void compute_spherical_warping(cv::Size2i out_shape, float f, cv::Mat &u, cv::Ma
         for (int j = 0; j < w; ++j)
             yf.at<float>(i, j) = (yf.at<float>(i, j) - 0.5 * h) / f;
 
-    #ifdef TEST
+    #ifdef DEBUG
         std::cout << xf << std::endl;
         std::cout << yf << std::endl;
     #endif
@@ -199,6 +199,77 @@ cv::Mat warp_spherical(cv::Mat img, float f) {
     cv::Size size = img.size();
     cv::Mat u, v;
     compute_spherical_warping(size, f, u, v);
+    return warp_local(img, u, v);
+}
+
+void compute_cylindrical_warping(cv::Size2i out_shape, float f, cv::Mat &u, cv::Mat &v) {
+    const int h = out_shape.height;
+    const int w = out_shape.width;
+    cv::Mat xf  = cv::Mat::zeros(cv::Size(w, h), CV_32F);
+    cv::Mat yf  = cv::Mat::zeros(cv::Size(w, h), CV_32F);
+
+    for (int idx = 0; idx < xf.rows; ++idx) {
+        std::vector<float> vec = utils::arange<float>(0, w);
+        float data[vec.size()];
+        std::copy(vec.begin(), vec.end(), data);
+        cv::Mat row(cv::Size(xf.cols, 1), CV_32F, &data);
+        row.copyTo(xf.row(idx));
+    }
+    for (int idx = 0; idx < yf.cols; ++idx) {
+        std::vector<float> vec = utils::arange<float>(0, h);
+        float data[vec.size()];
+        std::copy(vec.begin(), vec.end(), data);
+        cv::Mat col(cv::Size(1, yf.rows), CV_32F, &data);
+        col.copyTo(yf.col(idx));
+    }
+
+    #ifdef DEBUG
+        std::cout << xf << std::endl;
+        std::cout << yf << std::endl;
+    #endif
+
+    for (int i = 0; i < h; ++i)
+        for (int j = 0; j < w; ++j)
+            xf.at<float>(i, j) = (xf.at<float>(i, j) - 0.5 * w) / f;
+    for (int i = 0; i < h; ++i)
+        for (int j = 0; j < w; ++j)
+            yf.at<float>(i, j) = (yf.at<float>(i, j) - 0.5 * h) / f;
+
+    #ifdef DEBUG
+        std::cout << xf << std::endl;
+        std::cout << yf << std::endl;
+    #endif
+
+    cv::Mat xhat(cv::Mat::zeros(cv::Size(w, h), CV_32F));
+    cv::Mat yhat(cv::Mat::zeros(cv::Size(w, h), CV_32F));
+    cv::Mat zhat(cv::Mat::zeros(cv::Size(w, h), CV_32F));
+
+    for (int i = 0; i < h; ++i) {
+        for (int j = 0; j < w; ++j) {
+            const float _xf = xf.at<float>(i, j); 
+            const float _yf = yf.at<float>(i, j); 
+            xhat.at<float>(i, j) = sin(_xf);
+            yhat.at<float>(i, j) = _yf;
+            zhat.at<float>(i, j) = cos(_xf);
+        }
+    }
+
+    for (int i = 0; i < h; ++i) {
+        for (int j = 0; j < w; ++j) {
+            const float _zhat = zhat.at<float>(i, j); 
+            xhat.at<float>(i, j) /= _zhat;
+            yhat.at<float>(i, j) /= _zhat;
+        }
+    }
+
+    u = 0.5 * w + xhat * f;
+    v = 0.5 * h + yhat * f;
+}
+
+cv::Mat warp_cylindrical(cv::Mat img, float f) {
+    cv::Size size = img.size();
+    cv::Mat u, v;
+    compute_cylindrical_warping(size, f, u, v);
     return warp_local(img, u, v);
 }
 

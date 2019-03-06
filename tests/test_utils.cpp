@@ -46,10 +46,10 @@ int main() {
 
     // COPYING
     cout << "Testing copy functions...\n";
-    #define TEST
+    #define DEBUG
     cv::Mat u, v;
     utils::compute_spherical_warping(cv::Size2i(10, 10), 1.0f, u, v);
-    #undef TEST
+    #undef DEBUG
 
     // TEST WARPING
     cout << "Testing spherical warping...\n";
