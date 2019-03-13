@@ -17,7 +17,8 @@ Collection of tools ranging from image alignment, panorama generation, point clo
 ## Requirements
 - C++14
 - Linux (tested only on Ubuntu 18.10)
-- OpenCV
+- OpenCV (for image I/O)
+- g2o (for Bundle Adjustment)
 
 ## References
 1. M. Uyttendaele, A. Eden, and R. Szeliski.
