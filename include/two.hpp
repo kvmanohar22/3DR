@@ -36,6 +36,9 @@ public:
    // Estimate Fundamental/Essential matrix
    cv::Mat estimate_F();
    cv::Mat estimate_E();
+
+   // Reduce the estimated Fundamental matrix to a rank 2 matrix
+   cv::Mat clean_F(cv::Mat F);
  
    // Estimate epipoles of the images
    void estimate_epipoles();
@@ -44,7 +47,10 @@ public:
    cv::Point3d estimate_l(cv::Point2d pt, bool left=true); 
   
    // Given the Fundamental matrix, count the number of inliers 
-   std::vector<int> get_inliers(cv::Mat F);
+   std::vector<int> get_inliers(cv::Mat F,
+                                std::vector<cv::KeyPoint> kps_l,
+                                std::vector<cv::KeyPoint> kps_r,
+                                std::vector<cv::DMatch> matches);
 
 };
 

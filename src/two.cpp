@@ -77,12 +77,14 @@ cv::Mat TwoView::estimate_F() {
       cv::SVD svd(A, cv::SVD::FULL_UV | cv::SVD::MODIFY_A);
       F_est = svd.vt.row(svd.vt.rows-1).reshape(1, 3); 
 
+      F_est = this->clean_F(F_est);
       std::vector<int> inliers = get_inliers(F_est, left_kps, right_kps, matches);
 
       size_t n_inliers = inliers.size();
       if (n_inliers > max_inliers) {
          max_inliers = n_inliers;
          best_inliers = inliers;
+         F = F_est;
       }
 
       std::cout << "RANSAC ITER: " << i+1 << "/" << RANSAC_ITERS << " " 
@@ -92,6 +94,19 @@ cv::Mat TwoView::estimate_F() {
                 << std::endl;
    }
    return F.clone();
+}
+
+cv::Mat TwoView::clean_F(cv::Mat F) {
+   cv::SVD svd(F, cv::SVD::FULL_UV | cv::SVD::MODIFY_A);
+   cv::Mat D = svd.w;
+
+   float d_data[] = {D.at<float>(0), 0, 0,
+                     0, D.at<float>(1), 0,
+                     0, 0, 0};
+   cv::Mat d_hat(cv::Size(3, 3), CV_32F, &d_data);
+
+   cv::Mat _F = svd.u * d_hat * svd.vt;
+   return _F.clone();
 }
 
 cv::Mat TwoView::estimate_E() {
