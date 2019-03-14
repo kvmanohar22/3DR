@@ -15,14 +15,17 @@ set(GLAD_SRC src/glad.c)
 set(LIBS ${OpenCV_LIBRARIES} glfw)
 include_directories(${HEADERS} ${OpenCV_INCLUDE_DIRS} ${GLFW3_INCLUDE_DIRS})
 
-set(SRCS1 src/panorama.cpp)
-add_library(RECONSTRUCT_LIBS1 SHARED ${SRCS1})
+set(SRCS
+    src/two.cpp
+    src/utils.cpp
+    src/stitch.cpp
+    src/panorama.cpp
+    )
+add_library(DR3_LIBS SHARED ${SRCS})
 
-set(UTILS src/utils.cpp)
-add_library(RECONSTRUCT_UTILS SHARED ${UTILS})
+list(APPEND LIBS
+     ${OpenCV_LIBRARIES}
+     DR3_LIBS
+     )
 
-set(SRCS2 src/stitch.cpp)
-add_library(RECONSTRUCT_LIBS2 SHARED ${SRCS2})
-
-list(APPEND LIBS ${OpenCV_LIBRARIES} RECONSTRUCT_LIBS1 RECONSTRUCT_LIBS2 RECONSTRUCT_UTILS)
 add_subdirectory(tests)

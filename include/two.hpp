@@ -3,11 +3,13 @@
 
 #include <opencv2/opencv.hpp>
 #include <vector>
+#include <set>
 #include <string>
 
 #include "utils.hpp"
+#include "constants.hpp"
 
-namespace 3dr {
+namespace dr3 {
 
 class TwoView {
 private:
@@ -49,4 +51,3 @@ public:
 } // namespace 3dr
 
 #endif
-

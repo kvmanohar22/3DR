@@ -1,6 +1,6 @@
 #include "two.hpp"
 
-namespace 3dr {
+namespace dr3 {
 
 TwoView::TwoView() { 
   _img_l = "";
@@ -33,12 +33,13 @@ cv::Mat TwoView::estimate_F() {
    cv::BFMatcher bf = cv::BFMatcher(cv::NORM_HAMMING, true); 
    bf.match(left_des, right_des, matches);
 
+   cv::Mat F;
    const int N = 8; // 8-point algorithm
    const int max_index = matches.size(); 
-   for (int i = 0; i < ransac_iters; ++i) {
+   for (int i = 0; i < RANSAC_ITERS; ++i) {
       std::set<int> indices;
       std::vector<cv::DMatch> match_subset;
-      while (indices.size() < std::min(N, max_index) {
+      while (indices.size() < std::min(N, max_index)) {
          int rand_idx = rand() % max_index;
          if (indices.find(rand_idx) == indices.end()) {
             match_subset.push_back(matches[rand_idx]);
@@ -71,6 +72,28 @@ cv::Mat TwoView::estimate_F() {
       cv::SVD svd(A, cv::SVD::FULL_UV | cv::SVD::MODIFY_A);
       F_est = svd.vt.row(svd.vt.rows-1).reshape(3, 3); 
    }
+   return F.clone();
+}
+
+cv::Mat TwoView::estimate_E() {
+   cv::Mat E;
+   return E.clone();
+}
+
+void TwoView::estimate_epipoles() {
+
+}
+
+cv::Point3d TwoView::estimate_l(cv::Point2d pt, bool left) {
+   cv::Point3d line;
+
+   return line;
+}
+
+std::vector<int> TwoView::get_inliers(cv::Mat F) {
+   std::vector<int> inliers;
+
+   return inliers;
 }
 
 } // namespace 3dr
