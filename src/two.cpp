@@ -71,6 +71,8 @@ cv::Mat TwoView::estimate_F() {
       cv::Mat F_est = cv::Mat::zeros(cv::Size(3, 3), CV_32F);
       cv::SVD svd(A, cv::SVD::FULL_UV | cv::SVD::MODIFY_A);
       F_est = svd.vt.row(svd.vt.rows-1).reshape(3, 3); 
+
+      std::vector<int> inliers = get_inliers(F_est);
    }
    return F.clone();
 }

@@ -1,19 +1,22 @@
-add_executable(test_scale test_scale.cpp)
-add_executable(test_rotate test_rotate.cpp)
-add_executable(test_translate test_translate.cpp)
-add_executable(test_math test_math.cpp)
-add_executable(test_svd test_SVD.cpp)
-add_executable(test_stitch test_stitch.cpp)
-add_executable(test_utils test_utils.cpp)
-add_executable(test_panorama test_panorama.cpp)
-add_executable(test_opencv test_opencv.cpp)
+function(tester target src)
+   add_executable(${target} ${src})
+   target_link_libraries(${target} ${LIBS})
+endfunction()
 
-target_link_libraries(test_scale ${LIBS})
-target_link_libraries(test_rotate ${LIBS})
-target_link_libraries(test_translate ${LIBS})
-target_link_libraries(test_math ${LIBS})
-target_link_libraries(test_svd ${LIBS})
-target_link_libraries(test_stitch ${LIBS})
-target_link_libraries(test_utils ${LIBS})
-target_link_libraries(test_panorama ${LIBS})
-target_link_libraries(test_opencv ${LIBS})
+# Geometric transformations
+tester(test_scale test_scale.cpp)
+tester(test_rotate test_rotate.cpp)
+tester(test_translate test_translate.cpp)
+
+# Some math and utils
+tester(test_math test_math.cpp)
+tester(test_svd test_SVD.cpp)
+tester(test_utils test_utils.cpp)
+tester(test_opencv test_opencv.cpp)
+
+# Image stitching and Panorama
+tester(test_stitch test_stitch.cpp)
+tester(test_panorama test_panorama.cpp)
+
+# TwoView SfM
+tester(test_two test_twoview.cpp)
