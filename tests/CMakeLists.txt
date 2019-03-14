@@ -13,6 +13,7 @@ tester(test_math test_math.cpp)
 tester(test_svd test_SVD.cpp)
 tester(test_utils test_utils.cpp)
 tester(test_opencv test_opencv.cpp)
+tester(test_viewer test_viewer.cpp)
 
 # Image stitching and Panorama
 tester(test_stitch test_stitch.cpp)

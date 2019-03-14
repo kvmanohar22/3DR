@@ -38,7 +38,7 @@ public:
                    cv::Point2f pt);
 
    void draw_line(cv::Mat &img,
-                  cv::Point3d line);
+                  cv::Point3f line);
 
 }; // class Viewer2D
 

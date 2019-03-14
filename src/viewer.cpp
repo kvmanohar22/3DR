@@ -23,7 +23,7 @@ void Viewer2D::update(cv::Mat img_l, cv::Mat img_r,
    if (new_img.channels() < 3)
      cv::cvtColor(new_img, new_img, CV_GRAY2BGR);
 
-   Viewer2D::draw_kps(new_img, kps_l, idxs_l, kps_r, idxs_r);
+   // Viewer2D::draw_kps(new_img, kps_l, idxs_l, kps_r, idxs_r);
    cv::imshow("Viewer2D - SLAM", new_img);
    cv::waitKey(20);
 }
@@ -50,8 +50,31 @@ void Viewer2D::draw_point(cv::Mat &img, cv::KeyPoint pt) {
 }
 
 void Viewer2D::draw_point(cv::Mat &img, cv::Point2f pt) {
-   cv::circle(img, pt, 2, cv::Scalar(255, 0, 0), -1);
+   cv::circle(img, pt, 4, cv::Scalar(255, 0, 0), -1);
 }
+
+void Viewer2D::draw_line(cv::Mat &img, cv::Point3f line) {
+   float a = line.x;
+   float b = line.y;
+   float c = line.z;
+   float m = -1*a/b;
+
+   cv::Point2f pt1, pt2;
+
+   if (m > 0) {
+      pt1.x = c / a;
+      pt1.y = 0;
+      pt2.x = 0;
+      pt2.y = -1 * c / b;
+   } else {
+      pt1.x = img.rows;
+      pt1.y = (-c + a * img.rows) / b;
+      pt2.x = ( c + b * img.cols) / a;
+      pt2.y = img.cols;
+   }
+   cv::line(img, pt1, pt2, cv::Scalar(0, 255, 0));
+}
+
 
 Viewer3D::Viewer3D() {
    this->H = 720;

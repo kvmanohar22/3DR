@@ -15,5 +15,4 @@ int main() {
    cout << "F: \n" << F << endl;
 
    cv::SVD svd(F, cv::SVD::FULL_UV | cv::SVD::MODIFY_A);
-   cout << svd.w << endl;
 }
