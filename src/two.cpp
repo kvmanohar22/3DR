@@ -1,6 +1,9 @@
 #include "two.hpp"
+#include <cstdlib>
+#include <cmath>
 
 namespace dr3 {
+using namespace std;
 
 TwoView::TwoView() { 
   _img_l = "";
@@ -35,6 +38,8 @@ cv::Mat TwoView::estimate_F() {
 
    cv::Mat F;
    const int N = 8; // 8-point algorithm
+   size_t max_inliers = 0;
+   std::vector<int> best_inliers;
    const int max_index = matches.size(); 
    for (int i = 0; i < RANSAC_ITERS; ++i) {
       std::set<int> indices;
@@ -58,21 +63,33 @@ cv::Mat TwoView::estimate_F() {
          vl = left_kps[q_idx].pt.y;
          ur = right_kps[t_idx].pt.x;
          vr = right_kps[t_idx].pt.y;
-         
+
          float row_data[] = {
-            ur*ul, ur*vl, ur*ur,
-            vr*ul, vr*vl, vr*vr,
-            ul, vl, 1}; 
-         cv::Mat row = cv::Mat(cv::Size(1, 9), CV_32F, &row_data);
+            ur*ul, ur*vl, ur,
+            vr*ul, vr*vl, vr,
+            ul, vl, 1};
+         cv::Mat row = cv::Mat(cv::Size(9, 1), CV_32F, &row_data);
          row.copyTo(A.row(j));
       }
 
       // SVD
       cv::Mat F_est = cv::Mat::zeros(cv::Size(3, 3), CV_32F);
       cv::SVD svd(A, cv::SVD::FULL_UV | cv::SVD::MODIFY_A);
-      F_est = svd.vt.row(svd.vt.rows-1).reshape(3, 3); 
+      F_est = svd.vt.row(svd.vt.rows-1).reshape(1, 3); 
 
-      std::vector<int> inliers = get_inliers(F_est);
+      std::vector<int> inliers = get_inliers(F_est, left_kps, right_kps, matches);
+
+      size_t n_inliers = inliers.size();
+      if (n_inliers > max_inliers) {
+         max_inliers = n_inliers;
+         best_inliers = inliers;
+      }
+
+      std::cout << "RANSAC ITER: " << i+1 << "/" << RANSAC_ITERS << " " 
+                << "MAX INLIERS: " << max_inliers << " " 
+                << "CURR INLIERS: " << inliers.size() << " "
+                << "TOTAL MATCHES: "<< matches.size() << " "
+                << std::endl;
    }
    return F.clone();
 }
@@ -92,11 +109,32 @@ cv::Point3d TwoView::estimate_l(cv::Point2d pt, bool left) {
    return line;
 }
 
-std::vector<int> TwoView::get_inliers(cv::Mat F) {
+std::vector<int> TwoView::get_inliers(cv::Mat F,
+                                      std::vector<cv::KeyPoint> kps_l,
+                                      std::vector<cv::KeyPoint> kps_r,
+                                      std::vector<cv::DMatch> matches) {
    std::vector<int> inliers;
+   for (int i = 0; i < matches.size(); ++i) {
+      int q_idx = matches[i].queryIdx;
+      int t_idx = matches[i].trainIdx;
+
+      cv::KeyPoint kpl = kps_l[q_idx];
+      float x1_data[] = {kpl.pt.x, kpl.pt.y, 1};
+      cv::Mat x1(cv::Size(1, 3), CV_32F, &x1_data);
+      cv::KeyPoint kpr = kps_r[t_idx];
+      float x2_data[] = {kpr.pt.x, kpr.pt.y, 1};
+      cv::Mat x2(cv::Size(1, 3), CV_32F, &x2_data);
+
+      float a = F.row(0).t().dot(x1);
+      float b = F.row(1).t().dot(x1);
+
+      float d = abs(x2.dot(F * x1)) / sqrt(a*a + b*b);
+
+      if (d < RANSAC_THRESH)
+         inliers.push_back(i);
+   }
 
    return inliers;
 }
 
 } // namespace 3dr
-
