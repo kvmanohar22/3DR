@@ -18,7 +18,7 @@ TwoView::TwoView(std::string _img_l, std::string _img_r) {
 cv::Mat TwoView::estimate_F() {
    cv::Mat img_l, gray_l;
    cv::Mat img_r, gray_r;
-  
+
    img_l = utils::load_image(_img_l); 
    img_r = utils::load_image(_img_r); 
 
@@ -39,7 +39,7 @@ cv::Mat TwoView::estimate_F() {
    cv::Mat F;
    const int N = 8; // 8-point algorithm
    size_t max_inliers = 0;
-   std::vector<int> best_inliers;
+   std::vector<unsigned int> best_inliers;
    const int max_index = matches.size(); 
    for (int i = 0; i < RANSAC_ITERS; ++i) {
       std::set<int> indices;
@@ -78,7 +78,7 @@ cv::Mat TwoView::estimate_F() {
       F_est = svd.vt.row(svd.vt.rows-1).reshape(1, 3); 
 
       F_est = this->clean_F(F_est);
-      std::vector<int> inliers = get_inliers(F_est, left_kps, right_kps, matches);
+      std::vector<unsigned int> inliers = get_inliers(F_est, left_kps, right_kps, matches);
 
       size_t n_inliers = inliers.size();
       if (n_inliers > max_inliers) {
@@ -93,6 +93,27 @@ cv::Mat TwoView::estimate_F() {
                 << "TOTAL MATCHES: "<< matches.size() << " "
                 << std::endl;
    }
+
+
+   cv::KeyPoint kpl = left_kps[matches[best_inliers[0]].queryIdx];
+   cv::KeyPoint kpr = right_kps[matches[best_inliers[0]].trainIdx];
+
+
+   float data[] = {kpl.pt.x, kpl.pt.y, 1};
+   cv::Mat x1(cv::Size(1, 3), CV_32F, &data);
+   cv::Mat line = F * x1;
+   cv::Point3f pt3;
+   pt3.x = line.at<float>(0);
+   pt3.y = line.at<float>(1);
+   pt3.z = line.at<float>(2);
+
+   Viewer2D v2d;
+   v2d.draw_point(img_l, kpl);
+   v2d.draw_point(img_r, kpr);
+   v2d.draw_line(img_r, pt3);
+   v2d.update(img_l, img_r, left_kps, best_inliers, right_kps, best_inliers);
+ 
+   while(1);
    return F.clone();
 }
 
@@ -100,12 +121,18 @@ cv::Mat TwoView::clean_F(cv::Mat F) {
    cv::SVD svd(F, cv::SVD::FULL_UV | cv::SVD::MODIFY_A);
    cv::Mat D = svd.w;
 
-   float d_data[] = {D.at<float>(0), 0, 0,
-                     0, D.at<float>(1), 0,
-                     0, 0, 0};
+   float d1 = D.at<float>(0);
+   float d2 = D.at<float>(1);
+
+   float d_data[] = {d1, 0 , 0,
+                     0 , d2, 0,
+                     0 , 0 , 0};
    cv::Mat d_hat(cv::Size(3, 3), CV_32F, &d_data);
 
    cv::Mat _F = svd.u * d_hat * svd.vt;
+
+   std::cout << "old: \n" <<  F << std::endl;
+   std::cout << "new: \n" << _F << std::endl;
    return _F.clone();
 }
 
@@ -124,11 +151,11 @@ cv::Point3d TwoView::estimate_l(cv::Point2d pt, bool left) {
    return line;
 }
 
-std::vector<int> TwoView::get_inliers(cv::Mat F,
+std::vector<unsigned int> TwoView::get_inliers(cv::Mat F,
                                       std::vector<cv::KeyPoint> kps_l,
                                       std::vector<cv::KeyPoint> kps_r,
                                       std::vector<cv::DMatch> matches) {
-   std::vector<int> inliers;
+   std::vector<unsigned int> inliers;
    for (int i = 0; i < matches.size(); ++i) {
       int q_idx = matches[i].queryIdx;
       int t_idx = matches[i].trainIdx;

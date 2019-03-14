@@ -8,6 +8,7 @@
 
 #include "utils.hpp"
 #include "constants.hpp"
+#include "viewer.hpp"
 
 namespace dr3 {
 
@@ -47,7 +48,7 @@ public:
    cv::Point3d estimate_l(cv::Point2d pt, bool left=true); 
   
    // Given the Fundamental matrix, count the number of inliers 
-   std::vector<int> get_inliers(cv::Mat F,
+   std::vector<unsigned int> get_inliers(cv::Mat F,
                                 std::vector<cv::KeyPoint> kps_l,
                                 std::vector<cv::KeyPoint> kps_r,
                                 std::vector<cv::DMatch> matches);
