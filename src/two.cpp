@@ -94,18 +94,33 @@ cv::Mat TwoView::estimate_F() {
                 << std::endl;
    }
 
-
    cv::KeyPoint kpl = left_kps[matches[best_inliers[0]].queryIdx];
    cv::KeyPoint kpr = right_kps[matches[best_inliers[0]].trainIdx];
 
-
    float data[] = {kpl.pt.x, kpl.pt.y, 1};
    cv::Mat x1(cv::Size(1, 3), CV_32F, &data);
+   float data1[] = {kpr.pt.x, kpr.pt.y, 1};
+   cv::Mat x2(cv::Size(1, 3), CV_32F, &data1);
    cv::Mat line = F * x1;
    cv::Point3f pt3;
    pt3.x = line.at<float>(0);
    pt3.y = line.at<float>(1);
    pt3.z = line.at<float>(2);
+   std::cout << line << std::endl;
+   std::cout << pt3 << std::endl;
+
+
+   float a = F.row(0).t().dot(x1);
+   float b = F.row(1).t().dot(x1);
+
+   float d1 = abs(x2.dot(F * x1)) / sqrt(a*a + b*b);
+   float d2 = abs(x2.dot(line)) / sqrt(a*a + b*b);
+
+   std::cout << "Distance: " << d1 << std::endl;
+   std::cout << "Distance: " << d2 << std::endl;
+
+   std::cout << "a: " << a << std::endl;
+   std::cout << "b: " << b << std::endl;
 
    Viewer2D v2d;
    v2d.draw_point(img_l, kpl);
