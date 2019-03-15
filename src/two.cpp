@@ -16,8 +16,7 @@ TwoView::TwoView(std::string _img_l, std::string _img_r) {
 }
 
 cv::Mat TwoView::estimate_F() {
-   cv::Mat img_l, gray_l;
-   cv::Mat img_r, gray_r;
+   cv::Mat gray_l, gray_r;
 
    img_l = utils::load_image(_img_l); 
    img_r = utils::load_image(_img_r); 
@@ -27,10 +26,10 @@ cv::Mat TwoView::estimate_F() {
 
    cv::Ptr<cv::FeatureDetector> orb = cv::ORB::create();
    
-   std::vector<cv::KeyPoint> left_kps, right_kps;
+   std::vector<cv::KeyPoint> kps_l, kps_r;
    cv::Mat left_des, right_des;
-   orb->detectAndCompute(gray_l, cv::noArray(), left_kps, left_des);
-   orb->detectAndCompute(gray_r, cv::noArray(), right_kps, right_des);
+   orb->detectAndCompute(gray_l, cv::noArray(), kps_l, left_des);
+   orb->detectAndCompute(gray_r, cv::noArray(), kps_r, right_des);
    
    std::vector<cv::DMatch> matches;
    cv::BFMatcher bf = cv::BFMatcher(cv::NORM_HAMMING, true); 
@@ -59,10 +58,10 @@ cv::Mat TwoView::estimate_F() {
          int t_idx = match.trainIdx; 
    
          float ul, vl, ur, vr;
-         ul = left_kps[q_idx].pt.x;
-         vl = left_kps[q_idx].pt.y;
-         ur = right_kps[t_idx].pt.x;
-         vr = right_kps[t_idx].pt.y;
+         ul = kps_l[q_idx].pt.x;
+         vl = kps_l[q_idx].pt.y;
+         ur = kps_r[t_idx].pt.x;
+         vr = kps_r[t_idx].pt.y;
 
          float row_data[] = {
             ur*ul, ur*vl, ur,
@@ -78,7 +77,7 @@ cv::Mat TwoView::estimate_F() {
       F_est = svd.vt.row(svd.vt.rows-1).reshape(1, 3); 
 
       F_est = this->clean_F(F_est);
-      std::vector<unsigned int> inliers = get_inliers(F_est, left_kps, right_kps, matches);
+      std::vector<unsigned int> inliers = get_inliers(F_est, kps_l, kps_r, matches);
 
       size_t n_inliers = inliers.size();
       if (n_inliers > max_inliers) {
@@ -96,47 +95,12 @@ cv::Mat TwoView::estimate_F() {
       #endif
    }
 
-   cv::KeyPoint kpl = left_kps[matches[best_inliers[0]].queryIdx];
-   cv::KeyPoint kpr = right_kps[matches[best_inliers[0]].trainIdx];
+   this->kps_l = kps_l;
+   this->kps_r = kps_r;
+   this->matches = matches;
+   this->inliers = best_inliers;
+   this->_F = F;
 
-   float data[] = {kpl.pt.x, kpl.pt.y, 1};
-   cv::Mat x1(cv::Size(1, 3), CV_32F, &data);
-   float data1[] = {kpr.pt.x, kpr.pt.y, 1};
-   cv::Mat x2(cv::Size(1, 3), CV_32F, &data1);
-   cv::Mat line = F * x1;
-   cv::Point3f pt3;
-   float a = line.at<float>(0);
-   float b = line.at<float>(1);
-   float c = line.at<float>(2);
-   float w = 1./std::sqrt(a*a + b*b);
-   pt3.x = a*w;
-   pt3.y = b*w;
-   pt3.z = c*w;
-
-   cv::Point2f pt; pt.x = x1.at<float>(0); pt.y = x1.at<float>(1);
-   std::vector<cv::Point2f> pts;
-   pts.push_back(pt);
-   std::vector<cv::Point3f> _lines;
-   _lines.resize(1);
-
-   cv::computeCorrespondEpilines(pts, 1, F, _lines);
-   std::cout << "line (CV): " << _lines[0] << std::endl;
-   std::cout << "line (US): " << pt3 << std::endl;
-
-   float d1 = abs(x2.dot(F * x1)) / w;
-
-   std::cout << "Distance: " << d1 << std::endl;
-
-   std::cout << "a: " << a << std::endl;
-   std::cout << "b: " << b << std::endl;
-
-   Viewer2D v2d;
-   v2d.draw_point(img_l, kpl);
-   v2d.draw_point(img_r, kpr);
-   v2d.draw_line(img_r, pt3);
-   v2d.update(img_l, img_r, left_kps, best_inliers, right_kps, best_inliers);
- 
-   while(1);
    return F.clone();
 }
 
@@ -198,5 +162,35 @@ std::vector<unsigned int> TwoView::get_inliers(cv::Mat F,
 
    return inliers;
 }
+
+cv::Mat TwoView::draw_poles_and_lines(size_t n) {
+   n = std::min(n, inliers.size());
+   Viewer2D v2d;
+   for (int i = 0; i < n; ++i) {
+      cv::KeyPoint kpl = kps_l[matches[inliers[i]].queryIdx];
+      cv::KeyPoint kpr = kps_r[matches[inliers[i]].trainIdx];
+
+      float data[] = {kpl.pt.x, kpl.pt.y, 1};
+      cv::Mat x1(cv::Size(1, 3), CV_32F, &data);
+      cv::Mat line = this->_F * x1;
+      cv::Point3f pt3;
+      float a = line.at<float>(0);
+      float b = line.at<float>(1);
+      float c = line.at<float>(2);
+      float w = 1./std::sqrt(a*a + b*b);
+      pt3.x = a*w;
+      pt3.y = b*w;
+      pt3.z = c*w;
+
+      cv::Scalar color = utils::getc();
+      v2d.draw_point(img_l, kpl, color);
+      v2d.draw_point(img_r, kpr, color);
+      v2d.draw_line(img_r, pt3, color);
+   }
+
+   cv::Mat img = v2d.update(img_l, img_r, kps_l, inliers, kps_r, inliers);
+   return img;
+}
+
 
 } // namespace 3dr

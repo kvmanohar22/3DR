@@ -1,4 +1,5 @@
 #include "two.hpp"
+#include "utils.hpp"
 
 int main() {
    using namespace std;
@@ -12,6 +13,6 @@ int main() {
    TwoView twoview(img_l, img_r);
 
    cv::Mat F = twoview.estimate_F();
-
-   cv::SVD svd(F, cv::SVD::FULL_UV | cv::SVD::MODIFY_A);
+   cv::Mat img = twoview.draw_poles_and_lines(100);
+   utils::save_image("../imgs/slam/epipoles.png", img);
 }

@@ -11,6 +11,8 @@
 
 #include <iostream>
 
+#include "utils.hpp"
+
 namespace dr3 {
 
 // 2D Viewer
@@ -19,11 +21,11 @@ public:
    Viewer2D();
 
    // update the view
-   void update(cv::Mat img_l, cv::Mat img_r,
-               std::vector<cv::KeyPoint> kps_l,
-               std::vector<unsigned int> idxs_l,
-               std::vector<cv::KeyPoint> kps_r,
-               std::vector<unsigned int> idxs_r);
+   cv::Mat update(cv::Mat img_l, cv::Mat img_r,
+                  std::vector<cv::KeyPoint> kps_l,
+                  std::vector<unsigned int> idxs_l,
+                  std::vector<cv::KeyPoint> kps_r,
+                  std::vector<unsigned int> idxs_r);
 
    void draw_kps(cv::Mat &img,
                  std::vector<cv::KeyPoint> kps_l,
@@ -32,13 +34,17 @@ public:
                  std::vector<unsigned int> idxs_r);
 
    void draw_point(cv::Mat &img,
-                   cv::KeyPoint pt);
+                   cv::KeyPoint pt,
+                   cv::Scalar color = cv::Scalar(0, 255, 0));
 
    void draw_point(cv::Mat &img,
-                   cv::Point2f pt);
+                   cv::Point2f pt,
+                   cv::Scalar color = cv::Scalar(0, 255, 0));
 
+   // The line should be normalized (a**2+b**2 = 1)
    void draw_line(cv::Mat &img,
-                  cv::Point3f line);
+                  cv::Point3f line,
+                  cv::Scalar color = cv::Scalar(0, 255, 0));
 
 }; // class Viewer2D
 

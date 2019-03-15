@@ -261,6 +261,14 @@ cv::Mat warp_cylindrical(cv::Mat img, float f) {
     return warp_local(img, u, v);
 }
 
+cv::Scalar getc() {
+    float b = rand() % 255;
+    float g = rand() % 255;
+    float r = rand() % 255;
+
+    return cv::Scalar(b, g, r);
+}
+
 } // namespace utils
 
 #endif

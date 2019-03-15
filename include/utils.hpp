@@ -4,6 +4,7 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <vector>
+#include <cstdlib>
 
 namespace utils {
 
@@ -47,6 +48,9 @@ cv::Mat warp_spherical(cv::Mat img, float f);
 // Cylindrical warping functions
 void compute_cylindrical_warping(cv::Size2i out_shape, float f, cv::Mat &u, cv::Mat &v); 
 cv::Mat warp_cylindrical(cv::Mat img, float f);
+
+// Drawing
+cv::Scalar getc();
 
 } // namespace utils
 
