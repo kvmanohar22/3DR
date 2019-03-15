@@ -87,11 +87,13 @@ cv::Mat TwoView::estimate_F() {
          F = F_est;
       }
 
-      std::cout << "RANSAC ITER: " << i+1 << "/" << RANSAC_ITERS << " " 
-                << "MAX INLIERS: " << max_inliers << " " 
-                << "CURR INLIERS: " << inliers.size() << " "
-                << "TOTAL MATCHES: "<< matches.size() << " "
-                << std::endl;
+      #ifdef DEBUG
+         std::cout << "RANSAC ITER: " << i+1 << "/" << RANSAC_ITERS << " " 
+                   << "MAX INLIERS: " << max_inliers << " " 
+                   << "CURR INLIERS: " << inliers.size() << " "
+                   << "TOTAL MATCHES: "<< matches.size() << " "
+                   << std::endl;
+      #endif
    }
 
    cv::KeyPoint kpl = left_kps[matches[best_inliers[0]].queryIdx];
@@ -103,21 +105,27 @@ cv::Mat TwoView::estimate_F() {
    cv::Mat x2(cv::Size(1, 3), CV_32F, &data1);
    cv::Mat line = F * x1;
    cv::Point3f pt3;
-   pt3.x = line.at<float>(0);
-   pt3.y = line.at<float>(1);
-   pt3.z = line.at<float>(2);
-   std::cout << line << std::endl;
-   std::cout << pt3 << std::endl;
+   float a = line.at<float>(0);
+   float b = line.at<float>(1);
+   float c = line.at<float>(2);
+   float w = 1./std::sqrt(a*a + b*b);
+   pt3.x = a*w;
+   pt3.y = b*w;
+   pt3.z = c*w;
 
+   cv::Point2f pt; pt.x = x1.at<float>(0); pt.y = x1.at<float>(1);
+   std::vector<cv::Point2f> pts;
+   pts.push_back(pt);
+   std::vector<cv::Point3f> _lines;
+   _lines.resize(1);
 
-   float a = F.row(0).t().dot(x1);
-   float b = F.row(1).t().dot(x1);
+   cv::computeCorrespondEpilines(pts, 1, F, _lines);
+   std::cout << "line (CV): " << _lines[0] << std::endl;
+   std::cout << "line (US): " << pt3 << std::endl;
 
-   float d1 = abs(x2.dot(F * x1)) / sqrt(a*a + b*b);
-   float d2 = abs(x2.dot(line)) / sqrt(a*a + b*b);
+   float d1 = abs(x2.dot(F * x1)) / w;
 
    std::cout << "Distance: " << d1 << std::endl;
-   std::cout << "Distance: " << d2 << std::endl;
 
    std::cout << "a: " << a << std::endl;
    std::cout << "b: " << b << std::endl;
@@ -145,9 +153,6 @@ cv::Mat TwoView::clean_F(cv::Mat F) {
    cv::Mat d_hat(cv::Size(3, 3), CV_32F, &d_data);
 
    cv::Mat _F = svd.u * d_hat * svd.vt;
-
-   std::cout << "old: \n" <<  F << std::endl;
-   std::cout << "new: \n" << _F << std::endl;
    return _F.clone();
 }
 

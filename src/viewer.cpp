@@ -57,21 +57,15 @@ void Viewer2D::draw_line(cv::Mat &img, cv::Point3f line) {
    float a = line.x;
    float b = line.y;
    float c = line.z;
-   float m = -1*a/b;
+   float m = a / b;
 
    cv::Point2f pt1, pt2;
 
-   if (m > 0) {
-      pt1.x = c / a;
-      pt1.y = 0;
-      pt2.x = 0;
-      pt2.y = -1 * c / b;
-   } else {
-      pt1.x = img.rows;
-      pt1.y = (-c + a * img.rows) / b;
-      pt2.x = ( c + b * img.cols) / a;
-      pt2.y = img.cols;
-   }
+   pt1.x = 0;
+   pt1.y = int(-c / b);
+   pt2.x = img.cols;
+   pt2.y = int(-(c + a * img.cols) / b);
+
    cv::line(img, pt1, pt2, cv::Scalar(0, 255, 0));
 }
 

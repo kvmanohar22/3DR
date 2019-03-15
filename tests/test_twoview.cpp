@@ -12,7 +12,6 @@ int main() {
    TwoView twoview(img_l, img_r);
 
    cv::Mat F = twoview.estimate_F();
-   cout << "F: \n" << F << endl;
 
    cv::SVD svd(F, cv::SVD::FULL_UV | cv::SVD::MODIFY_A);
 }
