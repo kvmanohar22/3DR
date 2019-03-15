@@ -54,7 +54,7 @@ public:
    void estimate_epipoles();
 
    // Draw some points and lines
-   cv::Mat draw_poles_and_lines(size_t n=20);
+   cv::Mat draw_poles_and_lines(size_t n=20, bool left_points=true);
 
    // Estimate epipolar line for a given point
    cv::Point3d estimate_l(cv::Point2d pt, bool left=true); 

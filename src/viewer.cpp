@@ -26,7 +26,7 @@ cv::Mat Viewer2D::update(cv::Mat img_l, cv::Mat img_r,
    // Viewer2D::draw_kps(new_img, kps_l, idxs_l, kps_r, idxs_r);
    cv::imshow("Viewer2D - SLAM", new_img);
    cv::waitKey(20);
-   return new_img;
+   return new_img.clone();
 }
 
 void Viewer2D::draw_kps(cv::Mat &img, 

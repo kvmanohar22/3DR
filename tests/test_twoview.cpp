@@ -12,7 +12,11 @@ int main() {
    #define DEBUG
    TwoView twoview(img_l, img_r);
 
+   cv::Mat imgl, imgr;
    cv::Mat F = twoview.estimate_F();
-   cv::Mat img = twoview.draw_poles_and_lines(100);
-   utils::save_image("../imgs/slam/epipoles.png", img);
+   imgl = twoview.draw_poles_and_lines(100);
+   utils::save_image("../imgs/slam/epipoles_left.png", imgl);
+
+   imgr = twoview.draw_poles_and_lines(100, false);
+   utils::save_image("../imgs/slam/epipoles_right.png", imgr);
 }

@@ -163,16 +163,26 @@ std::vector<unsigned int> TwoView::get_inliers(cv::Mat F,
    return inliers;
 }
 
-cv::Mat TwoView::draw_poles_and_lines(size_t n) {
+cv::Mat TwoView::draw_poles_and_lines(size_t n, bool left_points) {
    n = std::min(n, inliers.size());
    Viewer2D v2d;
+   cv::Mat timg_l = this->img_l;
+   cv::Mat timg_r = this->img_r;
    for (int i = 0; i < n; ++i) {
       cv::KeyPoint kpl = kps_l[matches[inliers[i]].queryIdx];
       cv::KeyPoint kpr = kps_r[matches[inliers[i]].trainIdx];
 
-      float data[] = {kpl.pt.x, kpl.pt.y, 1};
-      cv::Mat x1(cv::Size(1, 3), CV_32F, &data);
-      cv::Mat line = this->_F * x1;
+      float data_l[] = {kpl.pt.x, kpl.pt.y, 1};
+      cv::Mat xl(cv::Size(1, 3), CV_32F, &data_l);
+      float data_r[] = {kpl.pt.x, kpl.pt.y, 1};
+      cv::Mat xr(cv::Size(1, 3), CV_32F, &data_r);
+
+      cv::Mat line;
+      if (left_points)
+         line = this->_F * xl;
+      else
+         line = this->_F.t() * xr;
+
       cv::Point3f pt3;
       float a = line.at<float>(0);
       float b = line.at<float>(1);
@@ -183,14 +193,16 @@ cv::Mat TwoView::draw_poles_and_lines(size_t n) {
       pt3.z = c*w;
 
       cv::Scalar color = utils::getc();
-      v2d.draw_point(img_l, kpl, color);
-      v2d.draw_point(img_r, kpr, color);
-      v2d.draw_line(img_r, pt3, color);
+      v2d.draw_point(timg_l, kpl, color);
+      v2d.draw_point(timg_r, kpr, color);
+      if (left_points)
+         v2d.draw_line(timg_r, pt3, color);
+      else
+         v2d.draw_line(timg_l, pt3, color);
    }
 
-   cv::Mat img = v2d.update(img_l, img_r, kps_l, inliers, kps_r, inliers);
+   cv::Mat img = v2d.update(timg_l, timg_r, kps_l, inliers, kps_r, inliers);
    return img;
 }
-
 
 } // namespace 3dr
