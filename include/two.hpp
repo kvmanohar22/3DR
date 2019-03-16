@@ -54,7 +54,8 @@ public:
    // Recovers the correct Rotation matrix and translation vector
    static void extract_params(const cv::Mat &F, 
                               const cv::Mat &K,
-                              cv::Mat &R, cv::Mat &t);
+                              cv::Mat &R1, cv::Mat &R2,
+                              cv::Mat &t1, cv::Mat &t2);
 
    // Reduce the estimated Fundamental matrix to a rank 2 matrix
    static cv::Mat clean_F(cv::Mat F);

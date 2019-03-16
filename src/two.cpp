@@ -132,12 +132,21 @@ cv::Mat TwoView::estimate_E() {
 
 void TwoView::extract_params(const cv::Mat &F,
                              const cv::Mat &K,
-                             cv::Mat &R,
-                             cv::Mta &t) {
+                             cv::Mat &R1, cv::Mat &R2,
+                             cv::Mat &t1, cv::Mat &t2) {
    cv::Mat E = K.t() * F * K;
-
+   cv::Mat W = (cv::Mat_<float>(3, 3) << 0, -1, 0,
+                                         1,  0, 0,
+                                         0,  0, 1);
    cv::SVD svd(E, cv::SVD::FULL_UV | cv::SVD::MODIFY_A);
-   t = svd.u.col(2);
+
+   // Translation vector
+   t1 =  svd.u.col(2);
+   t2 = -svd.u.col(2);
+
+   // Rotation matrix
+   R1 = svd.u * W * svd.vt;
+   R1 = svd.u * W.t() * svd.vt;
 }
 
 void TwoView::estimate_epipoles() {

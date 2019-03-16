@@ -39,8 +39,41 @@ void SLAM::process(cv::Mat &img) {
    cv::Mat F = TwoView::estimate_F(kps_p, kps_c, des_p, des_c, matches, inliers);
 
    // Recover (R, t) w.r.t previous frame
-   cv::Mat R, t;
-   TwoView::extract_params(F, K, R, t);
+   cv::Mat R1, t1, R2, t2;
+   TwoView::extract_params(F, K, R1, R2, t1, t2);
+
+   // Triangulation
+   // 4 solutions are possible (pick the correct one)
+   const size_t n_points = inliers.size();
+   cv::Mat camera_p_pts(1, n_points, CV_64FC2);
+   cv::Mat camera_c_pts(1, n_points, CV_64FC2);
+   for (size_t i = 0; i < n_points; ++i) {
+      cv::DMatch match = matches[inliers[i]];
+      cv::Point2f pt_p = kps_p[match.queryIdx].pt;
+      cv::Point2f pt_c = kps_c[match.trainIdx].pt;
+
+      camera_p_pts.at<cv::Vec2d>(0, i) = {pt_p.x, pt_p.y};
+      camera_c_pts.at<cv::Vec2d>(0, i) = {pt_c.x, pt_c.y};
+   }
+
+   // 4 possible solutions
+   std::vector<cv::Mat> Rt(4, cv::Mat(cv::Size(4, 3), CV_32F));
+   R1.copyTo(Rt[0].rowRange(0, 3).colRange(0, 3));
+   t1.copyTo(Rt[0].rowRange(0, 3).col(3));
+   R1.copyTo(Rt[1].rowRange(0, 3).colRange(0, 3));
+   t1.copyTo(Rt[1].rowRange(0, 3).col(3));
+   R1.copyTo(Rt[2].rowRange(0, 3).colRange(0, 3));
+   t1.copyTo(Rt[2].rowRange(0, 3).col(3));
+   R1.copyTo(Rt[3].rowRange(0, 3).colRange(0, 3));
+   t1.copyTo(Rt[3].rowRange(0, 3).col(3));
+   cv::Mat I3x4 = cv::Mat::eye(cv::Size(4, 4), CV_32F);
+   I3x4 = I3x4.rowRange(0, 3).colRange(0, 4);
+   for (int i = 0; i < 4; ++i) {
+      cv::Mat cam1 = K * I3x4;
+      cv::Mat cam2 = K * Rt[i];
+      cv::Mat pts4d(1, n_points, CV_64FC4);
+      cv::triangulatePoints(cam1, cam2, camera_p_pts, camera_c_pts, pts4d);
+   }
 
    // update the viewers
    v2d->update(img, curr_f.get_kps());
