@@ -27,6 +27,12 @@ public:
                   std::vector<cv::KeyPoint> kps_r,
                   std::vector<unsigned int> idxs_r);
 
+   void update(cv::Mat &img);
+   void update(cv::Mat &img, const std::vector<cv::KeyPoint> &kps);
+
+   void draw_kps(cv::Mat &img,
+                 const std::vector<cv::KeyPoint> &kps);
+
    void draw_kps(cv::Mat &img,
                  std::vector<cv::KeyPoint> kps_l,
                  std::vector<unsigned int> idxs_l,

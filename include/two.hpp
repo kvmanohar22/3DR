@@ -7,7 +7,6 @@
 #include <string>
 
 #include "utils.hpp"
-#include "constants.hpp"
 #include "viewer.hpp"
 
 namespace dr3 {
@@ -44,11 +43,21 @@ public:
    TwoView(std::string img_l, std::string img_r);
 
    // Estimate Fundamental/Essential matrix
-   cv::Mat estimate_F();
-   cv::Mat estimate_E();
+   cv::Mat _estimate_F();
+   static cv::Mat estimate_F(std::vector<cv::KeyPoint> &kps1,
+                             std::vector<cv::KeyPoint> &kps2,
+                             cv::Mat &des1, cv::Mat &des2,
+                             std::vector<cv::DMatch> &matches,
+                             std::vector<unsigned int> &best_inliers);
+   static cv::Mat estimate_E();
+
+   // Recovers the correct Rotation matrix and translation vector
+   static void extract_params(const cv::Mat &F, 
+                              const cv::Mat &K,
+                              cv::Mat &R, cv::Mat &t);
 
    // Reduce the estimated Fundamental matrix to a rank 2 matrix
-   cv::Mat clean_F(cv::Mat F);
+   static cv::Mat clean_F(cv::Mat F);
  
    // Estimate epipoles of the images
    void estimate_epipoles();
@@ -60,10 +69,10 @@ public:
    cv::Point3d estimate_l(cv::Point2d pt, bool left=true); 
   
    // Given the Fundamental matrix, count the number of inliers 
-   std::vector<unsigned int> get_inliers(cv::Mat F,
-                                std::vector<cv::KeyPoint> kps_l,
-                                std::vector<cv::KeyPoint> kps_r,
-                                std::vector<cv::DMatch> matches);
+   static std::vector<unsigned int> get_inliers(cv::Mat F,
+                                               std::vector<cv::KeyPoint> kps_l,
+                                               std::vector<cv::KeyPoint> kps_r,
+                                               std::vector<cv::DMatch> matches);
 
 };
 

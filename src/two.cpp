@@ -15,7 +15,7 @@ TwoView::TwoView(std::string _img_l, std::string _img_r) {
   this->_img_r = _img_r;
 }
 
-cv::Mat TwoView::estimate_F() {
+cv::Mat TwoView::_estimate_F() {
    cv::Mat gray_l, gray_r;
 
    img_l = utils::load_image(_img_l); 
@@ -25,22 +25,34 @@ cv::Mat TwoView::estimate_F() {
    cv::cvtColor(img_r, gray_r, cv::COLOR_BGR2GRAY); 
 
    cv::Ptr<cv::FeatureDetector> orb = cv::ORB::create();
-   
+
    std::vector<cv::KeyPoint> kps_l, kps_r;
-   cv::Mat left_des, right_des;
-   orb->detectAndCompute(gray_l, cv::noArray(), kps_l, left_des);
-   orb->detectAndCompute(gray_r, cv::noArray(), kps_r, right_des);
-   
+   cv::Mat des_l, des_r;
+   orb->detectAndCompute(gray_l, cv::noArray(), kps_l, des_l);
+   orb->detectAndCompute(gray_r, cv::noArray(), kps_r, des_r);
+
    std::vector<cv::DMatch> matches;
    cv::BFMatcher bf = cv::BFMatcher(cv::NORM_HAMMING, true); 
-   bf.match(left_des, right_des, matches);
+   bf.match(des_l, des_r, matches);
 
+   _F = estimate_F(kps_l, kps_r, des_l, des_r,
+                   matches, inliers);
+   this->kps_l = kps_l;
+   this->kps_r = kps_r;
+   this->matches = matches;
+   return _F.clone();
+}
+
+cv::Mat TwoView::estimate_F(std::vector<cv::KeyPoint> &kps1,
+                           std::vector<cv::KeyPoint> &kps2,
+                           cv::Mat &des1, cv::Mat &des2,
+                           std::vector<cv::DMatch> &matches,
+                           std::vector<unsigned int> &best_inliers) {
    cv::Mat F;
    const int N = 8; // 8-point algorithm
    size_t max_inliers = 0;
-   std::vector<unsigned int> best_inliers;
    const int max_index = matches.size(); 
-   for (int i = 0; i < RANSAC_ITERS; ++i) {
+   for (int i = 0; i < 30; ++i) {
       std::set<int> indices;
       std::vector<cv::DMatch> match_subset;
       while (indices.size() < std::min(N, max_index)) {
@@ -58,10 +70,10 @@ cv::Mat TwoView::estimate_F() {
          int t_idx = match.trainIdx; 
    
          float ul, vl, ur, vr;
-         ul = kps_l[q_idx].pt.x;
-         vl = kps_l[q_idx].pt.y;
-         ur = kps_r[t_idx].pt.x;
-         vr = kps_r[t_idx].pt.y;
+         ul = kps1[q_idx].pt.x;
+         vl = kps1[q_idx].pt.y;
+         ur = kps2[t_idx].pt.x;
+         vr = kps2[t_idx].pt.y;
 
          float row_data[] = {
             ur*ul, ur*vl, ur,
@@ -76,8 +88,8 @@ cv::Mat TwoView::estimate_F() {
       cv::SVD svd(A, cv::SVD::FULL_UV | cv::SVD::MODIFY_A);
       F_est = svd.vt.row(svd.vt.rows-1).reshape(1, 3); 
 
-      F_est = this->clean_F(F_est);
-      std::vector<unsigned int> inliers = get_inliers(F_est, kps_l, kps_r, matches);
+      F_est = clean_F(F_est);
+      std::vector<unsigned int> inliers = get_inliers(F_est, kps1, kps2, matches);
 
       size_t n_inliers = inliers.size();
       if (n_inliers > max_inliers) {
@@ -87,20 +99,13 @@ cv::Mat TwoView::estimate_F() {
       }
 
       #ifdef DEBUG
-         std::cout << "RANSAC ITER: " << i+1 << "/" << RANSAC_ITERS << " " 
-                   << "MAX INLIERS: " << max_inliers << " " 
-                   << "CURR INLIERS: " << inliers.size() << " "
-                   << "TOTAL MATCHES: "<< matches.size() << " "
+         std::cout << "RANSAC ITER: " << i+1 << "/" << 300 << " | " 
+                   << "MAX INLIERS: " << max_inliers << " | " 
+                   << "CURR INLIERS: " << inliers.size() << " | "
+                   << "TOTAL MATCHES: "<< matches.size() << " | "
                    << std::endl;
       #endif
    }
-
-   this->kps_l = kps_l;
-   this->kps_r = kps_r;
-   this->matches = matches;
-   this->inliers = best_inliers;
-   this->_F = F;
-
    return F.clone();
 }
 
@@ -123,6 +128,16 @@ cv::Mat TwoView::clean_F(cv::Mat F) {
 cv::Mat TwoView::estimate_E() {
    cv::Mat E;
    return E.clone();
+}
+
+void TwoView::extract_params(const cv::Mat &F,
+                             const cv::Mat &K,
+                             cv::Mat &R,
+                             cv::Mta &t) {
+   cv::Mat E = K.t() * F * K;
+
+   cv::SVD svd(E, cv::SVD::FULL_UV | cv::SVD::MODIFY_A);
+   t = svd.u.col(2);
 }
 
 void TwoView::estimate_epipoles() {
@@ -156,7 +171,7 @@ std::vector<unsigned int> TwoView::get_inliers(cv::Mat F,
 
       float d = abs(x2.dot(F * x1)) / sqrt(a*a + b*b);
 
-      if (d < RANSAC_THRESH)
+      if (d < 5.0f)
          inliers.push_back(i);
    }
 
