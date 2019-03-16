@@ -9,6 +9,7 @@ find_package(OpenCV REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(Pangolin REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(Ceres REQUIRED)
 
 set(HEADERS "include")
 set(GLAD_SRC src/glad.c)
@@ -17,6 +18,7 @@ include_directories(${HEADERS}
                     ${OpenCV_INCLUDE_DIRS}
                     ${GLFW3_INCLUDE_DIRS}
                     ${Pangolin_INCLUDE_DIRS}
+                    ${CERES_INCLUDE_DIRS}
                     ${Eigen3_INCLUDE_DIRS})
 
 set(SRCS
@@ -33,6 +35,7 @@ list(APPEND LIBS
      ${OpenCV_LIBRARIES}
      ${Pangolin_LIBRARIES}
      ${Eigen3_LIBS}
+     ${CERES_LIBRARIES}
      )
 
 add_subdirectory(tests)

@@ -12,8 +12,10 @@ tester(test_translate test_translate.cpp)
 tester(test_math test_math.cpp)
 tester(test_svd test_SVD.cpp)
 tester(test_utils test_utils.cpp)
-tester(test_opencv test_opencv.cpp)
 tester(test_viewer test_viewer.cpp)
+
+# Practice libraries
+tester(test_opencv test_opencv.cpp)
 
 # Image stitching and Panorama
 tester(test_stitch test_stitch.cpp)
@@ -21,3 +23,6 @@ tester(test_panorama test_panorama.cpp)
 
 # TwoView SfM
 tester(test_two test_twoview.cpp)
+
+add_subdirectory(ceres)
+

@@ -18,7 +18,7 @@ Collection of tools ranging from image alignment, panorama generation, point clo
 - C++14
 - Linux (tested only on Ubuntu 18.10)
 - OpenCV (for image I/O)
-- g2o (for Bundle Adjustment)
+- ceres-solver (for Bundle Adjustment)
 - Pangolin (for 3D viewer)
 
 ## References

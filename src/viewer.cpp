@@ -70,7 +70,6 @@ void Viewer2D::draw_line(cv::Mat &img, cv::Point3f line, cv::Scalar color) {
    cv::line(img, pt1, pt2, color, 1, CV_AA);
 }
 
-
 Viewer3D::Viewer3D() {
    this->H = 720;
    this->W = 1024;
