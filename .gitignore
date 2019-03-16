@@ -8,3 +8,5 @@ utils/**
 videos/**
 *.swp
 *.txt
+include/glad/*
+src/glad.c
