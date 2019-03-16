@@ -1,8 +1,3 @@
-function(tester target src)
-   add_executable(${target} ${src})
-   target_link_libraries(${target} ${LIBS})
-endfunction()
-
 # Geometric transformations
 tester(test_scale test_scale.cpp)
 tester(test_rotate test_rotate.cpp)
@@ -25,4 +20,4 @@ tester(test_panorama test_panorama.cpp)
 tester(test_two test_twoview.cpp)
 
 add_subdirectory(ceres)
-
+add_subdirectory(slam)

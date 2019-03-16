@@ -11,8 +11,8 @@ find_package(Pangolin REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Ceres REQUIRED)
 
+
 set(HEADERS "include")
-set(GLAD_SRC src/glad.c)
 set(LIBS ${OpenCV_LIBRARIES} glfw)
 include_directories(${HEADERS}
                     ${OpenCV_INCLUDE_DIRS}
@@ -22,20 +22,25 @@ include_directories(${HEADERS}
                     ${Eigen3_INCLUDE_DIRS})
 
 set(SRCS
-    src/two.cpp
-    src/utils.cpp
-    src/stitch.cpp
-    src/panorama.cpp
-    src/viewer.cpp
-    )
+   src/two.cpp
+   src/utils.cpp
+   src/stitch.cpp
+   src/panorama.cpp
+   src/slam.cpp
+   src/frame.cpp
+   src/viewer.cpp)
 add_library(DR3_LIBS SHARED ${SRCS})
 
 list(APPEND LIBS
-     DR3_LIBS
-     ${OpenCV_LIBRARIES}
-     ${Pangolin_LIBRARIES}
-     ${Eigen3_LIBS}
-     ${CERES_LIBRARIES}
-     )
+   DR3_LIBS
+   ${OpenCV_LIBRARIES}
+   ${Pangolin_LIBRARIES}
+   ${Eigen3_LIBS}
+   ${CERES_LIBRARIES})
+
+function(tester target src)
+   add_executable(${target} ${src})
+   target_link_libraries(${target} ${LIBS})
+endfunction()
 
 add_subdirectory(tests)

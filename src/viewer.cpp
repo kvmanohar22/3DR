@@ -2,9 +2,7 @@
 
 namespace dr3 {
 
-Viewer2D::Viewer2D() {
-    cv::namedWindow("Viewer2D - SLAM");
-}
+Viewer2D::Viewer2D() {}
 
 cv::Mat Viewer2D::update(cv::Mat img_l, cv::Mat img_r,
                          std::vector<cv::KeyPoint> kps_l,
@@ -20,18 +18,37 @@ cv::Mat Viewer2D::update(cv::Mat img_l, cv::Mat img_r,
    img_l.copyTo(new_img.rowRange(cv::Range(0, img_l.rows)));
    img_r.copyTo(new_img.rowRange(cv::Range(img_l.rows, img_l.rows+img_r.rows)));
 
-   if (new_img.channels() < 3)
-     cv::cvtColor(new_img, new_img, CV_GRAY2BGR);
-
-   // Viewer2D::draw_kps(new_img, kps_l, idxs_l, kps_r, idxs_r);
-   cv::imshow("Viewer2D - SLAM", new_img);
-   cv::waitKey(20);
+   Viewer2D::draw_kps(new_img, kps_l, idxs_l, kps_r, idxs_r);
+   update(new_img);
    return new_img.clone();
 }
 
+void Viewer2D::update(cv::Mat &img) {
+   cv::imshow("Viewer2D - SLAM djflkjd", img);
+   cv::waitKey(20);
+}
+
+void Viewer2D::update(cv::Mat &img,
+                      const std::vector<cv::KeyPoint> &kps) {
+   draw_kps(img, kps);
+   update(img);
+}
+
 void Viewer2D::draw_kps(cv::Mat &img, 
-                        std::vector<cv::KeyPoint> kps_l, std::vector<unsigned int> idxs_l,
-                        std::vector<cv::KeyPoint> kps_r, std::vector<unsigned int> idxs_r) {
+                        const std::vector<cv::KeyPoint> &kps) {
+   if (img.channels() < 3)
+     cv::cvtColor(img, img, CV_GRAY2BGR);
+
+   for (int i = 0; i < kps.size(); ++i)
+      draw_point(img, kps[i].pt);
+}
+
+
+void Viewer2D::draw_kps(cv::Mat &img, 
+                        std::vector<cv::KeyPoint> kps_l,
+                        std::vector<unsigned int> idxs_l,
+                        std::vector<cv::KeyPoint> kps_r,
+                        std::vector<unsigned int> idxs_r) {
    const int n_matches = idxs_l.size();
    for (int i = 0; i < n_matches; ++i) {
       cv::Point2f pt1 = kps_l[idxs_l[i]].pt;
@@ -43,30 +60,33 @@ void Viewer2D::draw_kps(cv::Mat &img,
    }
 }
 
-void Viewer2D::draw_point(cv::Mat &img, cv::KeyPoint pt, cv::Scalar color) {
+void Viewer2D::draw_point(cv::Mat &img,
+                          cv::KeyPoint pt,
+                          cv::Scalar color) {
    cv::Point2f pt2f;
    pt2f.x = pt.pt.x;
    pt2f.y = pt.pt.y;
    draw_point(img, pt2f, color);
 }
 
-void Viewer2D::draw_point(cv::Mat &img, cv::Point2f pt, cv::Scalar color) {
-   cv::circle(img, pt, 4, color, -1);
+void Viewer2D::draw_point(cv::Mat &img,
+                          cv::Point2f pt,
+                          cv::Scalar color) {
+   cv::circle(img, pt, 2, color, -1);
 }
 
-void Viewer2D::draw_line(cv::Mat &img, cv::Point3f line, cv::Scalar color) {
+void Viewer2D::draw_line(cv::Mat &img,
+                         cv::Point3f line,
+                         cv::Scalar color) {
    float a = line.x;
    float b = line.y;
    float c = line.z;
-   float m = a / b;
 
    cv::Point2f pt1, pt2;
-
    pt1.x = 0;
    pt1.y = int(-c / b);
    pt2.x = img.cols;
    pt2.y = int(-(c + a * img.cols) / b);
-
    cv::line(img, pt1, pt2, color, 1, CV_AA);
 }
 
