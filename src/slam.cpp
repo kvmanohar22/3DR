@@ -12,7 +12,10 @@ SLAM::SLAM(unsigned int H,
    : H(H), W(W), K(K) {
 
    v2d = new Viewer2D();
-   // v3d = new Viewer3D();
+   v3d = new Viewer3D();
+
+   I3x4 = cv::Mat::eye(cv::Size(4, 4), CV_32F);
+   I3x4 = I3x4.rowRange(0, 3).colRange(0, 4);
 }
 
 void SLAM::process(cv::Mat &img) {
@@ -66,22 +69,42 @@ void SLAM::process(cv::Mat &img) {
    t1.copyTo(Rt[2].rowRange(0, 3).col(3));
    R1.copyTo(Rt[3].rowRange(0, 3).colRange(0, 3));
    t1.copyTo(Rt[3].rowRange(0, 3).col(3));
-   cv::Mat I3x4 = cv::Mat::eye(cv::Size(4, 4), CV_32F);
-   I3x4 = I3x4.rowRange(0, 3).colRange(0, 4);
+
+   cv::Mat fpts4d;
+   int max_z = -1;
+   int idx = -1;
    for (int i = 0; i < 4; ++i) {
       cv::Mat cam1 = K * I3x4;
       cv::Mat cam2 = K * Rt[i];
       cv::Mat pts4d(1, n_points, CV_64FC4);
       cv::triangulatePoints(cam1, cam2, camera_p_pts, camera_c_pts, pts4d);
+      int cz = 0;
+      for (int j = 0; j < n_points; ++j) {
+         double x = pts4d.at<double>(j, 0);
+         double y = pts4d.at<double>(j, 1);
+         double z = pts4d.at<double>(j, 2);
+         double w = pts4d.at<double>(j, 3);
+         if (z / w > 0)
+            ++cz;
+      }
+      if (cz > max_z) {
+         max_z = cz;
+         idx = i;
+         fpts4d = pts4d;
+      }
    }
 
    // update the viewers
+   _pts.push_back(fpts4d);
    v2d->update(img, curr_f.get_kps());
-
+   v3d->update(Rt[idx], _pts);
+   const int ss = fpts4d.cols;
    // Spit some debug data
    std::cout << "Processing frame: #" << std::setw(3) << cidx << " | "
              << "Matches: " << std::setw(3) << matches.size() << " | "
              << "Inliers: " << std::setw(3) << inliers.size() << " | "
+             << "Triangulated: " << std::setw(3) << ss << " | "
+             << "Camera t: " << std::setw(3) << Rt[idx].col(3).t() << " | "
              << std::endl;
 
    // update

@@ -128,4 +128,34 @@ void Viewer3D::update() {
    pangolin::FinishFrame();
 }
 
+void Viewer3D::update(cv::Mat &Rt, std::vector<cv::Mat> &pts4d) {
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+   // render points
+   glBegin(GL_POINTS);
+   // glColor3f(1.0, 0.0, 1.0);
+
+   for (int idx = 0; idx < pts4d.size(); ++idx) {
+      const int n_points = pts4d[idx].cols;
+      for (int i = 0; i < n_points; ++i) {
+         double x = pts4d[idx].at<double>(i, 0);
+         double y = pts4d[idx].at<double>(i, 1);
+         double z = pts4d[idx].at<double>(i, 2);
+         double w = pts4d[idx].at<double>(i, 3);
+         glVertex3f(x/w, y/w, z/w);
+         // std::cout << "#" << i << " :"
+         //           << x/w << " "
+         //           << y/w << " "
+         //           << w/w << std::endl;
+      }
+   }
+   glEnd();
+
+   // render camera
+
+
+   d_cam.Activate(s_cam);
+   pangolin::FinishFrame();
+}
+
 } // namespace dr3

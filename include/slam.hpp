@@ -18,6 +18,9 @@ private:
 
    // camera intrinsics
    cv::Mat K;
+   cv::Mat I3x4;
+
+   std::vector<cv::Mat> _pts;
 
    // viewers
    Viewer2D *v2d;

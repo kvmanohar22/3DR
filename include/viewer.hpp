@@ -70,6 +70,7 @@ public:
 
    // update after each frame
    void update();
+   void update(cv::Mat &R, std::vector<cv::Mat> &pts4d);
 }; // class Viewer3D
 
 
