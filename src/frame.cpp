@@ -14,7 +14,7 @@ Frame::Frame(const long unsigned int idx,
 
    compute_kps(img);
    if (idx == 0) {
-      pose = cv::Mat::eye(4, 4, CV_32F);
+      pose = cv::Mat::eye(cv::Size(4, 4), CV_32F);
    } else {
 
    }
@@ -23,6 +23,18 @@ Frame::Frame(const long unsigned int idx,
 void Frame::compute_kps(const cv::Mat &img) {
    cv::Ptr<cv::FeatureDetector> orb = cv::ORB::create();
    orb->detectAndCompute(img, cv::noArray(), kps, des);
+}
+
+void Frame::set_pose(cv::Mat pose) {
+   this->pose = pose;
+}
+
+cv::Mat Frame::get_pose(bool _short) const {
+   if (_short) {
+      return pose.rowRange(0, 3).colRange(0, 4).clone();
+   } else {
+      return pose.clone();
+   }
 }
 
 } // namespace dr3

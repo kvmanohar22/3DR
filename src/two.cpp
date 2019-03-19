@@ -106,6 +106,7 @@ cv::Mat TwoView::estimate_F(std::vector<cv::KeyPoint> &kps1,
                    << std::endl;
       #endif
    }
+
    return F.clone();
 }
 
@@ -146,7 +147,7 @@ void TwoView::extract_params(const cv::Mat &F,
 
    // Rotation matrix
    R1 = svd.u * W * svd.vt;
-   R1 = svd.u * W.t() * svd.vt;
+   R2 = svd.u * W.t() * svd.vt;
 }
 
 void TwoView::estimate_epipoles() {

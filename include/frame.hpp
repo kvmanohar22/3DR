@@ -32,11 +32,12 @@ public:
    long unsigned int get_idx() const { return idx; }
    std::vector<cv::KeyPoint> get_kps() const { return kps; }
    cv::Mat get_des() const { return des; }
-   cv::Mat get_pose() const { return pose.clone(); }
+   cv::Mat get_pose(bool _short=true) const;
    
+   // Set the pose of the matrix
    void set_pose(cv::Mat pose);
-   void update_poses();
 
+   // Compute keypoints of the given image
    void compute_kps(const cv::Mat &img);
 }; // class Frame
 

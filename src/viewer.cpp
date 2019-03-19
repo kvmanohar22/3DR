@@ -96,7 +96,8 @@ Viewer3D::Viewer3D() {
    Viewer3D::init();
 }
 
-Viewer3D::Viewer3D(size_t _H, size_t _W) : H(_H), W(_W) {
+Viewer3D::Viewer3D(size_t _H, size_t _W)
+  : H(_H), W(_W) {
    Viewer3D::init();
 }
 

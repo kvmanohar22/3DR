@@ -6,6 +6,7 @@ cd ../build
 make test_slam
 
 if [ $? -eq 0 ]; then
+  echo "******************"
   ./tests/slam/test_slam ${SEQUENCE_PATH}
 else
   echo "Error occured in compilation"
