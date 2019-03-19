@@ -1,7 +1,8 @@
 # 3DR
 Collection of tools ranging from image alignment, panorama generation, point cloud generation, optical flow estimation to single view 3D reconstruction.
 
-<p align="center"><img width="100%" height="50%" src="imgs/results/panorama/field_focal_length_2600_spherical.jpg"/></p>
+<p align="center"><img width="100%" height="50%" src="imgs/slam/point_cloud.png"/></p>
+Tracking camera (without Bundle Adjustment)
 
 ---
 ## TODO
@@ -10,9 +11,8 @@ Collection of tools ranging from image alignment, panorama generation, point clo
 - [x] Panorama stitching
 - [ ] Ghost removal in big panoramas (refer [1])
 - [ ] Optical Flow
-- [ ] SfM
-- [ ] Bundle Adjustment
-- [ ] SLAM graph optimization
+- [ ] SfM (unordered images)
+- [ ] SfM (video sequence (localisation))
 
 ## Requirements
 - C++14
