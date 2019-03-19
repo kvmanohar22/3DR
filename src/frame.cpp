@@ -6,7 +6,7 @@ Frame::Frame() {}
 
 Frame::Frame(Frame &frame)
    : idx(frame.get_idx()), kps(frame.get_kps()),
-     des(frame.get_des()), pose(frame.get_pose()) {}
+     des(frame.get_des()), pose(frame.get_pose(false)) {}
 
 Frame::Frame(const long unsigned int idx,
              const cv::Mat &img, const cv::Mat &K) 

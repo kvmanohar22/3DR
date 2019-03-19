@@ -64,7 +64,6 @@ void SLAM::process(cv::Mat &img) {
    int idx = -1;
 
    // Update the camera poses
-   // cv::Mat cam1 = K * prev_f.get_pose();
    for (int i = 0; i < 4; ++i) {
       // Set cameras
       cv::Mat Rtmat(cv::Size(4, 3), CV_32F);
@@ -87,9 +86,8 @@ void SLAM::process(cv::Mat &img) {
             break;
       }
 
-      cv::Mat cam1 = K * I3x4;
-      cv::Mat cam2 = K * Rtmat;
-      // cv::Mat cam2 = K * prev_f.get_pose(false) * Rt4x4;
+      cv::Mat cam1 = K * prev_f.get_pose(true);
+      cv::Mat cam2 = K * Rtmat * prev_f.get_pose(false);
 
       cv::Mat tvec = Rtmat.col(3);
 
@@ -120,11 +118,6 @@ void SLAM::process(cv::Mat &img) {
          idx = i;
          fpts4d = pts4d;
       }
-      std::cout << "cam.z: " << tvec.at<float>(2)
-                << " valid points count: " << cz
-                << " total points: " << n_points
-                << std::endl;
-
    }
 
    // update the camera poses
@@ -154,30 +147,27 @@ void SLAM::process(cv::Mat &img) {
          break;
    }
 
+   // set the pose of the current camera (world -> camera)
    curr_f.set_pose(prev_f.get_pose(false) * Rt4x4);
 
    // Transfer the points to world frame
+   cv::Mat pts3d(cv::Size(3, n_points), CV_32F);
    for (int i = 0; i < n_points; ++i) {
       float x = fpts4d.at<float>(0, i);
       float y = fpts4d.at<float>(1, i);
       float z = fpts4d.at<float>(2, i);
       float w = fpts4d.at<float>(3, i);
 
-      // std::cout << i << ":  "
-      //           << x / w << " "
-      //           << y / w << " "
-      //           << z / w << " "
-      //           << std::endl;
-      // cv::Mat pt_new = prev_f.get_pose(false) * cv::Mat(pt_old);
-      // std::cout << pt_new << std::endl;
+      cv::Mat pt_old = (cv::Mat_<float>(4, 1) << x, y, z, w);
+      cv::Mat pt_new = prev_f.get_pose(false).inv() * pt_old;
 
-      // for (int k = 0; k < 4; ++k)
-         // fpts4d.at<float>(i, k) = pt_new.at<float>(k);
+      w = pt_new.at<float>(3);
+      for (int k = 0; k < 3; ++k)
+         pts3d.at<float>(i, k) = pt_new.at<float>(k) / w;
    }
 
-   while(1);
    // update the viewers
-   _pts.push_back(fpts4d);
+   _pts.push_back(pts3d);
    v2d->update(img, curr_f.get_kps());
    v3d->update(Rt4x4, _pts);
 
