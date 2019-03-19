@@ -74,8 +74,4 @@ int main() {
 
    // copying is weird in opencv
    std::vector<cv::Mat> Rt(4, cv::Mat(cv::Size(4, 3), CV_32F));
-
-   {0.41085437, 0.14669487, -0.89982182}
-   {-0.41085437, -0.14669487,  0.89982182}
-
 }

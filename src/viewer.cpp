@@ -91,12 +91,12 @@ void Viewer2D::draw_line(cv::Mat &img,
 }
 
 Viewer3D::Viewer3D() {
-   this->H = 720;
+   this->H = 768;
    this->W = 1024;
    Viewer3D::init();
 }
 
-Viewer3D::Viewer3D(size_t _H, size_t _W)
+Viewer3D::Viewer3D(float _H, float _W)
   : H(_H), W(_W) {
    Viewer3D::init();
 }
@@ -109,45 +109,48 @@ void Viewer3D::init() {
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
    s_cam = pangolin::OpenGlRenderState(
-         pangolin::ProjectionMatrix(W, H, 420, 420, W/2, H/2, 0.1, 10000),
-         pangolin::ModelViewLookAt(0, -10, -8,
+         pangolin::ProjectionMatrix(W, H, 420, 420, 512, 389, 0.1, 100),
+         pangolin::ModelViewLookAt(4,  0, 0,
                                    0,  0, 0,
                                    0, -1, 0));
 
    d_cam = pangolin::CreateDisplay();
-   d_cam.SetBounds(0.0, 1.0, pangolin::Attach::Pix(0), 1.0, (-1.0f * W) /H);
+   // d_cam.SetBounds(0.0, 1.0, pangolin::Attach::Pix(180), 1.0, (-1.0f * W) /H);
+   d_cam.SetBounds(0.0, 1.0, pangolin::Attach::Pix(180), 1.0, -W/H);
+   // d_cam.SetBounds(0.0, 1.0, 0.0, 1.0, (1.0f * W) /H);
    d_cam.SetHandler(new pangolin::Handler3D(s_cam));
-
-   // some constants
-   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void Viewer3D::update() {
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
    d_cam.Activate(s_cam);
+   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+   glPointSize(50);
+   glBegin(GL_POINTS);
+   glColor3f(0.0, 1.0, 0.0);
+   glVertex3f(4.0, 0.0, 0.0);
+   glEnd();
+
    pangolin::FinishFrame();
 }
 
-void Viewer3D::update(cv::Mat &Rt, std::vector<cv::Mat> &pts4d) {
+void Viewer3D::update(cv::Mat &Rt, std::vector<cv::Mat> &pts3d) {
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   d_cam.Activate(s_cam);
 
    // render points
    glBegin(GL_POINTS);
-   // glColor3f(1.0, 0.0, 1.0);
-
-   for (int idx = 0; idx < pts4d.size(); ++idx) {
-      const int n_points = pts4d[idx].cols;
+   glPointSize(3.0f);
+   glColor3f(1.0, 0.0, 1.0);
+   for (int idx = 0; idx < pts3d.size(); ++idx) {
+      const int n_points = pts3d[idx].rows;
       for (int i = 0; i < n_points; ++i) {
-         double x = pts4d[idx].at<double>(i, 0);
-         double y = pts4d[idx].at<double>(i, 1);
-         double z = pts4d[idx].at<double>(i, 2);
-         double w = pts4d[idx].at<double>(i, 3);
-         glVertex3f(x/w, y/w, z/w);
-         // std::cout << "#" << i << " :"
-         //           << x/w << " "
-         //           << y/w << " "
-         //           << w/w << std::endl;
+         float x = pts3d[idx].at<float>(i, 0);
+         float y = pts3d[idx].at<float>(i, 1);
+         float z = pts3d[idx].at<float>(i, 2);
+         glVertex3f(x, y, z);
       }
    }
    glEnd();
@@ -155,7 +158,6 @@ void Viewer3D::update(cv::Mat &Rt, std::vector<cv::Mat> &pts4d) {
    // render camera
 
 
-   d_cam.Activate(s_cam);
    pangolin::FinishFrame();
 }
 

@@ -8,6 +8,7 @@ tester(test_math test_math.cpp)
 tester(test_svd test_SVD.cpp)
 tester(test_utils test_utils.cpp)
 tester(test_viewer test_viewer.cpp)
+tester(test_pangolin test_pangolin.cc)
 
 # Practice libraries
 tester(test_opencv test_opencv.cpp)

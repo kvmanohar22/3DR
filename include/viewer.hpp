@@ -57,13 +57,13 @@ public:
 // 3D Viewer
 class Viewer3D {
 private:
-   size_t H, W;
+   float H, W;
    pangolin::View d_cam;
    pangolin::OpenGlRenderState s_cam;
 
 public:
    Viewer3D();
-   Viewer3D(size_t H, size_t W);
+   Viewer3D(float H, float W);
 
    // Initialize the viewer
    void init();
