@@ -1,7 +1,7 @@
 # 3DR
 Collection of tools ranging from image alignment, panorama generation, point cloud generation, optical flow estimation to single view 3D reconstruction.
 
-<p align="center"><img width="100%" height="50%" src="imgs/slam/point_cloud.png"/></p>
+<p align="center"><img width="70%" height="70%" src="imgs/slam/point_cloud.png"/></p>
 Tracking camera (without Bundle Adjustment)
 
 ---
