@@ -28,6 +28,8 @@ set(SRCS
    src/panorama.cpp
    src/slam.cpp
    src/frame.cpp
+   src/point.cpp
+   src/map.cpp
    src/viewer.cpp)
 add_library(DR3_LIBS SHARED ${SRCS})
 
