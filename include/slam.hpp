@@ -8,6 +8,10 @@
 #include "viewer.hpp"
 #include "frame.hpp"
 #include "two.hpp"
+#include "map.hpp"
+#include "point.hpp"
+
+#include <thread>
 
 namespace dr3 {
 
@@ -29,11 +33,18 @@ private:
    // ID of the current frame processed
    static long unsigned int cidx;
 
-   // current and previous frames
-   Frame prev_f, curr_f;
+   // previous frame
+   Frame prev_f;
+
+   // render the point cloud in a separate thread
+   std::thread render_loop;
+
+   // Map consisting of all the points
+   Map *mapp;
 
 public:
    SLAM();
+   ~SLAM();
    SLAM(unsigned int H, unsigned int W, cv::Mat K);
 
    void process(cv::Mat &img);

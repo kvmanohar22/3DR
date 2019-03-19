@@ -11,27 +11,42 @@ SLAM::SLAM(unsigned int H,
            cv::Mat K)
    : H(H), W(W), K(K) {
 
-   v2d = new Viewer2D();
-   v3d = new Viewer3D();
+   // Map to store the point cloud
+   mapp = new Map();
 
+   // Viewers
+   v2d = new Viewer2D();
+   v3d = new Viewer3D(mapp);
+
+   // Identity
    I3x4 = cv::Mat::eye(cv::Size(4, 4), CV_32F);
    I3x4 = I3x4.rowRange(0, 3).colRange(0, 4);
+
+   // start the render thread
+   render_loop = std::thread(&Viewer3D::update, v3d);
+}
+
+SLAM::~SLAM() {
+   delete v2d;
+   delete v3d;
+   delete mapp;
+   render_loop.join();
 }
 
 void SLAM::process(cv::Mat &img) {
    // process the current frame
-   Frame curr_f(cidx, img, K);
+   Frame *curr_f = new Frame(cidx, img, K);
    if (cidx == 0) {
-      prev_f = Frame(curr_f);
+      prev_f = Frame(*curr_f);
       ++cidx;
       return;
    }
 
    // Match the features from previous frame and current frame
    std::vector<cv::KeyPoint> kps_p = prev_f.get_kps();
-   std::vector<cv::KeyPoint> kps_c = curr_f.get_kps();
+   std::vector<cv::KeyPoint> kps_c = curr_f->get_kps();
    cv::Mat des_p = prev_f.get_des();
-   cv::Mat des_c = curr_f.get_des();
+   cv::Mat des_c = curr_f->get_des();
    std::vector<unsigned int> inliers;
 
    std::vector<cv::DMatch> matches;
@@ -148,10 +163,10 @@ void SLAM::process(cv::Mat &img) {
    }
 
    // set the pose of the current camera (world -> camera)
-   curr_f.set_pose(prev_f.get_pose(false) * Rt4x4);
+   curr_f->set_pose(prev_f.get_pose(false) * Rt4x4);
 
    // Transfer the points to world frame
-   cv::Mat pts3d(cv::Size(3, n_points), CV_32F);
+   cv::Mat CtoW = prev_f.get_pose(false).inv();
    for (int i = 0; i < n_points; ++i) {
       float x = fpts4d.at<float>(0, i);
       float y = fpts4d.at<float>(1, i);
@@ -159,28 +174,39 @@ void SLAM::process(cv::Mat &img) {
       float w = fpts4d.at<float>(3, i);
 
       cv::Mat pt_old = (cv::Mat_<float>(4, 1) << x, y, z, w);
-      cv::Mat pt_new = prev_f.get_pose(false).inv() * pt_old;
+      cv::Mat pt_new = CtoW * pt_old;
 
       w = pt_new.at<float>(3);
+      cv::Mat xyz(cv::Size(3, 1), CV_32F);
       for (int k = 0; k < 3; ++k)
-         pts3d.at<float>(i, k) = pt_new.at<float>(k) / w;
+         xyz.at<float>(0, k) = pt_new.at<float>(k) / w;
+
+      // Register a new point
+      Point *point = new Point(xyz);
+      point->add_observation(curr_f, 0);
+
+      // Add the point to the map
+      mapp->add_point(point);
    }
+   // Register the new camera with map
+   mapp->add_frame(curr_f);
 
    // update the viewers
-   _pts.push_back(pts3d);
-   v2d->update(img, curr_f.get_kps());
-   v3d->update(Rt4x4, _pts);
+   v2d->update(img, curr_f->get_kps());
+   // v3d->update(Rt4x4, _pts);
 
    // Spit some debug data
    std::cout << "Processing frame: #" << std::setw(3) << cidx << " | "
              << "Matches: " << std::setw(3) << matches.size() << " | "
              << "Inliers: " << std::setw(3) << inliers.size() << " | "
              << "Triangulated: " << std::setw(3) << fpts4d.cols << " | "
-             << "Camera t: " << std::setw(3) << prev_f.get_pose(false).col(3).t() << " | "
+             << "#frames: " << std::setw(3) << mapp->n_frames() << " | "
+             << "#points: " << std::setw(3) << mapp->n_points() << " | "
+             << "Camera t: " << std::setw(3) << prev_f.get_pose(false).col(3).t()
              << std::endl;
 
    // update
-   prev_f = Frame(curr_f);
+   prev_f = Frame(*curr_f);
    ++cidx;
 }
 

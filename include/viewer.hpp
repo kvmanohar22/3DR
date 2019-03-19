@@ -10,8 +10,13 @@
 #include <pangolin/pangolin.h>
 
 #include <iostream>
+#include <string>
+#include <thread>
 
 #include "utils.hpp"
+#include "map.hpp"
+#include "frame.hpp"
+#include "point.hpp"
 
 namespace dr3 {
 
@@ -58,21 +63,20 @@ public:
 class Viewer3D {
 private:
    float H, W;
+   std::string window_name;
    pangolin::View d_cam;
    pangolin::OpenGlRenderState s_cam;
+   Map *mapp;
 
 public:
-   Viewer3D();
-   Viewer3D(float H, float W);
+   Viewer3D(Map *mapp);
 
-   // Initialize the viewer
-   void init();
+   // setup render loop in a separater thread
+   void setup();
 
    // update after each frame
    void update();
-   void update(cv::Mat &R, std::vector<cv::Mat> &pts4d);
 }; // class Viewer3D
-
 
 } // namespace dr3
 

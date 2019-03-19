@@ -90,75 +90,59 @@ void Viewer2D::draw_line(cv::Mat &img,
    cv::line(img, pt1, pt2, color, 1, CV_AA);
 }
 
-Viewer3D::Viewer3D() {
-   this->H = 768;
-   this->W = 1024;
-   Viewer3D::init();
+
+Viewer3D::Viewer3D(Map *mapp) {
+   this->mapp = mapp;
+   Viewer3D::setup();
 }
 
-Viewer3D::Viewer3D(float _H, float _W)
-  : H(_H), W(_W) {
-   Viewer3D::init();
+void Viewer3D::setup() {
+   window_name = "SLAM: 3D";
+   H = 768;
+   W = 1024;
+
+   pangolin::CreateWindowAndBind(window_name, 640, 480);
+   glEnable(GL_DEPTH_TEST);
+   pangolin::GetBoundWindow()->RemoveCurrent();
 }
 
-void Viewer3D::init() {
-   pangolin::CreateWindowAndBind("Viewer3D - SLAM", W, H);
-
+void Viewer3D::update() {
+   pangolin::BindToContext(window_name);
    glEnable(GL_DEPTH_TEST);
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
    s_cam = pangolin::OpenGlRenderState(
          pangolin::ProjectionMatrix(W, H, 420, 420, 512, 389, 0.1, 100),
-         pangolin::ModelViewLookAt(4,  0, 0,
+         pangolin::ModelViewLookAt(-2, 2,-2,
                                    0,  0, 0,
-                                   0, -1, 0));
+                                   pangolin::AxisY));
 
-   d_cam = pangolin::CreateDisplay();
-   // d_cam.SetBounds(0.0, 1.0, pangolin::Attach::Pix(180), 1.0, (-1.0f * W) /H);
-   d_cam.SetBounds(0.0, 1.0, pangolin::Attach::Pix(180), 1.0, -W/H);
-   // d_cam.SetBounds(0.0, 1.0, 0.0, 1.0, (1.0f * W) /H);
-   d_cam.SetHandler(new pangolin::Handler3D(s_cam));
-}
+   pangolin::Handler3D handler(s_cam);
+   d_cam = pangolin::CreateDisplay()
+         .SetBounds(0.0, 1.0, 0.0, 1.0, -W/H)
+         .SetHandler(&handler);
 
-void Viewer3D::update() {
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   while(!pangolin::ShouldQuit()) {
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-   d_cam.Activate(s_cam);
-   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+      d_cam.Activate(s_cam);
+      glPointSize(5.0f);
+      glBegin(GL_POINTS);
+      glColor3f(1.0f, 0.0f, 0.0f);
 
-   glPointSize(50);
-   glBegin(GL_POINTS);
-   glColor3f(0.0, 1.0, 0.0);
-   glVertex3f(4.0, 0.0, 0.0);
-   glEnd();
-
-   pangolin::FinishFrame();
-}
-
-void Viewer3D::update(cv::Mat &Rt, std::vector<cv::Mat> &pts3d) {
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   d_cam.Activate(s_cam);
-
-   // render points
-   glBegin(GL_POINTS);
-   glPointSize(3.0f);
-   glColor3f(1.0, 0.0, 1.0);
-   for (int idx = 0; idx < pts3d.size(); ++idx) {
-      const int n_points = pts3d[idx].rows;
-      for (int i = 0; i < n_points; ++i) {
-         float x = pts3d[idx].at<float>(i, 0);
-         float y = pts3d[idx].at<float>(i, 1);
-         float z = pts3d[idx].at<float>(i, 2);
-         glVertex3f(x, y, z);
+      // Render cameras
+      std::vector<Frame*> frames = mapp->get_frames();
+      for (auto &itr : frames) {
+         cv::Mat pose = itr->get_pose(true);
+         glVertex3f(pose.at<float>(0, 3),
+                    pose.at<float>(1, 3),
+                    pose.at<float>(2, 3));
       }
+
+      glEnd();
+      pangolin::FinishFrame();
    }
-   glEnd();
-
-   // render camera
-
-
-   pangolin::FinishFrame();
 }
 
 } // namespace dr3
