@@ -59,17 +59,6 @@ void SLAM::process(cv::Mat &img) {
       camera_c_pts.at<cv::Vec2f>(0, i) = {pt_c.x, pt_c.y};
    }
 
-   // 4 possible solutions
-   std::vector<cv::Mat> Rt(4, cv::Mat(cv::Size(4, 3), CV_32F));
-   R1.copyTo(Rt[0].rowRange(0, 3).colRange(0, 3));
-   t1.copyTo(Rt[0].rowRange(0, 3).col(3));
-   R1.copyTo(Rt[1].rowRange(0, 3).colRange(0, 3));
-   t2.copyTo(Rt[1].rowRange(0, 3).col(3));
-   R2.copyTo(Rt[2].rowRange(0, 3).colRange(0, 3));
-   t1.copyTo(Rt[2].rowRange(0, 3).col(3));
-   R2.copyTo(Rt[3].rowRange(0, 3).colRange(0, 3));
-   t2.copyTo(Rt[3].rowRange(0, 3).col(3));
-
    cv::Mat fpts4d;
    int max_z = -1;
    int idx = -1;
@@ -78,42 +67,66 @@ void SLAM::process(cv::Mat &img) {
    // cv::Mat cam1 = K * prev_f.get_pose();
    for (int i = 0; i < 4; ++i) {
       // Set cameras
+      cv::Mat Rtmat(cv::Size(4, 3), CV_32F);
+      switch(i) {
+         case 0:
+            R1.copyTo(Rtmat.rowRange(0, 3).colRange(0, 3));
+            t1.copyTo(Rtmat.col(3));
+            break;
+         case 1:
+            R1.copyTo(Rtmat.rowRange(0, 3).colRange(0, 3));
+            t2.copyTo(Rtmat.col(3));
+            break;
+         case 2:
+            R2.copyTo(Rtmat.rowRange(0, 3).colRange(0, 3));
+            t1.copyTo(Rtmat.col(3));
+            break;
+         case 3:
+            R2.copyTo(Rtmat.rowRange(0, 3).colRange(0, 3));
+            t2.copyTo(Rtmat.col(3));
+            break;
+      }
+
       cv::Mat cam1 = K * I3x4;
-      cv::Mat Rt4x4 = cv::Mat::eye(cv::Size(4, 4), CV_32F);
-      Rt[i].copySize(Rt4x4.rowRange(0, 3).colRange(0, 4));
-      cv::Mat cam2 = K * Rt[i];
+      cv::Mat cam2 = K * Rtmat;
       // cv::Mat cam2 = K * prev_f.get_pose(false) * Rt4x4;
+
+      cv::Mat tvec = Rtmat.col(3);
+
+      /*
+         cam.z > 0 => the camera is moving in -ve z direction
+                   => the points should have -ve z in world frame
+      */
 
       // triangulate the points
       cv::Mat pts4d(1, n_points, CV_32FC4);
-      // std::cout << pts4d.rows << " "
-      //           << pts4d.cols << " "
-      //           << std::endl;
       cv::triangulatePoints(cam1, cam2, camera_p_pts, camera_c_pts, pts4d);
-      // std::cout << pts4d.rows << " "
-      //           << pts4d.cols << " "
-      //           << std::endl;
-      // while(1);
-      cv::Mat mask;
-      utils::remove_nans(pts4d);
+
+      // utils::remove_nans(pts4d);
       int cz = 0;
       for (int j = 0; j < n_points; ++j) {
-         float x = pts4d.at<float>(0, j);
-         float y = pts4d.at<float>(1, j);
          float z = pts4d.at<float>(2, j);
          float w = pts4d.at<float>(3, j);
-         if (z / w > 0)
+         if (tvec.at<float>(2) > 0) {
+            if (z / w < 0)
             ++cz;
+         } else {
+            if (z / w > 0)
+            ++cz;
+         }
       }
       if (cz > max_z) {
          max_z = cz;
          idx = i;
          fpts4d = pts4d;
       }
-      std::cout << ">>>> " << cz << "/" << n_points << std::endl;
+      std::cout << "cam.z: " << tvec.at<float>(2)
+                << " valid points count: " << cz
+                << " total points: " << n_points
+                << std::endl;
+
    }
 
-   // while (1);
    // update the camera poses
    if (idx == -1) {
       std::cerr << "WTF?" << std::endl;
@@ -122,7 +135,25 @@ void SLAM::process(cv::Mat &img) {
 
    // update the correct orientation of the camera
    cv::Mat Rt4x4 = cv::Mat::eye(cv::Size(4, 4), CV_32F);
-   Rt[idx].copySize(Rt4x4.rowRange(0, 3).colRange(0, 4));
+   switch(idx) {
+      case 0:
+         R1.copyTo(Rt4x4.rowRange(0, 3).colRange(0, 3));
+         t1.copyTo(Rt4x4.rowRange(0, 3).col(3));
+         break;
+      case 1:
+         R1.copyTo(Rt4x4.rowRange(0, 3).colRange(0, 3));
+         t2.copyTo(Rt4x4.rowRange(0, 3).col(3));
+         break;
+      case 2:
+         R2.copyTo(Rt4x4.rowRange(0, 3).colRange(0, 3));
+         t1.copyTo(Rt4x4.rowRange(0, 3).col(3));
+         break;
+      case 3:
+         R2.copyTo(Rt4x4.rowRange(0, 3).colRange(0, 3));
+         t2.copyTo(Rt4x4.rowRange(0, 3).col(3));
+         break;
+   }
+
    curr_f.set_pose(prev_f.get_pose(false) * Rt4x4);
 
    // Transfer the points to world frame
@@ -132,11 +163,11 @@ void SLAM::process(cv::Mat &img) {
       float z = fpts4d.at<float>(2, i);
       float w = fpts4d.at<float>(3, i);
 
-      std::cout << i << ":  "
-                << x / w << " "
-                << y / w << " "
-                << z / w << " "
-                << std::endl;
+      // std::cout << i << ":  "
+      //           << x / w << " "
+      //           << y / w << " "
+      //           << z / w << " "
+      //           << std::endl;
       // cv::Mat pt_new = prev_f.get_pose(false) * cv::Mat(pt_old);
       // std::cout << pt_new << std::endl;
 
@@ -148,7 +179,7 @@ void SLAM::process(cv::Mat &img) {
    // update the viewers
    _pts.push_back(fpts4d);
    v2d->update(img, curr_f.get_kps());
-   v3d->update(Rt[idx], _pts);
+   v3d->update(Rt4x4, _pts);
 
    // Spit some debug data
    std::cout << "Processing frame: #" << std::setw(3) << cidx << " | "

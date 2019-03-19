@@ -143,11 +143,15 @@ void TwoView::extract_params(const cv::Mat &F,
 
    // Translation vector
    t1 =  svd.u.col(2);
-   t2 = -svd.u.col(2);
+   t2 = -1 * svd.u.col(2);
 
    // Rotation matrix
    R1 = svd.u * W * svd.vt;
    R2 = svd.u * W.t() * svd.vt;
+
+   // std::cout << "Two possible camera positions" << std::endl
+   //           << t1.t() << "\n"
+   //           << t2.t() << std::endl;
 }
 
 void TwoView::estimate_epipoles() {

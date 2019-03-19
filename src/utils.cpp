@@ -284,12 +284,13 @@ void remove_nans(cv::Mat &mat) {
         float z = mat.at<float>(2, j);
         float w = mat.at<float>(3, j);
 
-        // std::cout << j << ":  "
-        //           << x / w << " "
-        //           << y / w << " "
-        //           << z / w << " "
-        //           << w / w << " "
-        //           << std::endl;
+        std::cout << j << ":  "
+                  << x / w << " "
+                  << y / w << " "
+                  << z / w << " "
+                  << w / w << " "
+                  << std::endl;
+
         if (z / w > 0 && w != 0)
             ++cz;
     }
