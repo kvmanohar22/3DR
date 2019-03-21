@@ -6,9 +6,10 @@ Frame::Frame() {}
 
 Frame::Frame(Frame &frame)
    : idx(frame.get_idx()), kps(frame.get_kps()),
-     des(frame.get_des()), pose_w2c(frame.get_pose(false)),
-     pose_c2w(frame.get_center(false)),
-     center(frame.get_camc()) {}
+     des(frame.get_des()),
+     pose_w2c(frame.get_pose_w2c()),
+     pose_c2w(frame.get_pose_c2w()),
+     center(frame.get_center()) {}
 
 Frame::Frame(const long unsigned int idx,
              const cv::Mat &img, const cv::Mat &K) 
@@ -46,26 +47,6 @@ void Frame::update_poses() {
    cv::Mat R = pose_w2c.rowRange(0, 3).colRange(0, 3);
    cv::Mat t = pose_w2c.rowRange(0, 3).col(3);
    center    = -R.t() * t;
-}
-
-cv::Mat Frame::get_pose(bool _short) const {
-   if (_short) {
-      return pose_w2c.rowRange(0, 3).colRange(0, 4).clone();
-   } else {
-      return pose_w2c.clone();
-   }
-}
-
-cv::Mat Frame::get_center(bool _short) const {
-   if (_short) {
-      return pose_c2w.rowRange(0, 3).colRange(0, 4).clone();
-   } else {
-      return pose_c2w.clone();
-   }
-}
-
-cv::Mat Frame::get_camc() const {
-   return center.clone();
 }
 
 } // namespace dr3

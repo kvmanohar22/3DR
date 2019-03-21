@@ -276,10 +276,6 @@ void TwoView::disambiguate_camera_pose(std::vector<cv::Mat> &tset,
       for (int ii = 0; ii < X.size(); ++ii) {
          cv::Mat xyz = X[ii].rowRange(0, 3) / X[ii].at<float>(3);
          cv::Mat ptc = R * xyz + t;
-         // std::cout << "world : " << xyz.t() << " " << std::endl
-         //           << "camera: " << ptc.t()
-         //           << "\n--------------"
-         //           << std::endl;
          if (xyz.at<float>(2) > 0 && ptc.at<float>(2) > 0) {
             ++curr_count;
             valid_points_curr.push_back(ii);
@@ -291,14 +287,9 @@ void TwoView::disambiguate_camera_pose(std::vector<cv::Mat> &tset,
          idx = i;
          valid_points = valid_points_curr;
       }
-
-      // std::cout <<" i: " << i 
-      //           <<" det(R): " << cv::determinant(R)
-      //           <<" cur: " << curr_count
-      //           <<" max: " << max_count << std::endl;
    }
-   // idx = 1;
-   // std::cout << "idx: " << idx << " count: " << max_count << std::endl;
+
+   assert(idx != -1 && "None of the 4 cameras are resulting in points");
    tset[idx].copyTo(t);
    Rset[idx].copyTo(R);
    for (auto &itr: valid_points)

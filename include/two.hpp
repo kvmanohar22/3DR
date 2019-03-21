@@ -75,12 +75,14 @@ public:
                                                std::vector<cv::KeyPoint> kps_r,
                                                std::vector<cv::DMatch> matches);
 
+   // generate 3D point
    static void triangulate(cv::KeyPoint &kp1,
                           cv::KeyPoint &kp2,
                           cv::Mat &P1,
                           cv::Mat &P2,
                           cv::Mat &xyz);
 
+   // Recover the correct camera pose from 4 possible solutions
    static void disambiguate_camera_pose(std::vector<cv::Mat> &tset,
                                         std::vector<cv::Mat> &Rset,
                                         std::vector<std::vector<cv::Mat>> &Xset,

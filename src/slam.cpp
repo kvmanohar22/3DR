@@ -43,37 +43,20 @@ void SLAM::process(cv::Mat &img) {
       return;
    }
 
-   // Match the features from previous frame and current frame
+   // Match the features
    std::vector<cv::KeyPoint> kps_p = prev_f.get_kps();
    std::vector<cv::KeyPoint> kps_c = curr_f->get_kps();
    cv::Mat des_p = prev_f.get_des();
    cv::Mat des_c = curr_f->get_des();
    std::vector<unsigned int> inliers;
-
    std::vector<cv::DMatch> matches;
    cv::BFMatcher bf = cv::BFMatcher(cv::NORM_HAMMING, true); 
    bf.match(des_p, des_c, matches);
 
-   std::vector<cv::Point2f> pts1(matches.size());
-   std::vector<cv::Point2f> pts2(matches.size());
-
-   for (int i = 0; i < matches.size(); ++i) {
-      cv::Point2f pt1, pt2;
-      int qmatch = matches[i].queryIdx;
-      int tmatch = matches[i].trainIdx;
-      pt1.x = kps_p[qmatch].pt.x;
-      pt1.y = kps_p[qmatch].pt.y;
-      pt2.x = kps_c[tmatch].pt.x;
-      pt2.y = kps_c[tmatch].pt.y;
-      pts1.push_back(pt1);
-      pts2.push_back(pt2);
-   }
-   // estimate Fundamental matrix
-   cv::Mat fest = cv::findFundamentalMat(pts1, pts2, CV_FM_RANSAC, 3, 0.99);
+   // Estimate Fundamental matrix
    cv::Mat F = TwoView::estimate_F(kps_p, kps_c, des_p, des_c, matches, inliers);
-   F.convertTo(F, CV_32F);
 
-   // Recover (R, t) w.r.t previous frame
+   // Recover (R, t) w.r.t previous frame (4 solutions)
    std::vector<cv::Mat> Rset, tset;
    TwoView::extract_camera_pose(F, K, Rset, tset);
 
@@ -98,6 +81,7 @@ void SLAM::process(cv::Mat &img) {
       Xset.push_back(Xs);
    }
 
+   // Recover the correct camera pose
    cv::Mat R(cv::Size(3, 3), CV_32F);
    cv::Mat t(cv::Size(1, 3), CV_32F);
    std::vector<cv::Mat> X;
@@ -107,23 +91,14 @@ void SLAM::process(cv::Mat &img) {
    t.copyTo(Rt4x4.rowRange(0, 3).col(3));
 
    // set the pose of the current camera (world -> camera)
-   curr_f->set_pose(Rt4x4 * prev_f.get_pose(false));
+   curr_f->set_pose(Rt4x4 * prev_f.get_pose_w2c());
 
    // Transfer the points to world frame
-   cv::Mat CtoW = prev_f.get_center(false);
+   cv::Mat CtoW = prev_f.get_pose_c2w();
+   cv::Mat Rt4x4inv = Rt4x4.inv();
    for (int i = 0; i < X.size(); ++i) {
-      float x = X[i].at<float>(0);
-      float y = X[i].at<float>(1);
-      float z = X[i].at<float>(2);
-      float w = X[i].at<float>(3);
-
-      cv::Mat pt_old = (cv::Mat_<float>(4, 1) << x, y, z, w);
-      cv::Mat pt_new = CtoW * Rt4x4.inv() * pt_old;
-
-      w = pt_new.at<float>(3);
-      cv::Mat xyz(cv::Size(1, 3), CV_32F);
-      for (int k = 0; k < 3; ++k)
-         xyz.at<float>(k) = pt_new.at<float>(k) / w;
+      cv::Mat pt_new = CtoW * Rt4x4inv * X[i];
+      cv::Mat xyz = pt_new.rowRange(0, 3) / pt_new.at<float>(3);
 
       // Register a new point
       Point *point = new Point(xyz);
@@ -142,17 +117,14 @@ void SLAM::process(cv::Mat &img) {
    std::cout << "Processing frame: #" << std::setw(3) << cidx << " | "
              << "Matches: " << std::setw(3) << matches.size() << " | "
              << "Inliers: " << std::setw(3) << inliers.size() << " | "
-             << "#frames: " << std::setw(3) << mapp->n_frames() << " | "
+             << "#KeyFrames: " << std::setw(3) << mapp->n_frames() << " | "
              << "#points: " << std::setw(7) << mapp->n_points() << " | "
-             << "Camera C: " << std::setw(3) << curr_f->get_camc().t()
+             << "Camera pos: " << std::setw(3) << curr_f->get_center().t()
              << std::endl;
 
    // update the previous frame
    prev_f = Frame(*curr_f);
    ++cidx;
-
-   // if (cidx == 5)
-   //    while(1);
 }
 
 } // namespace dr3

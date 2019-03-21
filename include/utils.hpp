@@ -52,9 +52,6 @@ cv::Mat warp_cylindrical(cv::Mat img, float f);
 // Drawing
 cv::Scalar getc();
 
-// misc
-void remove_nans(cv::Mat &mat);
-
 } // namespace utils
 
 #endif

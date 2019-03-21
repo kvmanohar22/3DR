@@ -152,55 +152,31 @@ void Viewer3D::update() {
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
    s_cam = pangolin::OpenGlRenderState(
-         pangolin::ProjectionMatrix(W, H, 420, 420, 512, 389, 0.1, 1000),
-         pangolin::ModelViewLookAt(-2, 2,-2,
-                                   0,  0, 0,
-                                   pangolin::AxisY));
+       pangolin::ProjectionMatrix(W, H, 420, 420, 512, 389, 0.1, 1000),
+       pangolin::ModelViewLookAt(-2, 2,-2,
+                                 0,  0, 0,
+                                 pangolin::AxisY));
 
    pangolin::Handler3D handler(s_cam);
    d_cam = pangolin::CreateDisplay()
-         .SetBounds(0.0, 1.0, 0.0, 1.0, -W/H)
-         .SetHandler(&handler);
+       .SetBounds(0.0, 1.0, 0.0, 1.0, -W/H)
+       .SetHandler(&handler);
+
+   cv::Point3f red, green, blue;
+   red.x   = 1.0f; red.y   = 0.0f; red.z   = 0.0f;
+   green.x = 0.0f; green.y = 1.0f; green.z = 0.0f;
+   blue.x  = 0.0f; blue.y  = 0.0f; blue.z  = 1.0f;
 
    while(!pangolin::ShouldQuit()) {
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       d_cam.Activate(s_cam);
-      cv::Point3f red;
-      red.x = 1.0f;
-      red.y = 0.0f;
-      red.z = 0.0f;
-
-      cv::Point3f green;
-      green.x = 0.0f;
-      green.y = 1.0f;
-      green.z = 0.0f;
-
-      cv::Point3f blue;
-      blue.x = 0.0f;
-      blue.y = 0.0f;
-      blue.z = 1.0f;
 
       // Render cameras
       const std::vector<Frame*> frames = mapp->get_frames();
-      int idx = 0;
-      // glPointSize(50.0f);
-      // glBegin(GL_POINTS);
       for (auto &itr : frames) {
-         cv::Mat pose = itr->get_center(false);
-         //  if (idx == 0)
-         //    glColor3f(1.0f, 0.0f, 0.0f);
-         //  else
-         //    glColor3f(0.0f, 1.0f, 0.0f);
-
-         // glVertex3f(pose.at<float>(0, 3),
-         //            pose.at<float>(1, 3),
-         //            pose.at<float>(2, 3));
-          if (idx == 0)
-            draw_camera(pose, red);
-          else
-            draw_camera(pose, blue);
-          ++idx;
+         cv::Mat pose = itr->get_pose_c2w();
+            draw_camera(pose, green);
       }
       glEnd();
 

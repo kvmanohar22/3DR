@@ -31,14 +31,16 @@ public:
    Frame(const long unsigned int idx, 
          const cv::Mat &img, const cv::Mat &K);
 
-   long unsigned int get_idx() const { return idx; }
-   std::vector<cv::KeyPoint> get_kps() const { return kps; }
-   cv::Mat get_des() const { return des; }
-   cv::Mat get_pose(bool _short) const;
-   cv::Mat get_center(bool _short) const;
-   cv::Mat get_camc() const;
+   inline const long unsigned int get_idx() const { return idx; }
+   inline const std::vector<cv::KeyPoint> get_kps() const { return kps; }
+   inline const cv::Mat get_des() const { return des; }
+
+   // camera poses
+   inline cv::Mat get_pose_w2c() const { return pose_w2c.clone(); }
+   inline cv::Mat get_pose_c2w() const { return pose_c2w.clone(); }
+   inline cv::Mat get_center()   const { return center.clone();   }
    
-   // Set the pose of the matrix
+   // Set the pose of the matrix (world -> camera)
    void set_pose(cv::Mat pose);
    void update_poses();
 

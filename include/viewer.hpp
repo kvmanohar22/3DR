@@ -64,8 +64,11 @@ class Viewer3D {
 private:
    float H, W;
    std::string window_name;
+
    pangolin::View d_cam;
    pangolin::OpenGlRenderState s_cam;
+
+   // database of camera poses and point cloud
    Map *mapp;
 
 protected:

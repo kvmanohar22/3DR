@@ -11,13 +11,13 @@ private:
    /* Position in the world
 
       Access the point as:
-      x -> xyz.at<float>(1);
-      y -> xyz.at<float>(2);
-      z -> xyz.at<float>(3);
+      x -> xyz.at<float>(0);
+      y -> xyz.at<float>(1);
+      z -> xyz.at<float>(2);
    */
    cv::Mat xyz;
 
-   // Frames observing this point and their indices
+   // Frames observing this point and their (keypoint) indices
    std::vector<Frame*> frames;
    std::vector<unsigned int> idxs;
 

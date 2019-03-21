@@ -9,6 +9,5 @@ if [ $? -eq 0 ]; then
   echo "******************"
   ./tests/slam/test_slam ${SEQUENCE_PATH}
 else
-  echo "Error occured in compilation"
+  echo "Compiler or linker error!"
 fi
-

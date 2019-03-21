@@ -269,36 +269,6 @@ cv::Scalar getc() {
     return cv::Scalar(b, g, r);
 }
 
-void remove_nans(cv::Mat &mat) {
-    std::cout << "Removing NaNs..." << std::endl;
-
-    int n_points = mat.cols;
-    int cz = 0;
-    cv::Mat mask = (mat != mat);
-    std::cout << mask.rows << " "
-              << mask.cols
-              << std::endl;
-    for (int j = 0; j < n_points; ++j) {
-        float x = mat.at<float>(0, j);
-        float y = mat.at<float>(1, j);
-        float z = mat.at<float>(2, j);
-        float w = mat.at<float>(3, j);
-
-        std::cout << j << ":  "
-                  << x / w << " "
-                  << y / w << " "
-                  << z / w << " "
-                  << w / w << " "
-                  << std::endl;
-
-        if (z / w > 0 && w != 0)
-            ++cz;
-    }
-    std::cout << cz << "/" << n_points << std::endl;
-    // while(1);
-}
-
-
 } // namespace utils
 
 #endif
