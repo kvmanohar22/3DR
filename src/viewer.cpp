@@ -24,7 +24,7 @@ cv::Mat Viewer2D::update(cv::Mat img_l, cv::Mat img_r,
 }
 
 void Viewer2D::update(cv::Mat &img) {
-   cv::imshow("Viewer2D - SLAM djflkjd", img);
+   cv::imshow("Viewer2D - SLAM", img);
    cv::waitKey(20);
 }
 

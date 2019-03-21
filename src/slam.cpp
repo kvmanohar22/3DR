@@ -97,6 +97,7 @@ void SLAM::process(cv::Mat &img) {
       }
       Xset.push_back(Xs);
    }
+
    cv::Mat R(cv::Size(3, 3), CV_32F);
    cv::Mat t(cv::Size(1, 3), CV_32F);
    std::vector<cv::Mat> X;
@@ -135,7 +136,7 @@ void SLAM::process(cv::Mat &img) {
    mapp->add_frame(curr_f);
 
    // update the viewers
-   v2d->update(img, curr_f->get_kps());
+   // v2d->update(img, curr_f->get_kps());
 
    // Spit some debug data
    std::cout << "Processing frame: #" << std::setw(3) << cidx << " | "
@@ -150,8 +151,8 @@ void SLAM::process(cv::Mat &img) {
    prev_f = Frame(*curr_f);
    ++cidx;
 
-   // if (cidx == 10)
-   //    while(1);
+   if (cidx == 2)
+      while(1);
 }
 
 } // namespace dr3

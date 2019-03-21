@@ -260,7 +260,8 @@ void TwoView::disambiguate_camera_pose(std::vector<cv::Mat> &tset,
                                       std::vector<cv::Mat> &X) {
    int max_count = -1;
    int idx = -1;
-   for (int i = 0; i < 4; ++i) {
+   std::vector<int> valid_points;
+   for (int i = 3; i < 4; ++i) {
       cv::Mat t = tset[i];
       cv::Mat R = Rset[i];
       std::vector<cv::Mat> X = Xset[i]; 
@@ -269,14 +270,18 @@ void TwoView::disambiguate_camera_pose(std::vector<cv::Mat> &tset,
       float cz = C.at<float>(2);
       for (int ii = 0; ii < X.size(); ++ii) {
          cv::Mat xyz = X[ii].rowRange(0, 3) / X[ii].at<float>(3);
-         float pz = R.row(2).dot(xyz.t());
-         if (cz > 0)
-            if (pz > cz)
-               ++curr_count;
-         else
-            if (pz < cz)
-               ++curr_count;
+         cv::Mat ptc = R * xyz + t;
+         std::cout << "world : " << xyz.t() << " " << std::endl
+                   << "camera: " << ptc.t()
+                   << "\n--------------"
+                   << std::endl;
+         if (xyz.at<float>(2) > 0 && ptc.at<float>(2) > 0) {
+            ++curr_count;
+            valid_points.push_back(ii);
+         }
       }
+      max_count = curr_count;
+      idx = i;
       if (max_count < curr_count) {
          max_count = curr_count;
          idx = i;
@@ -286,10 +291,11 @@ void TwoView::disambiguate_camera_pose(std::vector<cv::Mat> &tset,
       //           <<" max: " << max_count << std::endl;
    }
    // idx = 1;
-   // std::cout << "idx: " << idx << std::endl;
+   std::cout << "idx: " << idx << " count: " << max_count << std::endl;
    tset[idx].copyTo(t);
    Rset[idx].copyTo(R);
-   X = Xset[idx];
+   for (auto &itr: valid_points)
+      X.push_back(Xset[idx][itr]);
 }
 
 } // namespace 3dr
