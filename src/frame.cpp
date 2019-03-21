@@ -26,7 +26,7 @@ Frame::Frame(const long unsigned int idx,
 void Frame::compute_kps(const cv::Mat &img) {
    cv::Ptr<cv::FeatureDetector> orb = cv::ORB::create();
    std::vector<cv::Point2f> corners;
-   cv::goodFeaturesToTrack(img, corners, 2000, 0.01, 3);
+   cv::goodFeaturesToTrack(img, corners, 500, 0.01, 3);
    for (auto &itr: corners) {
       cv::KeyPoint kpt;
       kpt.pt.x = itr.x;

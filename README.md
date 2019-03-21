@@ -1,7 +1,7 @@
 # 3DR
 Collection of tools ranging from image alignment, panorama generation, point cloud generation, optical flow estimation to single view 3D reconstruction.
 
-<p align="center"><img width="70%" height="70%" src="imgs/slam/point_cloud.png"/></p>
+<p align="center"><img width="70%" height="70%" src="imgs/slam/slam.png"/></p>
 Tracking camera (without Bundle Adjustment)
 
 ---
@@ -9,6 +9,7 @@ Tracking camera (without Bundle Adjustment)
 - [x] Image Alignment
 - [x] Image Warping
 - [x] Panorama stitching
+- [x] Visual Odometry
 - [ ] Ghost removal in big panoramas (refer [1])
 - [ ] Optical Flow
 - [ ] SfM (unordered images)

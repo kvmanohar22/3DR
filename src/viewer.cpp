@@ -198,8 +198,6 @@ void Viewer3D::update() {
          //            pose.at<float>(2, 3));
           if (idx == 0)
             draw_camera(pose, red);
-          else if (idx == 1)
-            draw_camera(pose, green);
           else
             draw_camera(pose, blue);
           ++idx;

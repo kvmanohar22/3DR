@@ -292,10 +292,10 @@ void TwoView::disambiguate_camera_pose(std::vector<cv::Mat> &tset,
          valid_points = valid_points_curr;
       }
 
-      std::cout <<" i: " << i 
-                <<" det(R): " << cv::determinant(R)
-                <<" cur: " << curr_count
-                <<" max: " << max_count << std::endl;
+      // std::cout <<" i: " << i 
+      //           <<" det(R): " << cv::determinant(R)
+      //           <<" cur: " << curr_count
+      //           <<" max: " << max_count << std::endl;
    }
    // idx = 1;
    // std::cout << "idx: " << idx << " count: " << max_count << std::endl;
