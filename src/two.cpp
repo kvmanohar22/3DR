@@ -261,14 +261,21 @@ void TwoView::disambiguate_camera_pose(std::vector<cv::Mat> &tset,
    int max_count = -1;
    int idx = -1;
    for (int i = 0; i < 4; ++i) {
-      cv::Mat C = tset[i];
+      cv::Mat t = tset[i];
       cv::Mat R = Rset[i];
       std::vector<cv::Mat> X = Xset[i]; 
       int curr_count = 0;
+      cv::Mat C = -R.t() * t;
+      float cz = C.at<float>(2);
       for (int ii = 0; ii < X.size(); ++ii) {
          cv::Mat xyz = X[ii].rowRange(0, 3) / X[ii].at<float>(3);
-         if (R.row(2).dot((xyz - C).t()) > 0)
-            ++curr_count;
+         float pz = R.row(2).dot(xyz.t());
+         if (cz > 0)
+            if (pz > cz)
+               ++curr_count;
+         else
+            if (pz < cz)
+               ++curr_count;
       }
       if (max_count < curr_count) {
          max_count = curr_count;
@@ -278,6 +285,8 @@ void TwoView::disambiguate_camera_pose(std::vector<cv::Mat> &tset,
       //           <<" cur: " << curr_count
       //           <<" max: " << max_count << std::endl;
    }
+   // idx = 1;
+   // std::cout << "idx: " << idx << std::endl;
    tset[idx].copyTo(t);
    Rset[idx].copyTo(R);
    X = Xset[idx];

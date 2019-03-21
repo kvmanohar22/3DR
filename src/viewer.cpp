@@ -166,34 +166,54 @@ void Viewer3D::update() {
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       d_cam.Activate(s_cam);
-      cv::Point3f white;
-      white.x = 1.0f;
-      white.y = 1.0f;
-      white.z = 1.0f;
+      cv::Point3f red;
+      red.x = 1.0f;
+      red.y = 0.0f;
+      red.z = 0.0f;
+
+      cv::Point3f green;
+      green.x = 0.0f;
+      green.y = 1.0f;
+      green.z = 0.0f;
 
       // Render cameras
-      std::vector<Frame*> frames = mapp->get_frames();
-      for (auto &itr : frames) {
-         cv::Mat pose = itr->get_pose(false);
-            draw_camera(pose, white);
-      }
-
-      // std::cout << "Here" << std::endl;
-      // // Render points
-      // glPointSize(2.0f);
+      const std::vector<Frame*> frames = mapp->get_frames();
+      int idx = 0;
+      // glPointSize(50.0f);
       // glBegin(GL_POINTS);
-      // glColor3f(1.0f, 1.0f, 1.0f);
-      // std::vector<Point*> points = mapp->get_points();
-      // for (auto &itr : points) {
-      //    if (!itr->is_valid())
-      //       continue;
+      for (auto &itr : frames) {
+         cv::Mat pose = itr->get_center(false);
+         //  if (idx == 0)
+         //    glColor3f(1.0f, 0.0f, 0.0f);
+         //  else
+         //    glColor3f(0.0f, 1.0f, 0.0f);
 
-      //    cv::Mat point = itr->get_xyz();
-      //    glVertex3f(point.at<float>(0),
-      //               point.at<float>(1),
-      //               point.at<float>(2));
-      // }
-      // glEnd();
+         // glVertex3f(pose.at<float>(0, 3),
+         //            pose.at<float>(1, 3),
+         //            pose.at<float>(2, 3));
+          if (idx == 0)
+            draw_camera(pose, red);
+          else
+            draw_camera(pose, green);
+          ++idx;
+      }
+      glEnd();
+
+      // Render points
+      glPointSize(2.0f);
+      glBegin(GL_POINTS);
+      glColor3f(1.0f, 1.0f, 1.0f);
+      const std::vector<Point*> &points = mapp->get_points();
+      for (auto &itr : points) {
+         if (!itr->is_valid())
+            continue;
+
+         cv::Mat point = itr->get_xyz();
+         glVertex3f(point.at<float>(0),
+                    point.at<float>(1),
+                    point.at<float>(2));
+      }
+      glEnd();
 
       pangolin::FinishFrame();
    }

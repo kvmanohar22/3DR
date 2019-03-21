@@ -21,7 +21,10 @@ private:
    cv::Mat des;
 
    // Camera pose
-   cv::Mat pose;
+   cv::Mat pose_w2c; // world  -> camera
+   cv::Mat pose_c2w; // camera -> world
+   cv::Mat center;   // camera center in world coordinates
+
 
 public:
    Frame();
@@ -33,9 +36,11 @@ public:
    std::vector<cv::KeyPoint> get_kps() const { return kps; }
    cv::Mat get_des() const { return des; }
    cv::Mat get_pose(bool _short) const;
+   cv::Mat get_center(bool _short) const;
    
    // Set the pose of the matrix
    void set_pose(cv::Mat pose);
+   void update_poses();
 
    // Compute keypoints of the given image
    void compute_kps(const cv::Mat &img);

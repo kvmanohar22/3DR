@@ -85,7 +85,7 @@ void SLAM::process(cv::Mat &img) {
       cv::Mat temp(cv::Size(4, 3), CV_32F);
       Rset[i].copyTo(temp.rowRange(0, 3).colRange(0, 3));
       tset[i].copyTo(temp.rowRange(0, 3).col(3));
-      temp.col(3) *= -1;
+      // temp.col(3) *= -1;
       cv::Mat P2 = K * temp;
       for (int ii = 0; ii < inliers.size(); ++ii) {
          cv::Mat xyz(cv::Size(1, 4), CV_32F);
@@ -107,7 +107,7 @@ void SLAM::process(cv::Mat &img) {
    t.copyTo(Rt4x4.rowRange(0, 3).col(3));
 
    // set the pose of the current camera (world -> camera)
-   curr_f->set_pose(prev_f.get_pose(false) * Rt4x4);
+   curr_f->set_pose(Rt4x4 * prev_f.get_pose(false));
 
    // Transfer the points to world frame
    cv::Mat CtoW = prev_f.get_pose(false).inv();
@@ -144,15 +144,15 @@ void SLAM::process(cv::Mat &img) {
              << "Inliers: " << std::setw(3) << inliers.size() << " | "
              << "#frames: " << std::setw(3) << mapp->n_frames() << " | "
              << "#points: " << std::setw(7) << mapp->n_points() << " | "
-             << "Camera t: " << std::setw(3) << curr_f->get_pose(false).col(3).t()
+             << "Camera t: " << std::setw(3) << curr_f->get_center(false).col(3).t()
              << std::endl;
 
    // update the previous frame
    prev_f = Frame(*curr_f);
    ++cidx;
 
-   // if (cidx == 2)
-   //    while(1);
+   if (cidx == 3)
+      while(1);
 }
 
 } // namespace dr3
