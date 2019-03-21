@@ -257,10 +257,10 @@ void TwoView::disambiguate_camera_pose(std::vector<cv::Mat> &tset,
                                       std::vector<cv::Mat> &Rset,
                                       std::vector<std::vector<cv::Mat>> &Xset,
                                       cv::Mat &t, cv::Mat &R,
-                                      std::vector<cv::Mat> &X) {
+                                      std::vector<bool> &inliers,
+                                      int &set_idx) {
    int max_count = -1;
    int idx = -1;
-   std::vector<int> valid_points;
    for (int i = 0; i < 4; ++i) {
       cv::Mat t = tset[i];
       cv::Mat R = Rset[i];
@@ -272,28 +272,29 @@ void TwoView::disambiguate_camera_pose(std::vector<cv::Mat> &tset,
       int curr_count = 0;
       cv::Mat C = -R.t() * t;
       float cz = C.at<float>(2);
-      std::vector<int> valid_points_curr;
+      std::vector<bool> valid_points_curr;
       for (int ii = 0; ii < X.size(); ++ii) {
          cv::Mat xyz = X[ii].rowRange(0, 3) / X[ii].at<float>(3);
          cv::Mat ptc = R * xyz + t;
          if (xyz.at<float>(2) > 0 && ptc.at<float>(2) > 0) {
             ++curr_count;
-            valid_points_curr.push_back(ii);
+            valid_points_curr.push_back(true);
+         } else {
+            valid_points_curr.push_back(false);
          }
       }
 
       if (max_count < curr_count) {
          max_count = curr_count;
          idx = i;
-         valid_points = valid_points_curr;
+         inliers = valid_points_curr;
       }
    }
 
    assert(idx != -1 && "None of the 4 cameras are resulting in points");
    tset[idx].copyTo(t);
    Rset[idx].copyTo(R);
-   for (auto &itr: valid_points)
-      X.push_back(Xset[idx][itr]);
+   set_idx = idx;
 }
 
 } // namespace 3dr

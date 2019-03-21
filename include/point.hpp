@@ -1,9 +1,14 @@
 #ifndef _POINT_HPP_
 #define _POINT_HPP_
 
+#include <opencv2/core.hpp>
+#include <opencv2/opencv.hpp>
+
 #include "frame.hpp"
 
 namespace dr3 {
+
+class Frame;
 
 class Point {
 private:

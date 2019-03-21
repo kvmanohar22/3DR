@@ -32,7 +32,7 @@ private:
    static long unsigned int cidx;
 
    // previous frame
-   Frame prev_f;
+   Frame *prev_f;
 
    // render the point cloud in a separate thread
    std::thread render_loop;

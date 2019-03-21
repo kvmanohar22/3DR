@@ -87,7 +87,8 @@ public:
                                         std::vector<cv::Mat> &Rset,
                                         std::vector<std::vector<cv::Mat>> &Xset,
                                         cv::Mat &t, cv::Mat &R,
-                                        std::vector<cv::Mat> &X);
+                                        std::vector<bool> &inliers,
+                                        int &set_idx);
 
 };
 

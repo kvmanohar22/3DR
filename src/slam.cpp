@@ -37,16 +37,16 @@ void SLAM::process(cv::Mat &img) {
    // process the current frame
    Frame *curr_f = new Frame(cidx, img, K);
    if (cidx == 0) {
-      prev_f = Frame(*curr_f);
+      prev_f = curr_f;
       mapp->add_frame(curr_f);
       ++cidx;
       return;
    }
 
    // Match the features
-   std::vector<cv::KeyPoint> kps_p = prev_f.get_kps();
+   std::vector<cv::KeyPoint> kps_p = prev_f->get_kps();
    std::vector<cv::KeyPoint> kps_c = curr_f->get_kps();
-   cv::Mat des_p = prev_f.get_des();
+   cv::Mat des_p = prev_f->get_des();
    cv::Mat des_c = curr_f->get_des();
    std::vector<unsigned int> inliers;
    std::vector<cv::DMatch> matches;
@@ -85,24 +85,36 @@ void SLAM::process(cv::Mat &img) {
    cv::Mat R(cv::Size(3, 3), CV_32F);
    cv::Mat t(cv::Size(1, 3), CV_32F);
    std::vector<cv::Mat> X;
-   TwoView::disambiguate_camera_pose(tset, Rset, Xset, t, R, X);
+   std::vector<bool> inliers3d;
+   int set_idx;
+   TwoView::disambiguate_camera_pose(tset, Rset, Xset, t, R, inliers3d, set_idx);
    cv::Mat Rt4x4 = cv::Mat::eye(4, 4, CV_32F);
    R.copyTo(Rt4x4.rowRange(0, 3).colRange(0, 3));
    t.copyTo(Rt4x4.rowRange(0, 3).col(3));
 
    // set the pose of the current camera (world -> camera)
-   curr_f->set_pose(Rt4x4 * prev_f.get_pose_w2c());
+   curr_f->set_pose(Rt4x4 * prev_f->get_pose_w2c());
 
    // Transfer the points to world frame
-   cv::Mat CtoW = prev_f.get_pose_c2w();
+   cv::Mat CtoW = prev_f->get_pose_c2w();
    cv::Mat Rt4x4inv = Rt4x4.inv();
-   for (int i = 0; i < X.size(); ++i) {
-      cv::Mat pt_new = CtoW * Rt4x4inv * X[i];
+   for (size_t ii = 0; ii < inliers3d.size(); ++ii) {
+      if (!inliers3d[ii])
+         continue;
+
+      cv::Mat pt_new = CtoW * Rt4x4inv * Xset[set_idx][ii];
       cv::Mat xyz = pt_new.rowRange(0, 3) / pt_new.at<float>(3);
 
       // Register a new point
       Point *point = new Point(xyz);
-      point->add_observation(curr_f, 0);
+
+      // Add observation of frame in point
+      point->add_observation(curr_f, matches[inliers[ii]].queryIdx);
+      point->add_observation(prev_f, matches[inliers[ii]].trainIdx);
+
+      // Add observation of point in frame
+      curr_f->add_observation(point, matches[inliers[ii]].queryIdx);
+      prev_f->add_observation(point, matches[inliers[ii]].trainIdx);
 
       // Add the point to the map
       mapp->add_point(point);
@@ -123,7 +135,7 @@ void SLAM::process(cv::Mat &img) {
              << std::endl;
 
    // update the previous frame
-   prev_f = Frame(*curr_f);
+   prev_f = curr_f;
    ++cidx;
 }
 

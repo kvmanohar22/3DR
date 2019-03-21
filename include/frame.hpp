@@ -1,12 +1,16 @@
 #ifndef _FRAME_HPP_
 #define _FRAME_HPP_
 
+#include "point.hpp"
+
 #include <opencv2/core.hpp>
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <algorithm>
 
 namespace dr3 {
+
+class Point;
 
 class Frame {
 private:
@@ -24,6 +28,10 @@ private:
    cv::Mat pose_w2c; // world  -> camera
    cv::Mat pose_c2w; // camera -> world
    cv::Mat center;   // camera center in world coordinates
+
+   // Points projected from this Frame onto 3D world
+   std::vector<Point*> points;
+   std::vector<unsigned int> indices;
 
 public:
    Frame();
@@ -46,6 +54,10 @@ public:
 
    // Compute keypoints of the given image
    void compute_kps(const cv::Mat &img);
+
+   // add observation (point corresponds to kps[idx])
+   void add_observation(Point *point, unsigned int idx);
+
 }; // class Frame
 
 } // namespace dr3

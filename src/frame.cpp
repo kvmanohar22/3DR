@@ -49,4 +49,9 @@ void Frame::update_poses() {
    center    = -R.t() * t;
 }
 
+void Frame::add_observation(Point *point, unsigned int idx) {
+   points.push_back(point);
+   indices.push_back(idx);
+}
+
 } // namespace dr3
