@@ -7,7 +7,8 @@ Frame::Frame() {}
 Frame::Frame(Frame &frame)
    : idx(frame.get_idx()), kps(frame.get_kps()),
      des(frame.get_des()), pose_w2c(frame.get_pose(false)),
-     pose_c2w(frame.get_center(false)) {}
+     pose_c2w(frame.get_center(false)),
+     center(frame.get_camc()) {}
 
 Frame::Frame(const long unsigned int idx,
              const cv::Mat &img, const cv::Mat &K) 
@@ -24,7 +25,15 @@ Frame::Frame(const long unsigned int idx,
 
 void Frame::compute_kps(const cv::Mat &img) {
    cv::Ptr<cv::FeatureDetector> orb = cv::ORB::create();
-   orb->detectAndCompute(img, cv::noArray(), kps, des);
+   std::vector<cv::Point2f> corners;
+   cv::goodFeaturesToTrack(img, corners, 1000, 0.01, 5);
+   for (auto &itr: corners) {
+      cv::KeyPoint kpt;
+      kpt.pt.x = itr.x;
+      kpt.pt.y = itr.y;
+      kps.push_back(kpt);
+   }
+   orb->compute(img, kps, des);
 }
 
 void Frame::set_pose(cv::Mat pose) {
@@ -33,7 +42,10 @@ void Frame::set_pose(cv::Mat pose) {
 }
 
 void Frame::update_poses() {
-   pose_c2w = pose_w2c.inv();
+   pose_c2w  = pose_w2c.inv();
+   cv::Mat R = pose_w2c.rowRange(0, 3).colRange(0, 3);
+   cv::Mat t = pose_w2c.rowRange(0, 3).col(3);
+   center    = -R.t() * t;
 }
 
 cv::Mat Frame::get_pose(bool _short) const {
@@ -50,6 +62,10 @@ cv::Mat Frame::get_center(bool _short) const {
    } else {
       return pose_c2w.clone();
    }
+}
+
+cv::Mat Frame::get_camc() const {
+   return center.clone();
 }
 
 } // namespace dr3

@@ -81,12 +81,11 @@ void SLAM::process(cv::Mat &img) {
    std::vector<std::vector<cv::Mat>> Xset;
    for (int i = 0; i < 4; ++i) {
       std::vector<cv::Mat> Xs;
-      cv::Mat P1 = K * I3x4;
+      cv::Mat P1 = K * prev_f.get_pose(true);
       cv::Mat temp(cv::Size(4, 3), CV_32F);
       Rset[i].copyTo(temp.rowRange(0, 3).colRange(0, 3));
       tset[i].copyTo(temp.rowRange(0, 3).col(3));
-      // temp.col(3) *= -1;
-      cv::Mat P2 = K * temp;
+      cv::Mat P2 = K * temp * prev_f.get_pose(false);
       for (int ii = 0; ii < inliers.size(); ++ii) {
          cv::Mat xyz(cv::Size(1, 4), CV_32F);
          int qmatch = matches[inliers[ii]].queryIdx;
@@ -110,7 +109,7 @@ void SLAM::process(cv::Mat &img) {
    curr_f->set_pose(Rt4x4 * prev_f.get_pose(false));
 
    // Transfer the points to world frame
-   cv::Mat CtoW = prev_f.get_pose(false).inv();
+   cv::Mat CtoW = prev_f.get_center(false);
    for (int i = 0; i < X.size(); ++i) {
       float x = X[i].at<float>(0);
       float y = X[i].at<float>(1);
@@ -144,15 +143,15 @@ void SLAM::process(cv::Mat &img) {
              << "Inliers: " << std::setw(3) << inliers.size() << " | "
              << "#frames: " << std::setw(3) << mapp->n_frames() << " | "
              << "#points: " << std::setw(7) << mapp->n_points() << " | "
-             << "Camera t: " << std::setw(3) << curr_f->get_center(false).col(3).t()
+             << "Camera C: " << std::setw(3) << curr_f->get_camc().t()
              << std::endl;
 
    // update the previous frame
    prev_f = Frame(*curr_f);
    ++cidx;
 
-   if (cidx == 3)
-      while(1);
+   // if (cidx == 10)
+   //    while(1);
 }
 
 } // namespace dr3

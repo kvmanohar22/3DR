@@ -25,7 +25,6 @@ private:
    cv::Mat pose_c2w; // camera -> world
    cv::Mat center;   // camera center in world coordinates
 
-
 public:
    Frame();
    Frame(Frame &frame);
@@ -37,6 +36,7 @@ public:
    cv::Mat get_des() const { return des; }
    cv::Mat get_pose(bool _short) const;
    cv::Mat get_center(bool _short) const;
+   cv::Mat get_camc() const;
    
    // Set the pose of the matrix
    void set_pose(cv::Mat pose);
