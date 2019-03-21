@@ -81,11 +81,11 @@ void SLAM::process(cv::Mat &img) {
    std::vector<std::vector<cv::Mat>> Xset;
    for (int i = 0; i < 4; ++i) {
       std::vector<cv::Mat> Xs;
-      cv::Mat P1 = K * prev_f.get_pose(true);
+      cv::Mat P1 = K * I3x4;
       cv::Mat temp(cv::Size(4, 3), CV_32F);
       Rset[i].copyTo(temp.rowRange(0, 3).colRange(0, 3));
       tset[i].copyTo(temp.rowRange(0, 3).col(3));
-      cv::Mat P2 = K * temp * prev_f.get_pose(false);
+      cv::Mat P2 = K * temp;
       for (int ii = 0; ii < inliers.size(); ++ii) {
          cv::Mat xyz(cv::Size(1, 4), CV_32F);
          int qmatch = matches[inliers[ii]].queryIdx;
@@ -118,7 +118,7 @@ void SLAM::process(cv::Mat &img) {
       float w = X[i].at<float>(3);
 
       cv::Mat pt_old = (cv::Mat_<float>(4, 1) << x, y, z, w);
-      cv::Mat pt_new = CtoW * pt_old;
+      cv::Mat pt_new = CtoW * Rt4x4.inv() * pt_old;
 
       w = pt_new.at<float>(3);
       cv::Mat xyz(cv::Size(1, 3), CV_32F);
@@ -136,7 +136,7 @@ void SLAM::process(cv::Mat &img) {
    mapp->add_frame(curr_f);
 
    // update the viewers
-   // v2d->update(img, curr_f->get_kps());
+   v2d->update(img, curr_f->get_kps());
 
    // Spit some debug data
    std::cout << "Processing frame: #" << std::setw(3) << cidx << " | "
@@ -151,8 +151,8 @@ void SLAM::process(cv::Mat &img) {
    prev_f = Frame(*curr_f);
    ++cidx;
 
-   if (cidx == 2)
-      while(1);
+   // if (cidx == 5)
+   //    while(1);
 }
 
 } // namespace dr3

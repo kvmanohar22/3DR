@@ -261,37 +261,44 @@ void TwoView::disambiguate_camera_pose(std::vector<cv::Mat> &tset,
    int max_count = -1;
    int idx = -1;
    std::vector<int> valid_points;
-   for (int i = 3; i < 4; ++i) {
+   for (int i = 0; i < 4; ++i) {
       cv::Mat t = tset[i];
       cv::Mat R = Rset[i];
+      if (cv::determinant(R) < 0) {
+         R = -R;
+         t = -t;
+      }
       std::vector<cv::Mat> X = Xset[i]; 
       int curr_count = 0;
       cv::Mat C = -R.t() * t;
       float cz = C.at<float>(2);
+      std::vector<int> valid_points_curr;
       for (int ii = 0; ii < X.size(); ++ii) {
          cv::Mat xyz = X[ii].rowRange(0, 3) / X[ii].at<float>(3);
          cv::Mat ptc = R * xyz + t;
-         std::cout << "world : " << xyz.t() << " " << std::endl
-                   << "camera: " << ptc.t()
-                   << "\n--------------"
-                   << std::endl;
+         // std::cout << "world : " << xyz.t() << " " << std::endl
+         //           << "camera: " << ptc.t()
+         //           << "\n--------------"
+         //           << std::endl;
          if (xyz.at<float>(2) > 0 && ptc.at<float>(2) > 0) {
             ++curr_count;
-            valid_points.push_back(ii);
+            valid_points_curr.push_back(ii);
          }
       }
-      max_count = curr_count;
-      idx = i;
+
       if (max_count < curr_count) {
          max_count = curr_count;
          idx = i;
+         valid_points = valid_points_curr;
       }
-      // std::cout << "i: " << i 
-      //           <<" cur: " << curr_count
-      //           <<" max: " << max_count << std::endl;
+
+      std::cout <<" i: " << i 
+                <<" det(R): " << cv::determinant(R)
+                <<" cur: " << curr_count
+                <<" max: " << max_count << std::endl;
    }
    // idx = 1;
-   std::cout << "idx: " << idx << " count: " << max_count << std::endl;
+   // std::cout << "idx: " << idx << " count: " << max_count << std::endl;
    tset[idx].copyTo(t);
    Rset[idx].copyTo(R);
    for (auto &itr: valid_points)

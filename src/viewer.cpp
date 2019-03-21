@@ -176,6 +176,11 @@ void Viewer3D::update() {
       green.y = 1.0f;
       green.z = 0.0f;
 
+      cv::Point3f blue;
+      blue.x = 0.0f;
+      blue.y = 0.0f;
+      blue.z = 1.0f;
+
       // Render cameras
       const std::vector<Frame*> frames = mapp->get_frames();
       int idx = 0;
@@ -193,8 +198,10 @@ void Viewer3D::update() {
          //            pose.at<float>(2, 3));
           if (idx == 0)
             draw_camera(pose, red);
-          else
+          else if (idx == 1)
             draw_camera(pose, green);
+          else
+            draw_camera(pose, blue);
           ++idx;
       }
       glEnd();
