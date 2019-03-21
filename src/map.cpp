@@ -3,11 +3,11 @@
 namespace dr3 {
 
 void Map::add_point(Point *point) {
-   this->points.insert(point);
+   this->points.push_back(point);
 }
 
 void Map::add_frame(Frame *frame) {
-   this->frames.insert(frame);
+   this->frames.push_back(frame);
 }
 
 std::vector<Frame*> Map::get_frames() {

@@ -11,8 +11,8 @@ namespace dr3 {
 
 class Map {
 protected:
-   std::set<Point*> points;
-   std::set<Frame*> frames;
+   std::vector<Point*> points;
+   std::vector<Frame*> frames;
 
 public:
    Map() {}
