@@ -131,27 +131,28 @@ cv::Mat TwoView::estimate_E() {
    return E.clone();
 }
 
-void TwoView::extract_params(const cv::Mat &F,
-                             const cv::Mat &K,
-                             cv::Mat &R1, cv::Mat &R2,
-                             cv::Mat &t1, cv::Mat &t2) {
+void TwoView::extract_camera_pose(const cv::Mat &F,
+                                 const cv::Mat &K,
+                                 std::vector<cv::Mat> &Rset,
+                                 std::vector<cv::Mat> &tset) {
    cv::Mat E = K.t() * F * K;
    cv::Mat W = (cv::Mat_<float>(3, 3) << 0, -1, 0,
                                          1,  0, 0,
                                          0,  0, 1);
-   cv::SVD svd(E, cv::SVD::FULL_UV | cv::SVD::MODIFY_A);
+   cv::Mat u, w, vt;
+   cv::SVD::compute(E, w, u, vt, cv::SVD::FULL_UV | cv::SVD::MODIFY_A);
 
-   // Translation vector
-   t1 =  svd.u.col(2);
-   t2 = -1 * svd.u.col(2);
+   // Camera center
+   tset.push_back(u.col(2));
+   tset.push_back(-u.col(2));
+   tset.push_back(u.col(2));
+   tset.push_back(-u.col(2));
 
    // Rotation matrix
-   R1 = svd.u * W * svd.vt;
-   R2 = svd.u * W.t() * svd.vt;
-
-   // std::cout << "Two possible camera positions" << std::endl
-   //           << t1.t() << "\n"
-   //           << t2.t() << std::endl;
+   Rset.push_back(u * W * vt);
+   Rset.push_back(u * W * vt);
+   Rset.push_back(u * W.t() * vt);
+   Rset.push_back(u * W.t() * vt);
 }
 
 void TwoView::estimate_epipoles() {
@@ -232,6 +233,54 @@ cv::Mat TwoView::draw_poles_and_lines(size_t n, bool left_points) {
 
    cv::Mat img = v2d.update(timg_l, timg_r, kps_l, inliers, kps_r, inliers);
    return img;
+}
+
+void TwoView::triangulate(cv::KeyPoint &kp1,
+                          cv::KeyPoint &kp2,
+                          cv::Mat &P1,
+                          cv::Mat &P2,
+                          cv::Mat &xyz) {
+
+  cv::Mat A(4, 4, CV_32F);
+
+  A.row(0) = kp1.pt.x * P1.row(2) - P1.row(0);
+  A.row(1) = kp1.pt.y * P1.row(2) - P1.row(1);
+  A.row(2) = kp2.pt.x * P2.row(2) - P2.row(0);
+  A.row(3) = kp2.pt.y * P2.row(2) - P2.row(1);
+
+  cv::Mat u, w, vt;
+  cv::SVD::compute(A, w, u, vt, cv::SVD::MODIFY_A | cv::SVD::FULL_UV);
+  xyz = vt.row(3).t();
+}
+
+void TwoView::disambiguate_camera_pose(std::vector<cv::Mat> &tset,
+                                      std::vector<cv::Mat> &Rset,
+                                      std::vector<std::vector<cv::Mat>> &Xset,
+                                      cv::Mat &t, cv::Mat &R,
+                                      std::vector<cv::Mat> &X) {
+   int max_count = -1;
+   int idx = -1;
+   for (int i = 0; i < 4; ++i) {
+      cv::Mat C = tset[i];
+      cv::Mat R = Rset[i];
+      std::vector<cv::Mat> X = Xset[i]; 
+      int curr_count = 0;
+      for (int ii = 0; ii < X.size(); ++ii) {
+         cv::Mat xyz = X[ii].rowRange(0, 3) / X[ii].at<float>(3);
+         if (R.row(2).dot((xyz - C).t()) > 0)
+            ++curr_count;
+      }
+      if (max_count < curr_count) {
+         max_count = curr_count;
+         idx = i;
+      }
+      // std::cout << "i: " << i 
+      //           <<" cur: " << curr_count
+      //           <<" max: " << max_count << std::endl;
+   }
+   tset[idx].copyTo(t);
+   Rset[idx].copyTo(R);
+   X = Xset[idx];
 }
 
 } // namespace 3dr

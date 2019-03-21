@@ -63,15 +63,20 @@ int main() {
    //           << w << " "
    //           << std::endl;
 
-   float inf = 1.0 / 0.0;
-   cerr << inf << endl;
-   float nan1 = 0.0 * inf;
-   float nan2 = 0.0 * inf;
+   // float inf = 1.0 / 0.0;
+   // cerr << inf << endl;
+   // float nan1 = 0.0 * inf;
+   // float nan2 = 0.0 * inf;
    
-   if (nan1 == nan2)
-      cerr << nan << endl;
-   cerr << nan1 << endl;
+   // if (nan1 == nan2)
+   //    cerr << nan << endl;
+   // cerr << nan1 << endl;
 
-   // copying is weird in opencv
-   std::vector<cv::Mat> Rt(4, cv::Mat(cv::Size(4, 3), CV_32F));
+   // // copying is weird in opencv
+   // std::vector<cv::Mat> Rt(4, cv::Mat(cv::Size(4, 3), CV_32F));
+   cv::Mat xyz(cv::Size(1, 3), CV_32F);
+   xyz.at<float>(0) = 12;
+   xyz.at<float>(1) = 132;
+   xyz.at<float>(2) = 2;
+   std::cout << xyz << std::endl;
 }

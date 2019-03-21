@@ -68,6 +68,9 @@ private:
    pangolin::OpenGlRenderState s_cam;
    Map *mapp;
 
+protected:
+   void draw_camera(cv::Mat Rt, cv::Point3f color);
+
 public:
    Viewer3D(Map *mapp);
 

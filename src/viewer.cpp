@@ -101,9 +101,48 @@ void Viewer3D::setup() {
    H = 768;
    W = 1024;
 
-   pangolin::CreateWindowAndBind(window_name, 640, 480);
+   pangolin::CreateWindowAndBind(window_name, W, H);
    glEnable(GL_DEPTH_TEST);
    pangolin::GetBoundWindow()->RemoveCurrent();
+}
+
+void Viewer3D::draw_camera(cv::Mat Rt, cv::Point3f color) {
+   float w = 1.0;
+   float h = w * 0.75;
+   float z = w * 0.6;
+
+   Rt = Rt.t();
+
+   glPushMatrix();
+
+   glMultMatrixf(Rt.ptr<GLfloat>(0));
+
+   glLineWidth(1.0f);
+   glColor3f(color.x, color.y, color.z);
+   glBegin(GL_LINES);
+   glVertex3f(0,0,0);
+   glVertex3f(w,h,z);
+   glVertex3f(0,0,0);
+   glVertex3f(w,-h,z);
+   glVertex3f(0,0,0);
+   glVertex3f(-w,-h,z);
+   glVertex3f(0,0,0);
+   glVertex3f(-w,h,z);
+
+   glVertex3f(w,h,z);
+   glVertex3f(w,-h,z);
+
+   glVertex3f(-w,h,z);
+   glVertex3f(-w,-h,z);
+
+   glVertex3f(-w,h,z);
+   glVertex3f(w,h,z);
+
+   glVertex3f(-w,-h,z);
+   glVertex3f(w,-h,z);
+   glEnd();
+
+   glPopMatrix();
 }
 
 void Viewer3D::update() {
@@ -113,7 +152,7 @@ void Viewer3D::update() {
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
    s_cam = pangolin::OpenGlRenderState(
-         pangolin::ProjectionMatrix(W, H, 420, 420, 512, 389, 0.1, 100),
+         pangolin::ProjectionMatrix(W, H, 420, 420, 512, 389, 0.1, 1000),
          pangolin::ModelViewLookAt(-2, 2,-2,
                                    0,  0, 0,
                                    pangolin::AxisY));
@@ -127,20 +166,35 @@ void Viewer3D::update() {
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       d_cam.Activate(s_cam);
-      glPointSize(5.0f);
-      glBegin(GL_POINTS);
-      glColor3f(1.0f, 0.0f, 0.0f);
+      cv::Point3f white;
+      white.x = 1.0f;
+      white.y = 1.0f;
+      white.z = 1.0f;
 
       // Render cameras
       std::vector<Frame*> frames = mapp->get_frames();
       for (auto &itr : frames) {
-         cv::Mat pose = itr->get_pose(true);
-         glVertex3f(pose.at<float>(0, 3),
-                    pose.at<float>(1, 3),
-                    pose.at<float>(2, 3));
+         cv::Mat pose = itr->get_pose(false);
+            draw_camera(pose, white);
       }
 
-      glEnd();
+      // std::cout << "Here" << std::endl;
+      // // Render points
+      // glPointSize(2.0f);
+      // glBegin(GL_POINTS);
+      // glColor3f(1.0f, 1.0f, 1.0f);
+      // std::vector<Point*> points = mapp->get_points();
+      // for (auto &itr : points) {
+      //    if (!itr->is_valid())
+      //       continue;
+
+      //    cv::Mat point = itr->get_xyz();
+      //    glVertex3f(point.at<float>(0),
+      //               point.at<float>(1),
+      //               point.at<float>(2));
+      // }
+      // glEnd();
+
       pangolin::FinishFrame();
    }
 }

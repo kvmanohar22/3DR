@@ -52,10 +52,10 @@ public:
    static cv::Mat estimate_E();
 
    // Recovers the correct Rotation matrix and translation vector
-   static void extract_params(const cv::Mat &F, 
-                              const cv::Mat &K,
-                              cv::Mat &R1, cv::Mat &R2,
-                              cv::Mat &t1, cv::Mat &t2);
+   static void extract_camera_pose(const cv::Mat &F,
+                                   const cv::Mat &K,
+                                   std::vector<cv::Mat> &Rset,
+                                   std::vector<cv::Mat> &Cset);
 
    // Reduce the estimated Fundamental matrix to a rank 2 matrix
    static cv::Mat clean_F(cv::Mat F);
@@ -74,6 +74,18 @@ public:
                                                std::vector<cv::KeyPoint> kps_l,
                                                std::vector<cv::KeyPoint> kps_r,
                                                std::vector<cv::DMatch> matches);
+
+   static void triangulate(cv::KeyPoint &kp1,
+                          cv::KeyPoint &kp2,
+                          cv::Mat &P1,
+                          cv::Mat &P2,
+                          cv::Mat &xyz);
+
+   static void disambiguate_camera_pose(std::vector<cv::Mat> &tset,
+                                        std::vector<cv::Mat> &Rset,
+                                        std::vector<std::vector<cv::Mat>> &Xset,
+                                        cv::Mat &t, cv::Mat &R,
+                                        std::vector<cv::Mat> &X);
 
 };
 
