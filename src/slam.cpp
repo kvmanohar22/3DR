@@ -106,7 +106,7 @@ void SLAM::process(cv::Mat &img) {
       cv::Mat xyz = pt_new.rowRange(0, 3) / pt_new.at<float>(3);
 
       // Register a new point
-      Point *point = new Point(xyz);
+      Point *point = new Point(xyz, mapp->n_points());
 
       // Add observation of frame in point
       point->add_observation(curr_f, matches[inliers[ii]].queryIdx);

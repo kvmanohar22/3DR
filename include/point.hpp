@@ -13,6 +13,9 @@ class Frame;
 class Point {
 private:
 
+   // unique point idx
+   size_t idx;
+
    /* Position in the world
 
       Access the point as:
@@ -28,7 +31,9 @@ private:
 
 public:
    Point() {}
-   Point(cv::Mat xyz);
+   Point(cv::Mat xyz, size_t idx);
+
+   inline size_t get_idx() { return idx; }
 
    // Add a new observation
    void add_observation(Frame *frame, unsigned int idx);

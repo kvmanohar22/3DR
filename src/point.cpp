@@ -2,8 +2,9 @@
 
 namespace dr3 {
 
-Point::Point(cv::Mat xyz) {
+Point::Point(cv::Mat xyz, size_t idx) {
    this->xyz = xyz.clone();
+   this->idx = idx;
 }
 
 void Point::add_observation(Frame *frame,
