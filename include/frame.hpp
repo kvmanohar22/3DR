@@ -40,6 +40,7 @@ public:
 
    inline const long unsigned int get_idx() const { return idx; }
    inline const std::vector<cv::KeyPoint> get_kps() const { return kps; }
+   inline cv::KeyPoint get_kpt(size_t idx) const { return kps[idx]; }
    inline const cv::Mat get_des() const { return des; }
 
    // camera poses

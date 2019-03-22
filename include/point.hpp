@@ -14,7 +14,7 @@ class Point {
 private:
 
    // unique point idx
-   size_t idx;
+   unsigned int idx;
 
    /* Position in the world
 
@@ -31,17 +31,19 @@ private:
 
 public:
    Point() {}
-   Point(cv::Mat xyz, size_t idx);
+   Point(cv::Mat xyz, unsigned int idx);
 
-   inline size_t get_idx() { return idx; }
+   inline unsigned int get_idx() { return idx; }
 
    // Add a new observation
    void add_observation(Frame *frame, unsigned int idx);
 
-   // Check if the point is valid
-   bool is_valid() { return !xyz.empty(); }
+   inline bool is_valid() { return !xyz.empty(); }
+   inline cv::Mat get_xyz() { return xyz.clone(); }
+   inline size_t n_frames() const { return frames.size(); }
+   inline std::vector<Frame*> get_frames() { return frames; }
+   inline std::vector<unsigned int> get_indices() { return idxs; }
 
-   cv::Mat get_xyz() { return xyz.clone(); }
 }; // class Point
 
 } // namespace dr3

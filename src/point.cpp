@@ -2,7 +2,7 @@
 
 namespace dr3 {
 
-Point::Point(cv::Mat xyz, size_t idx) {
+Point::Point(cv::Mat xyz, unsigned int idx) {
    this->xyz = xyz.clone();
    this->idx = idx;
 }
