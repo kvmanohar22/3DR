@@ -10,7 +10,7 @@ Tracking camera (without Bundle Adjustment). Video: (KITTI `sequence/00`)
 - [x] Image Warping
 - [x] Panorama stitching
 - [x] Visual Odometry
-- [ ] Move Bundle Adjustment to separate thread
+- [ ] Sparse Visual Odometry
 - [ ] Ghost removal in big panoramas (refer [1])
 - [ ] Optical Flow
 - [ ] SfM (unordered images)
