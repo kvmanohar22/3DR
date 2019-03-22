@@ -11,6 +11,7 @@
 #include "map.hpp"
 #include "point.hpp"
 #include "optimizer.hpp"
+#include "timer.hpp"
 
 #include <thread>
 

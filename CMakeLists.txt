@@ -30,6 +30,7 @@ set(SRCS
    src/frame.cpp
    src/point.cpp
    src/map.cpp
+   src/timer.cpp
    src/optimizer.cpp
    src/viewer.cpp)
 add_library(DR3_LIBS SHARED ${SRCS})

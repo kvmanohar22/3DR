@@ -4,6 +4,7 @@
 #include <chrono>
 #include <map>
 #include <string>
+#include <iostream>
 #include <iterator>
 
 namespace dr3 {

@@ -26,7 +26,7 @@ void Monitor::stop_timer(const std::string &name) {
    _timer->second.toc();
 }
 
-void Monitor::get_time(const std::string &name) {
+double Monitor::get_time(const std::string &name) const {
    auto _timer = _timers.find(name);
    if (_timer == _timers.end()) {
       std::cerr << "Timer: \"" << name << "\" not registered." << std::endl;
