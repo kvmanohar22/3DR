@@ -44,6 +44,8 @@ public:
    inline std::vector<Frame*> get_frames() { return frames; }
    inline std::vector<unsigned int> get_indices() { return idxs; }
 
+   inline void set_xyz(cv::Mat xyz) { this->xyz = xyz; }
+
 }; // class Point
 
 } // namespace dr3

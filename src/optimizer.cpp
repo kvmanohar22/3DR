@@ -3,10 +3,10 @@
 namespace dr3 {
 
 /*********************** OptProblem ***********************/
-OptProblem::OptProblem(Map *mapp) {
+OptProblem::OptProblem(Map *map) : map(map) {
 
-   std::vector<Frame*> frames = mapp->get_frames();
-   std::vector<Point*> points = mapp->get_points();
+   std::vector<Frame*> frames = map->get_frames();
+   std::vector<Point*> points = map->get_points();
 
    _num_cameras = frames.size();
    _num_points  = points.size();
@@ -42,7 +42,7 @@ OptProblem::OptProblem(Map *mapp) {
 
    /* 
       Register camera parameters
-      
+
       camera[0] -> rotation about x
       camera[1] -> rotation about y
       camera[2] -> rotation about z
@@ -78,6 +78,44 @@ OptProblem::OptProblem(Map *mapp) {
          _point_parameters[i*3+j] = (double)X3D.at<float>(j);
       }
    } 
+}
+
+void OptProblem::replace_back() {
+   // put cameras back
+   std::vector<Frame*> frames = map->get_frames();
+   for (int i = 0; i < _num_cameras; ++i) {
+      // Extract Rotation angles and translation vector
+      double *curr_camera_params = this->mutable_cameras() + i * 6;
+      double *angle_axis = new double[3];
+      for (int j = 0; j < 3; ++j)
+         angle_axis[j] = curr_camera_params[j];
+      double *translation = new double[3];
+      for (int j = 0; j < 3; ++j)
+         translation[j] = curr_camera_params[3 + j];
+
+      // Rotation angles -> Rotation matrix
+      double *R = new double[9];
+      AngleAxisToRotationMatrix(angle_axis, R);
+
+      cv::Mat pose_w2c = cv::Mat::eye(4, 4, CV_32F);
+      for (int ii = 0; ii < 3; ++ii)
+         for (int jj = 0; jj < 3; ++jj)
+            pose_w2c.at<float>(ii, jj) = (float)R[ii * 3 + jj];
+      for (int ii = 0; ii < 3; ++ii)
+         pose_w2c.at<float>(ii, 3) = (float)translation[ii];
+      frames[i]->set_pose(pose_w2c);
+   }
+
+   // put 3D points back
+   std::vector<Point*> points = map->get_points();
+   for (int i = 0; i < _num_points; ++i) {
+      double *curr_point_parameters = this->mutable_points() + i * 3;
+      cv::Mat X3D(cv::Size(1, 3), CV_32F);
+      for (int j = 0; j < 3; ++j) {
+         X3D.at<float>(j) = (float)curr_point_parameters[j];
+      }
+      points[i]->set_xyz(X3D.clone());
+   }
 }
 
 OptProblem::~OptProblem() {
@@ -118,9 +156,13 @@ void Optimizer::global_BA(Map *map, cv::Mat K) {
    options.linear_solver_type = ceres::DENSE_SCHUR;
    options.minimizer_progress_to_stdout = false;
 
+   // Optimize
    ceres::Solver::Summary summary;
    ceres::Solve(options, &ceres_problem, &summary);
    std::cout << summary.BriefReport() << std::endl;
+
+   // Replace the optimized variables back
+   problem.replace_back();
 }
 
 

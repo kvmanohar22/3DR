@@ -16,6 +16,10 @@ Tracking camera (without Bundle Adjustment). Video: (KITTI `sequence/00`)
 - [ ] SfM (unordered images)
 - [x] SfM (video sequence (localisation))
 
+## To fix
+- [ ] Cholesky Decomposition fails during BA
+- [ ] Optimization is ridiculously slow (but works). Should make it faster
+
 ## Requirements
 - C++14
 - Linux (tested only on Ubuntu 18.10)

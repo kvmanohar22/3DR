@@ -41,6 +41,8 @@ private:
    double *_camera_parameters;
    double *_point_parameters;
 
+   Map *map;
+
 public:
    OptProblem(Map *mapp);
    ~OptProblem();
@@ -63,7 +65,8 @@ public:
       return mutable_points() + _point_index[i] * 3;
    }
 
-
+   // put the optimized cameras and frames back
+   void replace_back();
 };
 
 
