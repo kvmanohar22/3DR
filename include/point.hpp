@@ -39,9 +39,9 @@ public:
    void add_observation(Frame *frame, unsigned int idx);
 
    // Check if the point is valid
-   bool is_valid();
+   bool is_valid() { return !xyz.empty(); }
 
-   cv::Mat get_xyz();
+   cv::Mat get_xyz() { return xyz.clone(); }
 }; // class Point
 
 } // namespace dr3

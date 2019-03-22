@@ -1,9 +1,9 @@
 #!/bin/sh
 
-SEQUENCE_PATH=/home/kv/slam/dataset/sequences/00
+SEQUENCE_PATH=/home/kv/slam/dataset/sequences/02
 
 cd ../build
-make test_slam
+make test_slam -j3
 
 if [ $? -eq 0 ]; then
   echo "******************"

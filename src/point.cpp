@@ -13,12 +13,4 @@ void Point::add_observation(Frame *frame,
    this->idxs.push_back(idx);
 }
 
-bool Point::is_valid() {
-   return !xyz.empty();
-}
-
-cv::Mat Point::get_xyz() {
-   return xyz.clone();
-}
-
 } // namespace dr3
