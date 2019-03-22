@@ -22,9 +22,9 @@ OptProblem::OptProblem(Map *mapp) {
    // allocate memory
    _point_index  = new int[_num_observations];
    _camera_index = new int[_num_observations];
-   _observations = new float[2 * _num_observations];
-   _camera_parameters = new float[_num_camera_parameters];
-   _point_parameters  = new float[_num_point_parameters];
+   _observations = new double[2 * _num_observations];
+   _camera_parameters = new double[_num_camera_parameters];
+   _point_parameters  = new double[_num_point_parameters];
 
    // Register observations
    size_t curr_observation_idx = 0;
@@ -55,11 +55,11 @@ OptProblem::OptProblem(Map *mapp) {
       cv::Mat pose_w2c = frames[i]->get_pose_w2c();
 
       // Convert rotation matrix to angle-axis form
-      float *angle_axis = new float[3];
-      float *R = new float[9];
+      double *angle_axis = new double[3];
+      double *R = new double[9];
       for (int ii = 0; ii < 3; ++ii)
          for (int jj = 0; jj < 3; ++jj)
-            R[ii*3+jj] = pose_w2c.at<float>(ii, jj);
+            R[ii*3+jj] = (double)pose_w2c.at<float>(ii, jj);
       RotationMatrixToAngleAxis(R, angle_axis);
 
       // Rotation
@@ -68,14 +68,14 @@ OptProblem::OptProblem(Map *mapp) {
 
       // Translation
       for (int j = 0; j < 3; ++j)
-         _camera_parameters[i*6+3+j] = pose_w2c.at<float>(j, 3);
+         _camera_parameters[i*6+3+j] = (double)pose_w2c.at<float>(j, 3);
    } 
 
    // Register 3D point coordinates
    for (int i = 0; i < _num_points; ++i) {
       cv::Mat X3D = points[i]->get_xyz();
       for (int j = 0; j < 3; ++j) {
-         _point_parameters[i*3+j] = X3D.at<float>(j);
+         _point_parameters[i*3+j] = (double)X3D.at<float>(j);
       }
    } 
 }
@@ -93,13 +93,13 @@ OptProblem::~OptProblem() {
 void Optimizer::global_BA(Map *map, cv::Mat K) {
    OptProblem problem(map);
 
-   const float* observations = problem.get_observations();
+   const double* observations = problem.get_observations();
 
-   float* intrinsics = new float[4];
-   intrinsics[0] = K.at<float>(0, 0);
-   intrinsics[1] = K.at<float>(1, 1);
-   intrinsics[2] = K.at<float>(0, 2);
-   intrinsics[3] = K.at<float>(1, 2);
+   double* intrinsics = new double[4];
+   intrinsics[0] = (double)K.at<float>(0, 0);
+   intrinsics[1] = (double)K.at<float>(1, 1);
+   intrinsics[2] = (double)K.at<float>(0, 2);
+   intrinsics[3] = (double)K.at<float>(1, 2);
 
    // Create residuals
    ceres::Problem ceres_problem;
@@ -116,10 +116,11 @@ void Optimizer::global_BA(Map *map, cv::Mat K) {
 
    ceres::Solver::Options options;
    options.linear_solver_type = ceres::DENSE_SCHUR;
-   options.minimizer_progress_to_stdout = true;
+   options.minimizer_progress_to_stdout = false;
 
    ceres::Solver::Summary summary;
    ceres::Solve(options, &ceres_problem, &summary);
+   std::cout << summary.BriefReport() << std::endl;
 }
 
 

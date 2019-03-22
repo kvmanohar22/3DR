@@ -37,9 +37,9 @@ private:
 
    int *_point_index;
    int *_camera_index;
-   float *_observations;
-   float *_camera_parameters;
-   float *_point_parameters;
+   double *_observations;
+   double *_camera_parameters;
+   double *_point_parameters;
 
 public:
    OptProblem(Map *mapp);
@@ -51,15 +51,15 @@ public:
    inline int num_camera_parameters() { return _num_camera_parameters; }
    inline int num_point_parameters() { return _num_point_parameters; }
 
-   const float* get_observations() const { return _observations; }
-   float* mutable_cameras() { return _camera_parameters; }
-   float* mutable_points() { return _point_parameters; }
+   const double* get_observations() const { return _observations; }
+   double* mutable_cameras() { return _camera_parameters; }
+   double* mutable_points() { return _point_parameters; }
 
-   float* mutable_camera_for_observation(size_t i) {
+   double* mutable_camera_for_observation(size_t i) {
       return mutable_cameras() + _camera_index[i] * 6;
    }
 
-   float* mutable_point_for_observation(size_t i) {
+   double* mutable_point_for_observation(size_t i) {
       return mutable_points() + _point_index[i] * 3;
    }
 
@@ -69,10 +69,10 @@ public:
 
 /********************* Reprojection Error *********************/
 struct ReprojectionError {
-   float observed_x;
-   float observed_y;
+   double observed_x;
+   double observed_y;
 
-   ReprojectionError(float observed_x, float observed_y)
+   ReprojectionError(double observed_x, double observed_y)
       : observed_x(observed_x), observed_y(observed_y) {}
 
    template <typename T>
@@ -108,8 +108,8 @@ struct ReprojectionError {
    }
 
    // Create loss
-   static ceres::CostFunction* create(const float observed_x,
-                                      const float observed_y) {
+   static ceres::CostFunction* create(const double observed_x,
+                                      const double observed_y) {
       return (new ceres::AutoDiffCostFunction<ReprojectionError, 2, 4, 6, 3>(
                   new ReprojectionError(observed_x, observed_y)));
    }

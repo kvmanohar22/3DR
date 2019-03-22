@@ -138,6 +138,9 @@ void SLAM::process(cv::Mat &img) {
    // update the viewers
    v2d->update(img, curr_f->get_kps());
 
+   // Bundle Adjustment
+   Optimizer::global_BA(mapp, K);
+
    // Spit some debug data
    std::cout << "Frame: #"     << std::setw(3) << cidx << " | "
              << "Matches: "    << std::setw(3) << matches.size() << " | "
@@ -146,14 +149,13 @@ void SLAM::process(cv::Mat &img) {
              << "#KeyFrames: " << std::setw(3) << mapp->n_frames() << " | "
              << "#points: "    << std::setw(7) << mapp->n_points() << " | "
              << "Camera pos: " << std::setw(3) << curr_f->get_center().t()
+             << std::endl
+             << "*********************************************"
              << std::endl;
 
    // update the previous frame
    prev_f = curr_f;
    ++cidx;
-
-   // Bundle Adjustment
-   Optimizer::global_BA(mapp, K);
 }
 
 } // namespace dr3
