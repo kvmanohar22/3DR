@@ -2,13 +2,8 @@
 
 namespace dr3 {
 
-Solver::Options Optimizer::_options;
-Solver::Summary Optimizer::_summary;
-
-
 /*********************** OptProblem ***********************/
-OptProblem::OptProblem(Map *mapp)
-   : mapp(mapp), _num_observations(0) {
+OptProblem::OptProblem(Map *mapp) {
 
    std::vector<Frame*> frames = mapp->get_frames();
    std::vector<Point*> points = mapp->get_points();
@@ -16,6 +11,7 @@ OptProblem::OptProblem(Map *mapp)
    _num_cameras = frames.size();
    _num_points  = points.size();
 
+   _num_observations = 0;
    for (auto &itr: points)
       _num_observations += itr->n_frames();
 
@@ -94,13 +90,36 @@ OptProblem::~OptProblem() {
 
 
 /********************* Optimizer *********************/
-Optimizer::Optimizer() {
-   _options.linear_solver_type = ceres::DENSE_SCHUR;
-   _options.minimizer_progress_to_stdout = true;
-}
+void Optimizer::global_BA(Map *map, cv::Mat K) {
+   OptProblem problem(map);
 
-void Optimizer::global_BA(Map *map) {
+   const float* observations = problem.get_observations();
 
+   float* intrinsics = new float[4];
+   intrinsics[0] = K.at<float>(0, 0);
+   intrinsics[1] = K.at<float>(1, 1);
+   intrinsics[2] = K.at<float>(0, 2);
+   intrinsics[3] = K.at<float>(1, 2);
+
+   // Create residuals
+   ceres::Problem ceres_problem;
+   for (size_t i = 0; i < problem.num_observations(); ++i) {
+      ceres::CostFunction *cost_function = 
+         ReprojectionError::create(observations[2 * i + 0],
+                                   observations[2 * i + 1]);
+      ceres_problem.AddResidualBlock(cost_function,
+                                     NULL,
+                                     intrinsics,
+                                     problem.mutable_camera_for_observation(i),
+                                     problem.mutable_point_for_observation(i));
+   }
+
+   ceres::Solver::Options options;
+   options.linear_solver_type = ceres::DENSE_SCHUR;
+   options.minimizer_progress_to_stdout = true;
+
+   ceres::Solver::Summary summary;
+   ceres::Solve(options, &ceres_problem, &summary);
 }
 
 

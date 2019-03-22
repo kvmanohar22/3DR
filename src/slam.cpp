@@ -151,6 +151,9 @@ void SLAM::process(cv::Mat &img) {
    // update the previous frame
    prev_f = curr_f;
    ++cidx;
+
+   // Bundle Adjustment
+   Optimizer::global_BA(mapp, K);
 }
 
 } // namespace dr3

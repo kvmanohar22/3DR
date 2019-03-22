@@ -41,8 +41,6 @@ private:
    float *_camera_parameters;
    float *_point_parameters;
 
-   Map *mapp;
-
 public:
    OptProblem(Map *mapp);
    ~OptProblem();
@@ -52,6 +50,20 @@ public:
    inline int num_cameras() { return _num_cameras; }
    inline int num_camera_parameters() { return _num_camera_parameters; }
    inline int num_point_parameters() { return _num_point_parameters; }
+
+   const float* get_observations() const { return _observations; }
+   float* mutable_cameras() { return _camera_parameters; }
+   float* mutable_points() { return _point_parameters; }
+
+   float* mutable_camera_for_observation(size_t i) {
+      return mutable_cameras() + _camera_index[i] * 6;
+   }
+
+   float* mutable_point_for_observation(size_t i) {
+      return mutable_points() + _point_index[i] * 3;
+   }
+
+
 };
 
 
@@ -106,16 +118,8 @@ struct ReprojectionError {
 
 /********************* Optimizer *********************/
 class Optimizer {
-private:
-
-   // solver
-   static Solver::Options _options;
-   static Solver::Summary _summary;
-
 public:   
-   Optimizer();
-
-   static void global_BA(Map *map);
+   static void global_BA(Map *map, cv::Mat K);
 
 }; // class Optimizer
 
