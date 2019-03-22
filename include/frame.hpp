@@ -31,7 +31,6 @@ private:
 
    // Points projected from this Frame onto 3D world
    std::vector<Point*> points;
-   std::vector<unsigned int> indices;
 
 public:
    Frame();
@@ -56,7 +55,12 @@ public:
    void compute_kps(const cv::Mat &img);
 
    // add observation (point corresponds to kps[idx])
-   void add_observation(Point *point, unsigned int idx);
+   void add_observation(Point *point, size_t idx);
+
+   // Checks if a 3D point at `idx` is not back projected
+   bool fresh_point(size_t idx) { return points[idx] == NULL; }
+
+   Point* get_point(size_t idx) { return points[idx]; }
 
 }; // class Frame
 

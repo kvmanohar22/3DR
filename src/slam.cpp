@@ -98,10 +98,23 @@ void SLAM::process(cv::Mat &img) {
    // Transfer the points to world frame
    cv::Mat CtoW = prev_f->get_pose_c2w();
    cv::Mat Rt4x4inv = Rt4x4.inv();
+   int duplicate_count = 0;
    for (size_t ii = 0; ii < inliers3d.size(); ++ii) {
       if (!inliers3d[ii])
          continue;
 
+      // Avoid adding duplicate points (only considering previous frame)
+      size_t qidx = matches[inliers[ii]].queryIdx;
+      size_t tidx = matches[inliers[ii]].trainIdx;
+      if (!prev_f->fresh_point(qidx)) {
+         Point *point = prev_f->get_point(qidx);
+         curr_f->add_observation(point, tidx);
+         point->add_observation(curr_f, tidx);
+         ++duplicate_count;
+         continue;
+      }
+
+      // This is a new point not observed in any of the previous frames
       cv::Mat pt_new = CtoW * Rt4x4inv * Xset[set_idx][ii];
       cv::Mat xyz = pt_new.rowRange(0, 3) / pt_new.at<float>(3);
 
@@ -109,12 +122,12 @@ void SLAM::process(cv::Mat &img) {
       Point *point = new Point(xyz, mapp->n_points());
 
       // Add observation of frame in point
-      point->add_observation(curr_f, matches[inliers[ii]].queryIdx);
-      point->add_observation(prev_f, matches[inliers[ii]].trainIdx);
+      point->add_observation(prev_f, qidx);
+      point->add_observation(curr_f, tidx);
 
       // Add observation of point in frame
-      curr_f->add_observation(point, matches[inliers[ii]].queryIdx);
-      prev_f->add_observation(point, matches[inliers[ii]].trainIdx);
+      prev_f->add_observation(point, qidx);
+      curr_f->add_observation(point, tidx);
 
       // Add the point to the map
       mapp->add_point(point);
@@ -126,11 +139,12 @@ void SLAM::process(cv::Mat &img) {
    v2d->update(img, curr_f->get_kps());
 
    // Spit some debug data
-   std::cout << "Processing frame: #" << std::setw(3) << cidx << " | "
-             << "Matches: " << std::setw(3) << matches.size() << " | "
-             << "Inliers: " << std::setw(3) << inliers.size() << " | "
+   std::cout << "Frame: #"     << std::setw(3) << cidx << " | "
+             << "Matches: "    << std::setw(3) << matches.size() << " | "
+             << "Inliers: "    << std::setw(3) << inliers.size() << " | "
+             << "Duplicates: " << std::setw(3) << duplicate_count << " | "
              << "#KeyFrames: " << std::setw(3) << mapp->n_frames() << " | "
-             << "#points: " << std::setw(7) << mapp->n_points() << " | "
+             << "#points: "    << std::setw(7) << mapp->n_points() << " | "
              << "Camera pos: " << std::setw(3) << curr_f->get_center().t()
              << std::endl;
 

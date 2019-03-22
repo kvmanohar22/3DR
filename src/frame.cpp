@@ -16,6 +16,8 @@ Frame::Frame(const long unsigned int idx,
    : idx(idx), K(K) {
 
    compute_kps(img);
+   points = std::vector<Point*>(kps.size(), NULL);
+
    if (idx == 0) {
       pose_w2c = cv::Mat::eye(cv::Size(4, 4), CV_32F);
       update_poses();
@@ -49,9 +51,8 @@ void Frame::update_poses() {
    center    = -R.t() * t;
 }
 
-void Frame::add_observation(Point *point, unsigned int idx) {
-   points.push_back(point);
-   indices.push_back(idx);
+void Frame::add_observation(Point *point, size_t idx) {
+   points[idx] = point;
 }
 
 } // namespace dr3
