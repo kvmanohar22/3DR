@@ -166,6 +166,7 @@ void Viewer3D::update() {
    red.x   = 1.0f; red.y   = 0.0f; red.z   = 0.0f;
    green.x = 0.0f; green.y = 1.0f; green.z = 0.0f;
    blue.x  = 0.0f; blue.y  = 0.0f; blue.z  = 1.0f;
+   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
    while(!pangolin::ShouldQuit()) {
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

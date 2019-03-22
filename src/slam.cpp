@@ -61,9 +61,9 @@ void SLAM::process(cv::Mat &img) {
    TwoView::extract_camera_pose(F, K, Rset, tset);
 
    // Generate Xset for each (R, t)
-   std::vector<std::vector<cv::Mat>> Xset;
+   std::vector<std::vector<cv::Mat>> Xset(4);
    for (int i = 0; i < 4; ++i) {
-      std::vector<cv::Mat> Xs;
+      std::vector<cv::Mat> Xs(inliers.size());
       cv::Mat P1 = K * I3x4;
       cv::Mat temp(cv::Size(4, 3), CV_32F);
       Rset[i].copyTo(temp.rowRange(0, 3).colRange(0, 3));
@@ -76,9 +76,9 @@ void SLAM::process(cv::Mat &img) {
          TwoView::triangulate(kps_p[qmatch],
                               kps_c[tmatch],
                               P1, P2, xyz);
-         Xs.push_back(xyz);
+         Xs[ii] = xyz;
       }
-      Xset.push_back(Xs);
+      Xset[i] = Xs;
    }
 
    // Recover the correct camera pose
