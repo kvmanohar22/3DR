@@ -10,6 +10,7 @@
 #include "two.hpp"
 #include "map.hpp"
 #include "point.hpp"
+#include "optimizer.hpp"
 
 #include <thread>
 
