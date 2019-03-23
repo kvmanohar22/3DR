@@ -11,6 +11,7 @@ Tracking camera (without Bundle Adjustment). Video: (KITTI `sequence/00`)
 - [x] Panorama stitching
 - [x] Visual Odometry
 - [ ] Sparse Visual Odometry
+- [ ] Tracking
 - [ ] Ghost removal in big panoramas (refer [1])
 - [ ] Optical Flow
 - [ ] SfM (unordered images)
@@ -19,6 +20,10 @@ Tracking camera (without Bundle Adjustment). Video: (KITTI `sequence/00`)
 ## To fix
 - [ ] Cholesky Decomposition fails during BA
 - [ ] Optimization is ridiculously slow (but works). Should make it faster
+- [ ] Fliped y-axis in 3D viewer?
+- [ ] Add only KeyFrames for graph optimization
+- [ ] Reduce the number of points for graph optimization
+
 
 ## Requirements
 - C++14
@@ -31,3 +36,7 @@ Tracking camera (without Bundle Adjustment). Video: (KITTI `sequence/00`)
 1. M. Uyttendaele, A. Eden, and R. Szeliski.
     Eliminating ghosting and exposure artifacts in image mosaics.
     In Proceedings of the Interational Conference on Computer Vision and Pattern Recognition
+
+## LICENSE
+All my code is MIT licensed
+
