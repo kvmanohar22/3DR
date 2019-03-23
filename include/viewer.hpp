@@ -62,6 +62,13 @@ public:
 // 3D Viewer
 class Viewer3D {
 private:
+   /*
+      Viewer axes convention (Right-handed system)
+      x-axis: Right
+      y-axis: Down
+      z-axis: Front
+   */
+
    float H, W;
    std::string window_name;
 
@@ -82,6 +89,9 @@ public:
 
    // update after each frame
    void update();
+
+   void check_axes();
+
 }; // class Viewer3D
 
 } // namespace dr3

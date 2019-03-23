@@ -20,7 +20,7 @@ Tracking camera (without Bundle Adjustment). Video: (KITTI `sequence/00`)
 ## To fix
 - [ ] Cholesky Decomposition fails during BA
 - [ ] Optimization is ridiculously slow (but works). Should make it faster
-- [ ] Fliped y-axis in 3D viewer?
+- [x] Fliped y-axis in 3D viewer?
 - [ ] Add only KeyFrames for graph optimization
 - [ ] Reduce the number of points for graph optimization
 

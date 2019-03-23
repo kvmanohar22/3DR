@@ -153,9 +153,10 @@ void Viewer3D::update() {
 
    s_cam = pangolin::OpenGlRenderState(
        pangolin::ProjectionMatrix(W, H, 420, 420, 512, 389, 0.1, 1000),
-       pangolin::ModelViewLookAt(-2, 2,-2,
-                                 0,  0, 0,
-                                 pangolin::AxisY));
+       pangolin::ModelViewLookAt(0, -1, -2, // camera location in world
+                                 0,  0,  0, // where should the camera look at?
+                                 0, -1,  0) // camera y-axis
+       );
 
    pangolin::Handler3D handler(s_cam);
    d_cam = pangolin::CreateDisplay()
@@ -195,6 +196,50 @@ void Viewer3D::update() {
                     point.at<float>(1),
                     point.at<float>(2));
       }
+      glEnd();
+      pangolin::FinishFrame();
+   }
+}
+
+void Viewer3D::check_axes() {
+   pangolin::BindToContext(window_name);
+   glEnable(GL_DEPTH_TEST);
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+   s_cam = pangolin::OpenGlRenderState(
+       pangolin::ProjectionMatrix(W, H, 420, 420, 512, 389, 0.1, 1000),
+       pangolin::ModelViewLookAt(0, -1, -2, // camera location in world
+                                 0,  0,  0, // where should the camera look at?
+                                 0, -1,  0) // camera y-axis
+       );
+
+   pangolin::Handler3D handler(s_cam);
+   d_cam = pangolin::CreateDisplay()
+       .SetBounds(0.0, 1.0, 0.0, 1.0, -W/H)
+       .SetHandler(&handler);
+
+   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+   while(!pangolin::ShouldQuit()) {
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      d_cam.Activate(s_cam);
+      glBegin(GL_LINES);
+
+      // x-axis
+      glColor3f(1.0f, 0.0f, 0.0f);
+      glVertex3f(0, 0, 0);
+      glVertex3f(1, 0, 0);
+
+      // y-axis
+      glColor3f(0.0f, 1.0f, 0.0f);
+      glVertex3f(0, 0, 0);
+      glVertex3f(0, 1, 0);
+
+      // z-axis
+      glColor3f(0.0f, 0.0f, 1.0f);
+      glVertex3f(0, 0, 0);
+      glVertex3f(0, 0, 1);
       glEnd();
 
       pangolin::FinishFrame();
