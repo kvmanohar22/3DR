@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 project(3DR)
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(OpenCV_DIR /usr/local/share/OpenCV)
 set(Pangolin_DIR /usr/local/share/Pangolin/)
