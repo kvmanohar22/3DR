@@ -4,7 +4,23 @@ Collection of tools ranging from image alignment, panorama generation, point clo
 <p align="center"><img width="70%" height="70%" src="imgs/slam/slam.png"/></p>
 Tracking camera (without Bundle Adjustment). Video: (KITTI `sequence/00`)
 
----
+## Usage
+1. Build all the executables
+```bash
+git clone git@github.com:kvmanohar22/3DR.git
+mkdir build
+cd build
+cmake ..
+make
+```
+2. SLAM
+- First download videos from KITTI dataset [link](http://www.cvlibs.net/datasets/kitti/eval_stereo.php)
+- Set the path to the video sequence in `scripts/slam.sh`
+```bash
+cd scripts/
+./slam.sh
+``` 
+
 ## TODO
 - [x] Image Alignment
 - [x] Image Warping
