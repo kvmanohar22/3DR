@@ -5,6 +5,7 @@
 #include <vector>
 #include <set>
 #include "utils.hpp"
+#include "viewer.hpp"
 
 namespace reconstruct {
 

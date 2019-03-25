@@ -11,15 +11,15 @@ namespace dr3 {
 
 using namespace std::chrono;
 
-typedef high_resolution_clock hrs;
+typedef high_resolution_clock hrc;
 
 /*********************** Timer ***********************/
 class Timer {
 private:
    duration<double> _total_time;
    size_t _n_calls;
-   hrs::time_point _start;
-   hrs::time_point _end;
+   hrc::time_point _start;
+   hrc::time_point _end;
    duration<double> _avg_time;
 
 public:
@@ -30,12 +30,12 @@ public:
    }
 
    void tic() {
-      _start = hrs::now();
+      _start = hrc::now();
    }
 
    void toc() {
-      _end = hrs::now();
-      _total_time += hrs::now() - _start;
+      _end = hrc::now();
+      _total_time += hrc::now() - _start;
       _n_calls += 1;
       _avg_time += _total_time;
    }

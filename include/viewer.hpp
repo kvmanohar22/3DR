@@ -26,29 +26,29 @@ public:
    Viewer2D();
 
    // update the view
-   cv::Mat update(cv::Mat img_l, cv::Mat img_r,
+   static cv::Mat update(cv::Mat img_l, cv::Mat img_r,
                   std::vector<cv::KeyPoint> kps_l,
                   std::vector<unsigned int> idxs_l,
                   std::vector<cv::KeyPoint> kps_r,
                   std::vector<unsigned int> idxs_r);
 
-   void update(cv::Mat &img);
-   void update(cv::Mat &img, const std::vector<cv::KeyPoint> &kps);
+   static void update(cv::Mat &img);
+   static void update(cv::Mat &img, const std::vector<cv::KeyPoint> &kps);
 
-   void draw_kps(cv::Mat &img,
-                 const std::vector<cv::KeyPoint> &kps);
+   static void draw_kps(cv::Mat &img,
+                        const std::vector<cv::KeyPoint> &kps);
 
-   void draw_kps(cv::Mat &img,
+   static void draw_kps(cv::Mat &img,
                  std::vector<cv::KeyPoint> kps_l,
                  std::vector<unsigned int> idxs_l,
                  std::vector<cv::KeyPoint> kps_r,
                  std::vector<unsigned int> idxs_r);
 
-   void draw_point(cv::Mat &img,
+   static void draw_point(cv::Mat &img,
                    cv::KeyPoint pt,
                    cv::Scalar color = cv::Scalar(0, 255, 0));
 
-   void draw_point(cv::Mat &img,
+   static void draw_point(cv::Mat &img,
                    cv::Point2f pt,
                    cv::Scalar color = cv::Scalar(0, 255, 0));
 
