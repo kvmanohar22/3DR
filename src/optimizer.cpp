@@ -153,13 +153,22 @@ void Optimizer::global_BA(Map *map, cv::Mat K) {
    }
 
    ceres::Solver::Options options;
-   options.linear_solver_type = ceres::DENSE_SCHUR;
+   // options.linear_solver_type = ceres::SPARSE_SCHUR;        // Large BA
+   // options.linear_solver_type = ceres::ITERATIVE_SCHUR;     // Thousands of cameras
+   // options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY; // If Jacobian has lot of zeros
+   options.linear_solver_type = ceres::DENSE_SCHUR;            // Around of hundereds of cameras
+
+   options.preconditioner_type = ceres::SCHUR_JACOBI;
+   // options.preconditioner_type = ceres::CLUSTER_JACOBI;
+   // options.preconditioner_type = ceres::CLUSTER_TRIDIAGONAL; 
+
+   options.num_threads = 8;
    options.minimizer_progress_to_stdout = false;
 
    // Optimize
    ceres::Solver::Summary summary;
    ceres::Solve(options, &ceres_problem, &summary);
-   std::cout << summary.BriefReport() << std::endl;
+   std::cout << summary.FullReport() << std::endl;
 
    // Replace the optimized variables back
    problem.replace_back();

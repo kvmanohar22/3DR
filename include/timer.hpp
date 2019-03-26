@@ -40,8 +40,8 @@ public:
       _avg_time += _total_time;
    }
 
-   inline double get_total_time() const { return _total_time.count(); }
-   inline double get_avg_time() const  { return _avg_time.count() / _n_calls; }
+   inline double get_ct() const { return _total_time.count(); }
+   inline double get_at() const  { return _avg_time.count() / _n_calls; }
    inline size_t n_calls() const { return _n_calls; }
 
    inline void reset() {
@@ -51,7 +51,7 @@ public:
    }
 
    bool operator < (const Timer &timer) const {
-      if (this->get_total_time() < timer.get_total_time())
+      if (this->get_ct() < timer.get_ct())
          return true;
       return false;
    }
@@ -63,10 +63,11 @@ public:
    Monitor();
    ~Monitor();
    void add_timer(const std::string &name);
-   void start_timer(const std::string &name);
-   void stop_timer(const std::string &name);
-   double get_time(const std::string &name) const;
+   void tic(const std::string &name);
+   void toc(const std::string &name);
    void reset(const std::string &name);
+   double get_ct(const std::string &name);
+   double get_at(const std::string &name);
 
 private:
    std::map<std::string, Timer> _timers;

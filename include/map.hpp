@@ -25,6 +25,9 @@ public:
 
    size_t n_frames() { return frames.size(); }
    size_t n_points() { return points.size(); }
+  
+   size_t n_observations();
+
 }; // class Map
 
 } // namespace dr3

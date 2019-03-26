@@ -92,6 +92,8 @@ public:
 
    void check_axes();
 
+   // Draw the axes
+   void draw_axes();
 }; // class Viewer3D
 
 } // namespace dr3

@@ -5,6 +5,11 @@
 #include <vector>
 #include <iomanip>
 
+#include <ceres/ceres.h>
+#include <gflags/gflags.h>
+#include <glog/logging.h>
+
+
 #include "viewer.hpp"
 #include "frame.hpp"
 #include "two.hpp"
@@ -20,7 +25,7 @@ namespace dr3 {
 class SLAM {
 private:
    // Image dimensions
-   unsigned int H, W;
+   size_t H, W;
 
    // camera intrinsics
    cv::Mat K;
@@ -42,9 +47,17 @@ private:
    // Map consisting of all the points
    Map *mapp;
 
+   // Tracking time for different operations
+   Monitor *monitor;
+
+protected:
+   void pprint(Frame &frame);
+
 public:
    SLAM();
-   SLAM(unsigned int H, unsigned int W, cv::Mat K);
+   SLAM(size_t H, size_t W,
+       cv::Mat K,
+       int argc, char **argv);
    ~SLAM();
 
    void process(cv::Mat &img);

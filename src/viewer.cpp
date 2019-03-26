@@ -174,6 +174,9 @@ void Viewer3D::update() {
 
       d_cam.Activate(s_cam);
 
+      // Draw world axes
+      draw_axes();
+
       // Render cameras
       const std::vector<Frame*> frames = mapp->get_frames();
       for (auto &itr : frames) {
@@ -201,6 +204,29 @@ void Viewer3D::update() {
    }
 }
 
+void Viewer3D::draw_axes() {
+      glBegin(GL_LINES); 
+
+      // x-axis
+      glColor3f(1.0f, 0.0f, 0.0f);
+      glVertex3f(0, 0, 0);
+      glVertex3f(1, 0, 0);
+
+      // y-axis
+      glColor3f(0.0f, 1.0f, 0.0f);
+      glVertex3f(0, 0, 0);
+      glVertex3f(0, 1, 0);
+
+      // z-axis
+      glColor3f(0.0f, 0.0f, 1.0f);
+      glVertex3f(0, 0, 0);
+      glVertex3f(0, 0, 1);
+
+      glEnd();
+}
+
+
+
 void Viewer3D::check_axes() {
    pangolin::BindToContext(window_name);
    glEnable(GL_DEPTH_TEST);
@@ -225,22 +251,8 @@ void Viewer3D::check_axes() {
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       d_cam.Activate(s_cam);
       glBegin(GL_LINES);
-
-      // x-axis
-      glColor3f(1.0f, 0.0f, 0.0f);
-      glVertex3f(0, 0, 0);
-      glVertex3f(1, 0, 0);
-
-      // y-axis
-      glColor3f(0.0f, 1.0f, 0.0f);
-      glVertex3f(0, 0, 0);
-      glVertex3f(0, 1, 0);
-
-      // z-axis
-      glColor3f(0.0f, 0.0f, 1.0f);
-      glVertex3f(0, 0, 0);
-      glVertex3f(0, 0, 1);
-      glEnd();
+      
+      draw_axes();
 
       pangolin::FinishFrame();
    }

@@ -6,9 +6,9 @@ long unsigned int SLAM::cidx = 0;
 
 SLAM::SLAM() {}
 
-SLAM::SLAM(unsigned int H, 
-           unsigned int W,
-           cv::Mat K)
+SLAM::SLAM(size_t H, 
+           size_t W,
+           cv::Mat K, int argc, char **argv)
    : H(H), W(W), K(K) {
 
    // Map to store the point cloud
@@ -24,6 +24,16 @@ SLAM::SLAM(unsigned int H,
 
    // start the render thread
    render_loop = std::thread(&Viewer3D::update, v3d);
+
+   // Monitor
+   monitor = new Monitor(); 
+
+   monitor->add_timer("global");        // Global timing monitor
+   monitor->add_timer("frame");         // Generating frame object for each image
+   monitor->add_timer("match");         // Matching keypoints across two frames
+   monitor->add_timer("fmatrix");       // Estimating Fundamental matrix
+   monitor->add_timer("triangulation"); // Estimating Rset, tset, Xset & the correct points
+   monitor->add_timer("optimizer");     // Bundle Adjustment
 }
 
 SLAM::~SLAM() {
@@ -33,9 +43,33 @@ SLAM::~SLAM() {
    render_loop.join();
 }
 
+void SLAM::pprint(Frame &curr_f) {
+   const cv::Mat pose = curr_f.get_center().t();
+   const double fps = mapp->n_frames()  / monitor->get_ct("global");
+
+   std::cout << std::right << std::setw(70) << "Frame Number" << " : "
+             << std::left << std::setw(20) << cidx << std::endl
+             << std::right << std::setw(70) << "FPS" << " : "
+             << std::left << std::setw(20) << fps << std::endl
+             << std::right << std::setw(70) << "Total KeyFrame nodes" << " : "
+             << std::left << std::setw(20) << mapp->n_frames() << std::endl
+             << std::right << std::setw(70) << "Total Point nodes"  << " : "
+             << std::left << std::setw(20) << mapp->n_points() << std::endl
+             << std::right << std::setw(70) << "Total observation edges" << " : "
+             << std::left << std::setw(20) << mapp->n_observations() << std::endl
+             << std::right << std::setw(70) << "Current Camera pos" << " : "
+             << std::left << pose << std::endl
+             << std::endl;
+}
+
 void SLAM::process(cv::Mat &img) {
+   monitor->tic("global");
+
    // process the current frame
+   monitor->tic("frame");
    Frame *curr_f = new Frame(cidx, img, K);
+   monitor->toc("frame");
+
    if (cidx == 0) {
       prev_f = curr_f;
       mapp->add_frame(curr_f);
@@ -51,13 +85,19 @@ void SLAM::process(cv::Mat &img) {
    std::vector<unsigned int> inliers;
    std::vector<cv::DMatch> matches;
    cv::BFMatcher bf = cv::BFMatcher(cv::NORM_HAMMING, true); 
+   
+   monitor->tic("match");
    bf.match(des_p, des_c, matches);
+   monitor->toc("match");
 
    // Estimate Fundamental matrix
+   monitor->tic("fmatrix");
    cv::Mat F = TwoView::estimate_F(kps_p, kps_c, des_p, des_c, matches, inliers);
-
+   monitor->toc("fmatrix");
+   
    // Recover (R, t) w.r.t previous frame (4 solutions)
    std::vector<cv::Mat> Rset, tset;
+   monitor->tic("triangulation");
    TwoView::extract_camera_pose(F, K, Rset, tset);
 
    // Generate Xset for each (R, t)
@@ -91,7 +131,8 @@ void SLAM::process(cv::Mat &img) {
    cv::Mat Rt4x4 = cv::Mat::eye(4, 4, CV_32F);
    R.copyTo(Rt4x4.rowRange(0, 3).colRange(0, 3));
    t.copyTo(Rt4x4.rowRange(0, 3).col(3));
-
+   monitor->toc("triangulation");
+   
    // set the pose of the current camera (world -> camera)
    curr_f->set_pose(Rt4x4 * prev_f->get_pose_w2c());
 
@@ -139,23 +180,17 @@ void SLAM::process(cv::Mat &img) {
    v2d->update(img, curr_f->get_kps());
 
    // Bundle Adjustment
-   Optimizer::global_BA(mapp, K);
-
-   // Spit some debug data
-   std::cout << "Frame: #"     << std::setw(3) << cidx << " | "
-             << "Matches: "    << std::setw(3) << matches.size() << " | "
-             << "Inliers: "    << std::setw(3) << inliers.size() << " | "
-             << "Duplicates: " << std::setw(3) << duplicate_count << " | "
-             << "#KeyFrames: " << std::setw(3) << mapp->n_frames() << " | "
-             << "#points: "    << std::setw(7) << mapp->n_points() << " | "
-             << "Camera pos: " << std::setw(3) << curr_f->get_center().t()
-             << std::endl
-             << "*********************************************"
-             << std::endl;
+   monitor->tic("optimizer");
+   // Optimizer::global_BA(mapp, K);
+   monitor->toc("optimizer");
 
    // update the previous frame
    prev_f = curr_f;
    ++cidx;
+   monitor->toc("global");
+
+   // Spit some debug data
+   pprint(*curr_f);
 }
 
 } // namespace dr3

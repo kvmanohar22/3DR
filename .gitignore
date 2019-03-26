@@ -10,3 +10,4 @@ videos/**
 *.txt
 include/glad/*
 src/glad.c
+release/**

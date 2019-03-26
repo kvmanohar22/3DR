@@ -10,7 +10,7 @@ void Monitor::add_timer(const std::string &name) {
    _timers.insert(std::make_pair(name, Timer()));
 }
 
-void Monitor::start_timer(const std::string &name) {
+void Monitor::tic(const std::string &name) {
    auto _timer = _timers.find(name);
    if (_timer == _timers.end()) {
       std::cerr << "Timer: \"" << name << "\" not registered." << std::endl;
@@ -18,7 +18,7 @@ void Monitor::start_timer(const std::string &name) {
    _timer->second.tic();
 }
 
-void Monitor::stop_timer(const std::string &name) {
+void Monitor::toc(const std::string &name) {
    auto _timer = _timers.find(name);
    if (_timer == _timers.end()) {
       std::cerr << "Timer: \"" << name << "\" not registered." << std::endl;
@@ -26,12 +26,21 @@ void Monitor::stop_timer(const std::string &name) {
    _timer->second.toc();
 }
 
-double Monitor::get_time(const std::string &name) const {
+double Monitor::get_ct(const std::string &name) {
    auto _timer = _timers.find(name);
    if (_timer == _timers.end()) {
       std::cerr << "Timer: \"" << name << "\" not registered." << std::endl;
    }
-   _timer->second.get_total_time();
+   return _timer->second.get_ct();
+}
+
+double Monitor::get_at(const std::string &name) {
+   auto _timer = _timers.find(name);
+   if (_timer == _timers.end()) {
+      std::cerr << "Timer: \"" << name << "\" not registered." << std::endl;
+   }
+   _timer->second.reset();
+   return _timer->second.get_at();
 }
 
 void Monitor::reset(const std::string &name) {

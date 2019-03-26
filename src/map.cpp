@@ -18,4 +18,11 @@ std::vector<Point*> Map::get_points() {
    return std::vector<Point*>(points.begin(), points.end());
 }
 
+size_t Map::n_observations() {
+  size_t n_obsers = 0;
+  for (auto &itr: points)
+    n_obsers += itr->n_frames();
+  return n_obsers;
+}
+
 } // namespace dr3
