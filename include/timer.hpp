@@ -25,7 +25,6 @@ private:
 public:
    Timer() {
       _total_time = duration<double>(0.0f);
-      _avg_time = duration<double>(0.0f);
       _n_calls = 0;
    }
 
@@ -37,11 +36,10 @@ public:
       _end = hrc::now();
       _total_time += hrc::now() - _start;
       _n_calls += 1;
-      _avg_time += _total_time;
    }
 
    inline double get_ct() const { return _total_time.count(); }
-   inline double get_at() const  { return _avg_time.count() / _n_calls; }
+   inline double get_at() const  { return _total_time.count() / _n_calls; }
    inline size_t n_calls() const { return _n_calls; }
 
    inline void reset() {
@@ -68,6 +66,7 @@ public:
    void reset(const std::string &name);
    double get_ct(const std::string &name);
    double get_at(const std::string &name);
+   double get_tat();
 
 private:
    std::map<std::string, Timer> _timers;

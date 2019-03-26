@@ -46,19 +46,37 @@ SLAM::~SLAM() {
 void SLAM::pprint(Frame &curr_f) {
    const cv::Mat pose = curr_f.get_center().t();
    const double fps = mapp->n_frames()  / monitor->get_ct("global");
-
+   const size_t n_frames = mapp->n_frames();
+   const size_t n_points = mapp->n_points();
+   const size_t n_params = n_frames * 6 + n_points * 3;
+  
    std::cout << std::right << std::setw(70) << "Frame Number" << " : "
              << std::left << std::setw(20) << cidx << std::endl
              << std::right << std::setw(70) << "FPS" << " : "
              << std::left << std::setw(20) << fps << std::endl
-             << std::right << std::setw(70) << "Total KeyFrame nodes" << " : "
-             << std::left << std::setw(20) << mapp->n_frames() << std::endl
-             << std::right << std::setw(70) << "Total Point nodes"  << " : "
-             << std::left << std::setw(20) << mapp->n_points() << std::endl
-             << std::right << std::setw(70) << "Total observation edges" << " : "
+             << std::right << std::setw(70) << "Total nodes (F + P)" << " : "
+             << std::right << std::setw(4) << n_frames << " + " << std::setw(5) << n_points << " = "
+             << std::setw(5) << n_frames + n_points << std::endl
+             << std::right << std::setw(70) << "Total Params" << " : "
+             << std::left << std::setw(20) << n_params << std::endl
+             << std::right << std::setw(70) << "Total observations" << " : "
              << std::left << std::setw(20) << mapp->n_observations() << std::endl
              << std::right << std::setw(70) << "Current Camera pos" << " : "
              << std::left << pose << std::endl
+             << std::setw(65) << ' ' << "-------------" << std::endl 
+             << std::right << std::setw(70) << "frame generation" << " : "
+             << std::left << std::setw(20) << monitor->get_at("frame") << std::endl
+             << std::right << std::setw(70) << "KeyPoint matching" << " : "
+             << std::left << std::setw(20) << monitor->get_at("match") << std::endl
+             << std::right << std::setw(70) << "F estimation" << " : "
+             << std::left << std::setw(20) << monitor->get_at("fmatrix") << std::endl
+             << std::right << std::setw(70) << "Triangulation (Rset, tset, Xset)" << " : "
+             << std::left << std::setw(20) << monitor->get_at("triangulation") << std::endl
+             << std::right << std::setw(70) << "Optimizer" << " : "
+             << std::left << std::setw(20) << monitor->get_at("optimizer") << std::endl
+             << std::setw(65) << ' ' << "-------------" << std::endl 
+             << std::right << std::setw(70) << "Total" << " : "
+             << std::left << std::setw(20) << monitor->get_tat() << std::endl
              << std::endl;
 }
 

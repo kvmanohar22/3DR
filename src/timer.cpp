@@ -39,7 +39,6 @@ double Monitor::get_at(const std::string &name) {
    if (_timer == _timers.end()) {
       std::cerr << "Timer: \"" << name << "\" not registered." << std::endl;
    }
-   _timer->second.reset();
    return _timer->second.get_at();
 }
 
@@ -49,6 +48,13 @@ void Monitor::reset(const std::string &name) {
       std::cerr << "Timer: \"" << name << "\" not registered." << std::endl;
    }
    _timer->second.reset();
+}
+
+double Monitor::get_tat() {
+   double tat = 0.0f;
+   for (auto &itr: _timers)
+      tat += itr.second.get_at();
+   return tat;
 }
 
 } // namespace dr3
