@@ -81,6 +81,7 @@ void SLAM::pprint(Frame &curr_f) {
 }
 
 void SLAM::process(cv::Mat &img) {
+   std::cout << "here " << std::endl;
    monitor->tic("global");
 
    // process the current frame

@@ -5,6 +5,9 @@
 #include <iomanip>
 #include <fstream>
 
+#include <glog/logging.h>
+#include <gflags/gflags.h>
+
 #include "slam.hpp"
 
 using namespace std;
@@ -42,9 +45,12 @@ void load_images(const string sequence_root_path,
 
 int main(int argc, char **argv) {
 
-   if (argc != 2) {
+   if (argc < 2) {
       cerr << "Usage: ./stereo path_to_sequence_root" << endl;
    }
+
+   // gflags::ParseCommandLineFlags(&argc, &argv, true);
+   // google::InitGoogleLogging(argv[0]);
 
    // image dimensions
    const int H = 376;
@@ -59,7 +65,7 @@ int main(int argc, char **argv) {
    cv::Mat K = (cv::Mat_<float>(3, 3) << fx,  0, cx,
                                           0, fy, cy,
                                           0,  0,  1);
-   dr3::SLAM slam(H, W, K);
+   dr3::SLAM slam(H, W, K, argc, argv);
 
    // load image paths
    vector<string> imgs;
@@ -69,6 +75,7 @@ int main(int argc, char **argv) {
    // process
    cv::Mat img;
    for (int i = 0; i < n_images; ++i) {
+      std::cout << "here" << std::endl;
       img = cv::imread(imgs[i], CV_LOAD_IMAGE_UNCHANGED);
       slam.process(img);
    }

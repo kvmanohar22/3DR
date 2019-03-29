@@ -20,5 +20,8 @@ tester(test_panorama test_panorama.cpp)
 # TwoView SfM
 tester(test_two test_twoview.cpp)
 
+# Misc
+tester(test_cpp test_cpp.cc)
+
 add_subdirectory(ceres)
 add_subdirectory(slam)
