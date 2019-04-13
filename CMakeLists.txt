@@ -36,6 +36,7 @@ set(SRCS
    src/timer.cpp
    src/optimizer.cpp
    src/viewer.cpp
+   src/config.cpp
    src/features.cpp)
 add_library(DR3_LIBS SHARED ${SRCS})
 

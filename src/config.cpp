@@ -1,15 +1,21 @@
 #include <config.hpp>
 
-namespace sim {
+namespace dr3 {
 
 Config *Config::_instance = NULL;
 
-Config::Config() {}
+Config::Config() :
+    __ransac_iters(50),
+    __ransac_threshold(5.0f),
+    __cell_size(30),
+    __n_pyr_levels(5),
+    __min_harris_corner_score(20.0)
+{}
 
 Config* Config::get_instance() {
     if (_instance == NULL)
-        _instance = get_instance(); // Generate only one instance of the class
+        _instance = new Config(); // Generate only one instance of the class
     return _instance;
 }
 
-} // namespace sim
+} // namespace dr3
