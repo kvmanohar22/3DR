@@ -52,6 +52,8 @@ cv::Mat warp_cylindrical(cv::Mat img, float f);
 // Drawing
 cv::Scalar getc();
 
+float shi_tomasi_score(const cv::Mat &img, int u, int v);
+
 } // namespace utils
 
 #endif
