@@ -47,6 +47,7 @@ cd scripts/
 - OpenCV (for image I/O)
 - ceres-solver (for Bundle Adjustment)
 - Pangolin (for 3D viewer)
+- [fast](https://github.com/uzh-rpg/fast.git) (for fast corner detection)
 
 ## References
 1. M. Uyttendaele, A. Eden, and R. Szeliski.

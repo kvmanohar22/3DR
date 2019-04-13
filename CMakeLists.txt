@@ -11,6 +11,7 @@ find_package(glfw3 REQUIRED)
 find_package(Pangolin REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Ceres REQUIRED)
+find_package(fast REQUIRED)
 
 
 set(HEADERS "include")
@@ -20,6 +21,7 @@ include_directories(${HEADERS}
                     ${GLFW3_INCLUDE_DIRS}
                     ${Pangolin_INCLUDE_DIRS}
                     ${CERES_INCLUDE_DIRS}
+                    ${fast_INCLUDE_DIRS}
                     ${Eigen3_INCLUDE_DIRS})
 
 set(SRCS
@@ -33,13 +35,15 @@ set(SRCS
    src/map.cpp
    src/timer.cpp
    src/optimizer.cpp
-   src/viewer.cpp)
+   src/viewer.cpp
+   src/features.cpp)
 add_library(DR3_LIBS SHARED ${SRCS})
 
 list(APPEND LIBS
    DR3_LIBS
    ${OpenCV_LIBRARIES}
    ${Pangolin_LIBRARIES}
+   ${fast_LIBRARIES}
    ${Eigen3_LIBS}
    ${CERES_LIBRARIES})
 
