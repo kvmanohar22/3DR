@@ -10,6 +10,8 @@
 
 namespace dr3 {
 
+typedef std::vector<cv::Mat> ImgPyramid;
+
 class Point;
 
 class Frame {

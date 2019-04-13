@@ -62,7 +62,6 @@ public:
     {}
 };
 typedef std::vector<Corner> Corners;
-typedef std::vector<cv::Mat> ImgPyramid;
 
 /*
     - Base detector for all the feature detectors

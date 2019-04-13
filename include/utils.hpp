@@ -5,8 +5,16 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <vector>
 #include <cstdlib>
+#include <frame.hpp>
+
+#include <string>       // memset
+#include <string.h>     // memset
+#include <cassert>
+#include <cstdlib>
 
 namespace utils {
+
+typedef std::vector<cv::Mat> ImgPyramid;
 
 const float PI = 3.141592653589793;
 const int INF = INT_MAX;
@@ -52,7 +60,13 @@ cv::Mat warp_cylindrical(cv::Mat img, float f);
 // Drawing
 cv::Scalar getc();
 
+// shi-tomasi score for a corner
 float shi_tomasi_score(const cv::Mat &img, int u, int v);
+
+// create image pyramid
+void create_img_pyramid(const cv::Mat &img_lvl_0, int n_levels, ImgPyramid &pyr);
+
+void reduce_to_half(cv::Mat &img_in, cv::Mat &img_out);
 
 } // namespace utils
 

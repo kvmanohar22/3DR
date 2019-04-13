@@ -23,5 +23,8 @@ tester(test_two test_twoview.cpp)
 # Misc
 tester(test_cpp test_cpp.cc)
 
+# fast corner detector
+tester(test_fast_corners test_fast_corners.cpp)
+
 add_subdirectory(ceres)
 add_subdirectory(slam)
