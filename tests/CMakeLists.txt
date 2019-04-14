@@ -26,5 +26,8 @@ tester(test_cpp test_cpp.cc)
 # fast corner detector
 tester(test_fast_corners test_fast_corners.cpp)
 
+# initial map estimation
+tester(test_init_map test_init.cpp)
+
 add_subdirectory(ceres)
 add_subdirectory(slam)
