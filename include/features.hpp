@@ -1,9 +1,12 @@
 #ifndef _3DR_FEATURE_DETECTION_HPP
 #define _3DR_FEATURE_DETECTION_HPP
 
+#include "global.hpp"
+#include "point.hpp"
+
 #include <config.hpp>
-#include <frame.hpp>
 #include <utils.hpp>
+#include <frame.hpp>
 
 #include <vector>
 #include <list>
@@ -17,10 +20,8 @@
 
 namespace dr3 {
 
-// Various feature detectors
-namespace feature_detection {
-
-using namespace Eigen;
+class Point;
+class Frame;
 
 // Image patch
 class Feature {
@@ -33,13 +34,13 @@ public:
     };
 
     FeatureType type; // type of the corner
-    Frame *frame;     // frame from which this feature was detected
+    FramePtr frame;     // frame from which this feature was detected
     Vector2d px;      // coordinates in pixels (at pyramid level 0)
     Vector3d f;       // Unit-bearing vector of the feature
     int level;        // level from which this was extracted
     Point *point;     // 3D point in the world
 
-    Feature(Frame *frame, const Vector2d &px, int level) :
+    Feature(FramePtr frame, const Vector2d &px, int level) :
         type(FeatureType::CORNER),
         frame(frame),
         px(px),
@@ -48,7 +49,9 @@ public:
         point(NULL)
     {}
 };
-typedef std::list<Feature*> Features;
+
+// Various feature detectors
+namespace feature_detection {
 
 // Container for a corner in the image
 class Corner {
@@ -78,7 +81,7 @@ public:
     virtual ~Detector() {};
 
     virtual void detect(
-        Frame *frame,
+        FramePtr frame,
         const ImgPyramid &img_pyr,
         const double detection_threshold,
         Features &fts) =0;
@@ -118,15 +121,13 @@ public:
     virtual ~FastDetector() {}
 
     virtual void detect(
-        Frame *frame,
+        FramePtr frame,
         const ImgPyramid &img_pyr,
         const double detection_threshold,
         Features &fts);
 };
 
-
 } // namespace feature_detection
-
 
 } // namespace dr3
 

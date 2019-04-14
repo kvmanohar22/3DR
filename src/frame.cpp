@@ -15,15 +15,16 @@ Frame::Frame(const long unsigned int idx,
              const cv::Mat &img, const cv::Mat &K) 
    : idx(idx), K(K) {
 
-   compute_kps(img);
-   points = std::vector<Point*>(kps.size(), NULL);
+    compute_kps(img);
+    utils::create_img_pyramid(img, Config::n_pyr_levels(), _img_pyr);
+    points = std::vector<Point*>(kps.size(), NULL);
 
-   if (idx == 0) {
-      pose_w2c = cv::Mat::eye(cv::Size(4, 4), CV_32F);
-      update_poses();
-   } else {
+    if (idx == 0) {
+        pose_w2c = cv::Mat::eye(cv::Size(4, 4), CV_32F);
+        update_poses();
+    } else {
 
-   }
+    }
 }
 
 void Frame::compute_kps(const cv::Mat &img) {

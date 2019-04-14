@@ -1,7 +1,10 @@
 #ifndef _FRAME_HPP_
 #define _FRAME_HPP_
 
+#include "global.hpp"
 #include "point.hpp"
+#include "utils.hpp"
+#include "config.hpp"
 
 #include <opencv2/core.hpp>
 #include <opencv2/opencv.hpp>
@@ -11,20 +14,27 @@
 namespace dr3 {
 
 typedef std::vector<cv::Mat> ImgPyramid;
+typedef std::list<Feature*> Features;
 
 class Point;
 
 class Frame {
-private:
+public:
    // Unique frame index
    long unsigned int idx;
 
    // intrinsics
    cv::Mat K;
 
-   // Keypoints and descriptors
+   // Keypoints and descriptors (only used in feature-based SLAM)
    std::vector<cv::KeyPoint> kps;
    cv::Mat des;
+
+   // Image pyramid
+   ImgPyramid _img_pyr;
+
+   // Features
+   Features _fts;
 
    // Camera pose
    cv::Mat pose_w2c; // world  -> camera
@@ -34,7 +44,6 @@ private:
    // Points projected from this Frame onto 3D world
    std::vector<Point*> points;
 
-public:
    Frame();
    Frame(Frame &frame);
    Frame(const long unsigned int idx, 

@@ -37,6 +37,7 @@ set(SRCS
    src/optimizer.cpp
    src/viewer.cpp
    src/config.cpp
+   src/initialization.cpp
    src/features.cpp)
 add_library(DR3_LIBS SHARED ${SRCS})
 

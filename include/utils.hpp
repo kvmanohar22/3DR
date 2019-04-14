@@ -1,6 +1,8 @@
 #ifndef _UTILS_HPP_
 #define _UTILS_HPP_
 
+#include "global.hpp"
+
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <vector>
@@ -13,8 +15,6 @@
 #include <cstdlib>
 
 namespace utils {
-
-typedef std::vector<cv::Mat> ImgPyramid;
 
 const float PI = 3.141592653589793;
 const int INF = INT_MAX;
@@ -64,7 +64,7 @@ cv::Scalar getc();
 float shi_tomasi_score(const cv::Mat &img, int u, int v);
 
 // create image pyramid
-void create_img_pyramid(const cv::Mat &img_lvl_0, int n_levels, ImgPyramid &pyr);
+void create_img_pyramid(const cv::Mat &img_lvl_0, int n_levels, dr3::ImgPyramid &pyr);
 
 void reduce_to_half(cv::Mat &img_in, cv::Mat &img_out);
 

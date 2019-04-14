@@ -41,7 +41,7 @@ FastDetector::FastDetector(
     {}
 
 void FastDetector::detect(
-    Frame *frame,
+    FramePtr frame,
     const ImgPyramid &img_pyr,
     const double detection_threshold,
     Features &fts) {
@@ -89,7 +89,8 @@ void FastDetector::detect(
         if (corner.score > detection_threshold) {
             fts.push_back(new Feature(frame,
                                       Vector2d(corner.x, corner.y),
-                                      corner.level));
+                                      corner.level)
+            );
         }
     });
 
