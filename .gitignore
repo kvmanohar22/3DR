@@ -1,6 +1,7 @@
 .vscode
 build/**
 bin/**
+lib/**
 *.pyc
 *.ipynb_checkpoints
 __pycache__/

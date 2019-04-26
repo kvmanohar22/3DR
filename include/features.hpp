@@ -34,7 +34,7 @@ public:
     };
 
     FeatureType type; // type of the corner
-    FramePtr frame;     // frame from which this feature was detected
+    FramePtr frame;   // frame from which this feature was detected
     Vector2d px;      // coordinates in pixels (at pyramid level 0)
     Vector3d f;       // Unit-bearing vector of the feature
     int level;        // level from which this was extracted

@@ -13,6 +13,8 @@ find_package(Eigen3 REQUIRED)
 find_package(Ceres REQUIRED)
 find_package(fast REQUIRED)
 
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 set(HEADERS "include")
 set(LIBS ${OpenCV_LIBRARIES} glfw)
