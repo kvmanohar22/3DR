@@ -5,6 +5,7 @@
 #include "point.hpp"
 #include "utils.hpp"
 #include "config.hpp"
+#include "camera.hpp"
 
 #include <opencv2/core.hpp>
 #include <opencv2/opencv.hpp>
@@ -23,23 +24,18 @@ public:
    // Unique frame index
    long unsigned int idx;
 
-   // intrinsics
+   // Redundant as of now (remove)
    cv::Mat K;
-
-   // Keypoints and descriptors (only used in feature-based SLAM)
    std::vector<cv::KeyPoint> kps;
    cv::Mat des;
 
-   // Image pyramid
-   ImgPyramid _img_pyr;
 
-   // Features
-   Features _fts;
-
-   // Camera pose
-   cv::Mat pose_w2c; // world  -> camera
-   cv::Mat pose_c2w; // camera -> world
-   cv::Mat center;   // camera center in world coordinates
+   AbstractCamera*  _cam;     // camera
+   ImgPyramid       _img_pyr; // image pyramid
+   Features         _fts;     // frame features
+   cv::Mat          pose_w2c; // world  -> camera
+   cv::Mat          pose_c2w; // camera -> world
+   cv::Mat          center;   // camera center in world coordinates
 
    // Points projected from this Frame onto 3D world
    std::vector<Point*> points;
@@ -48,6 +44,8 @@ public:
    Frame(Frame &frame);
    Frame(const long unsigned int idx, 
          const cv::Mat &img, const cv::Mat &K);
+   Frame(const long unsigned int idx, 
+         const cv::Mat &img, AbstractCamera *cam);
 
    inline const long unsigned int get_idx() const { return idx; }
    inline const std::vector<cv::KeyPoint> get_kps() const { return kps; }

@@ -27,6 +27,14 @@ Frame::Frame(const long unsigned int idx,
     }
 }
 
+Frame::Frame(const long unsigned int idx,
+             const cv::Mat &img, AbstractCamera *cam) 
+   : idx(idx), _cam(cam) {
+
+    utils::create_img_pyramid(img, Config::n_pyr_levels(), _img_pyr);
+    points = std::vector<Point*>(kps.size(), NULL);
+}
+
 void Frame::compute_kps(const cv::Mat &img) {
    cv::Ptr<cv::FeatureDetector> orb = cv::ORB::create();
    std::vector<cv::Point2f> corners;

@@ -4,6 +4,7 @@
 #include "config.hpp"
 #include "utils.hpp"
 #include "viewer.hpp"
+#include "camera.hpp"
 #include "svo/initialization.hpp"
 
 using namespace std;
@@ -28,15 +29,22 @@ int main() {
         return -2;
     }
 
+    // camera
+    AbstractCamera *cam = new Pinhole(1240, 376,
+                                      718.856, 718.856,
+                                      607.1928, 185.2157);
+
     cv::Mat K = (cv::Mat_<float>(3, 3) << 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    boost::shared_ptr<Frame> frame_ref(new Frame(0, img1, K));
-    boost::shared_ptr<Frame> frame_cur(new Frame(7, img2, K));
+    boost::shared_ptr<Frame> frame_ref(new Frame(0, img1, cam));
+    boost::shared_ptr<Frame> frame_cur(new Frame(7, img2, cam));
 
     Features new_features1, new_features2;
     FastDetector detector(img1.cols,
                           img1.rows,
                           Config::cell_size(),
                           Config::n_pyr_levels());
+
+    // Detect features
     detector.detect(frame_ref,
                     frame_ref->_img_pyr,
                     Config::min_harris_corner_score(),
@@ -46,9 +54,9 @@ int main() {
                     Config::min_harris_corner_score(),
                     new_features2);
 
+    // draw features
     cv::cvtColor(img1, img1, CV_GRAY2BGR);
     cv::cvtColor(img2, img2, CV_GRAY2BGR);
-
     draw_features(new_features1, img1);
     draw_features(new_features2, img2);
 

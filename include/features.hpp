@@ -44,7 +44,7 @@ public:
         type(FeatureType::CORNER),
         frame(frame),
         px(px),
-        f(0, 0, 0),
+        f(frame->_cam->cam2world(px)),
         level(level),
         point(NULL)
     {}
