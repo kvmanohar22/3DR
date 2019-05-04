@@ -57,9 +57,9 @@ Result Init::add_second_frame(FramePtr frame_cur) {
     _pts_cur.clear(); _pts_cur.reserve(_kps_cur.size());
     for (size_t i = 0; kps_ref_itr != _kps_ref.end(); ++i) {
         if (!status[i]) {
-            _kps_ref.erase(kps_ref_itr);
-            _kps_cur.erase(kps_cur_itr);
-            _pts_ref.erase(pts_ref_itr);
+            kps_ref_itr = _kps_ref.erase(kps_ref_itr);
+            kps_cur_itr = _kps_cur.erase(kps_cur_itr);
+            pts_ref_itr = _pts_ref.erase(pts_ref_itr);
             continue;
         }
         _disparities.push_back(Vector2d(kps_ref_itr->x - kps_cur_itr->x,
@@ -73,34 +73,31 @@ Result Init::add_second_frame(FramePtr frame_cur) {
     // Compute homography
     vector<Vector2d> uv_ref(_pts_ref.size());
     vector<Vector2d> uv_cur(_pts_cur.size());
-    std::cout << "ref: " << uv_ref.size() << std::endl;
-    std::cout << "cur: " << uv_cur.size() << std::endl;
-    std::cout << "e2: " << _frame_ref->_cam->error2() << std::endl;
 
-    int jj=0;
     for (size_t i = 0; i < _pts_ref.size(); ++i) {
         uv_ref[i] = vk::project2d(_pts_ref[i]);
         uv_cur[i] = vk::project2d(_pts_cur[i]);
-        ++jj;
+
+        std::cout << "ref: " << uv_ref[i].transpose() << std::endl;
+        std::cout << "cur: " << uv_cur[i].transpose() << std::endl;
+        std::cout << "-----" << std::endl;
     }
 
-    std::cout << "ref: " << uv_ref.size() << std::endl;
-    std::cout << "cur: " << uv_cur.size() << std::endl;
-    std::cout << "jj: " << jj << std::endl;
+    double ee = _frame_ref->_cam->error2();
+    double rr = 5.0;
 
-    vk::Homography homography(uv_ref, uv_cur,
-                              718.0f,
-                              5.0f);
+    vk::Homography homography(uv_ref, uv_cur, ee, rr);
+    homography.computeSE3fromMatches();
+    vector<int> outliers;
+    vk::computeInliers(_pts_cur, _pts_ref,
+                       homography.T_c2_from_c1.rotation_matrix(), homography.T_c2_from_c1.translation(),
+                       rr, ee,
+                       _xyz_in_cur, _inliers, outliers);
+    std::cout << "#inliers: " << _inliers.size() << std::endl;
+    std::cout << "#cur: " << _pts_cur.size() << std::endl;
+    std::cout << "#ref: " << _pts_ref.size() << std::endl;
 
-    // homography.computeSE3fromMatches();
-    // vector<int> outliers;
-    // vector<Vector3d> xyz_in_cur;
-    // vk::computeInliers(_pts_cur, _pts_ref,
-    //                    homography.T_c2_from_c1.rotation_matrix(),
-    //                    homography.T_c2_from_c1.translation(),
-    //                    5.0f, _frame_ref->_cam->error2(),
-    //                    xyz_in_cur, _inliers, outliers);
-
+    while(1);
 }
 
 } // namespace init

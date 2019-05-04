@@ -59,7 +59,6 @@ private:
     const double _fx, _fy;
     const double _cx, _cy;
     bool _distortion;
-    double _d[5];
     Matrix3d _K;
 
 public:
@@ -81,11 +80,6 @@ public:
     inline double fy() const { return _fy; }
     inline double cx() const { return _cx; }
     inline double cy() const { return _cy; }
-    inline double d0() const { return _d[0]; }
-    inline double d1() const { return _d[1]; }
-    inline double d2() const { return _d[2]; }
-    inline double d3() const { return _d[3]; }
-    inline double d4() const { return _d[4]; }
 };
 
 } // namespace dr3

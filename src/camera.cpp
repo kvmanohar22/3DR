@@ -9,13 +9,8 @@ Pinhole::Pinhole(double width, double height,
                  double d3, double d4) :
     AbstractCamera(width, height),
     _fx(fx), _fy(fy),
-    _cx(cx), _cy(cy) {
-
-    _d[0] = d0;
-    _d[1] = d1;
-    _d[2] = d2;
-    _d[3] = d3;
-    _d[4] = d4;
+    _cx(cx), _cy(cy),
+    _distortion(false) {
 
     _K << _fx, 0.0, _cx, 0.0, _fy, _cy, 0.0, 0.0, 1.0;
 }
