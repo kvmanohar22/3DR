@@ -42,9 +42,7 @@ public:
 
    Frame();
    Frame(Frame &frame);
-   Frame(const long unsigned int idx, 
-         const cv::Mat &img, const cv::Mat &K);
-   Frame(const long unsigned int idx, 
+   Frame(const long unsigned int idx,
          const cv::Mat &img, AbstractCamera *cam);
 
    inline const long unsigned int get_idx() const { return idx; }
