@@ -26,7 +26,7 @@ cd scripts/
 - [x] Image Warping
 - [x] Panorama stitching
 - [x] Visual Odometry
-- [ ] Sparse Visual Odometry
+- [ ] Semi-Direct Visual Odometry (SVO)
 - [ ] Tracking
 - [ ] Ghost removal in big panoramas (refer [1])
 - [ ] Optical Flow
@@ -39,6 +39,8 @@ cd scripts/
 - [x] Fliped y-axis in 3D viewer?
 - [ ] Add only KeyFrames for graph optimization
 - [ ] Reduce the number of points for graph optimization
+### Semi-Direct Visual Odometry
+- [ ] opencv's `calcOpticalFlowPyrLK` doesn't seem to work that good on forward motion camera
 
 
 ## Requirements
@@ -56,4 +58,3 @@ cd scripts/
 
 ## LICENSE
 All my code is MIT licensed
-
