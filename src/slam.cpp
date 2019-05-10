@@ -1,4 +1,5 @@
 #include "slam.hpp"
+#include "camera.hpp"
 
 namespace dr3 {
 
@@ -17,6 +18,8 @@ SLAM::SLAM(size_t H,
    // Viewers
    v2d = new Viewer2D();
    v3d = new Viewer3D(mapp);
+
+   cam = new Pinhole(50, 50, 50, 50, 50, 50);
 
    // Identity
    I3x4 = cv::Mat::eye(cv::Size(4, 4), CV_32F);
@@ -86,7 +89,7 @@ void SLAM::process(cv::Mat &img) {
 
    // process the current frame
    monitor->tic("frame");
-   Frame *curr_f = new Frame(cidx, img, K);
+   Frame *curr_f = new Frame(cidx, img, cam);
    monitor->toc("frame");
 
    if (cidx == 0) {

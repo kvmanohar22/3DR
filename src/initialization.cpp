@@ -6,7 +6,7 @@ namespace dr3 {
 
 namespace init {
 
-Result Init::add_first_frame(FramePtr frame_ref) {
+Result Init::add_first_frame(const FramePtr frame_ref) {
     // Detect the corners
     feature_detection::FastDetector detector(frame_ref->_img_pyr[0].cols,
                                              frame_ref->_img_pyr[0].rows,
@@ -16,13 +16,15 @@ Result Init::add_first_frame(FramePtr frame_ref) {
                     Config::min_harris_corner_score(),
                     frame_ref->_fts);
 
-    // TODO: Check if the features are less than some threshold
+    if (frame_ref->_fts.size() < 100) {
+        return Result::FAILED;
+    }
 
     // Initialize the keypoints for the reference frame
     _kps_ref.clear(); _kps_ref.reserve(frame_ref->_fts.size());
     _pts_ref.clear(); _pts_ref.reserve(frame_ref->_fts.size());
     std::for_each(frame_ref->_fts.begin(), frame_ref->_fts.end(), [&](Feature *ftr) {
-        _kps_ref.push_back(cv::Point2f(ftr->px[0], ftr->px[1]));
+        _kps_ref.emplace_back(cv::Point2f(ftr->px[0], ftr->px[1]));
         _pts_ref.push_back(ftr->f);
         delete ftr;
     });
@@ -34,10 +36,10 @@ Result Init::add_first_frame(FramePtr frame_ref) {
     return Result::SUCCESS;
 }
 
-Result Init::add_second_frame(FramePtr frame_cur) {
+Result Init::add_second_frame(const FramePtr frame_cur) {
     // KLT Tracker
-    const double klt_win_size = 30.0;
-    const int klt_max_iter = 30;
+    const int klt_win_size = 30;
+    const int klt_max_iter = 100;
     const double klt_eps = 1e-3;
     vector<uchar> status;
     vector<float> error;
@@ -70,6 +72,11 @@ Result Init::add_second_frame(FramePtr frame_cur) {
         ++pts_ref_itr;
     }
 
+    // Draw the matches computed from optical flow
+    Viewer2D::update(_frame_ref->_img_pyr[0],
+                      frame_cur->_img_pyr[0],
+                     _kps_ref, _kps_cur);
+
     // Compute homography
     vector<Vector2d> uv_ref(_pts_ref.size());
     vector<Vector2d> uv_cur(_pts_cur.size());
@@ -78,13 +85,13 @@ Result Init::add_second_frame(FramePtr frame_cur) {
         uv_ref[i] = vk::project2d(_pts_ref[i]);
         uv_cur[i] = vk::project2d(_pts_cur[i]);
 
-        std::cout << "ref: " << uv_ref[i].transpose() << std::endl;
-        std::cout << "cur: " << uv_cur[i].transpose() << std::endl;
-        std::cout << "-----" << std::endl;
+//        std::cout << "ref: " << uv_ref[i].transpose() << std::endl;
+//        std::cout << "cur: " << uv_cur[i].transpose() << std::endl;
+//        std::cout << "-----" << std::endl;
     }
 
     double ee = _frame_ref->_cam->error2();
-    double rr = 5.0;
+    double rr = 15.0;
 
     vk::Homography homography(uv_ref, uv_cur, ee, rr);
     homography.computeSE3fromMatches();
@@ -93,11 +100,18 @@ Result Init::add_second_frame(FramePtr frame_cur) {
                        homography.T_c2_from_c1.rotation_matrix(), homography.T_c2_from_c1.translation(),
                        rr, ee,
                        _xyz_in_cur, _inliers, outliers);
+
+    std::cout << "e2: " << ee << std::endl;
+    std::cout << "optimization threshold: " << rr << std::endl;
     std::cout << "#inliers: " << _inliers.size() << std::endl;
     std::cout << "#cur: " << _pts_cur.size() << std::endl;
     std::cout << "#ref: " << _pts_ref.size() << std::endl;
 
-    while(1);
+    while (true) {
+        Viewer2D::update(_frame_ref->_img_pyr[0],
+                         frame_cur->_img_pyr[0],
+                         _kps_ref, _kps_cur);
+    }
 }
 
 } // namespace init

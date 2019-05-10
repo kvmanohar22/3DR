@@ -16,6 +16,7 @@
 #include "map.hpp"
 #include "point.hpp"
 #include "optimizer.hpp"
+#include "camera.hpp"
 #include "timer.hpp"
 
 #include <thread>
@@ -37,6 +38,9 @@ private:
 
    // ID of the current frame processed
    static long unsigned int cidx;
+
+   // Abstract camera
+   AbstractCamera *cam;
 
    // previous frame
    Frame *prev_f;

@@ -34,9 +34,8 @@ int main() {
                                       718.856, 718.856,
                                       607.1928, 185.2157);
 
-    cv::Mat K = (cv::Mat_<float>(3, 3) << 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    boost::shared_ptr<Frame> frame_ref(new Frame(0, img1, cam));
-    boost::shared_ptr<Frame> frame_cur(new Frame(7, img2, cam));
+    FramePtr frame_ref(new Frame(0, img1, cam));
+    FramePtr frame_cur(new Frame(7, img2, cam));
 
     Features new_features1, new_features2;
     FastDetector detector(img1.cols,

@@ -19,11 +19,11 @@ protected:
     int _height;
 
 public:
-    AbstractCamera() {}
+    AbstractCamera() : _width(0), _height(0) {}
     AbstractCamera(int width, int height) :
         _width(width), _height(height) {}
 
-    virtual ~AbstractCamera() {}
+    virtual ~AbstractCamera() =default;
 
     virtual Vector3d cam2world(const double &u, const double &v) const =0;
     virtual Vector3d cam2world(const Vector2d &px) const =0;
@@ -68,13 +68,13 @@ public:
             double fx, double fy, double cx, double cy,
             double d0=0.0f, double d1=0.0f, double d2=0.0f, 
             double d3=0.0f, double d4=0.0f);
-    ~Pinhole();
+    ~Pinhole() override;
 
-    virtual Vector3d cam2world(const double &u, const double &v) const;
-    virtual Vector3d cam2world(const Vector2d &px) const;
-    virtual Vector2d world2cam(const Vector3d &xyz) const;
+    Vector3d cam2world(const double &u, const double &v) const override;
+    Vector3d cam2world(const Vector2d &px) const override;
+    Vector2d world2cam(const Vector3d &xyz) const override;
 
-    virtual double error2() const { return fabs(_fx); }
+    double error2() const override { return fabs(_fx); }
 
     inline double fx() const { return _fx; }
     inline double fy() const { return _fy; }

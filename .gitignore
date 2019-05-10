@@ -12,3 +12,6 @@ videos/**
 include/glad/*
 src/glad.c
 release/**
+.idea/*
+cmake-build-debug/**
+

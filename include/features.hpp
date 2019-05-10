@@ -46,7 +46,7 @@ public:
         px(px),
         f(frame->_cam->cam2world(px)),
         level(level),
-        point(NULL)
+        point(nullptr)
     {}
 };
 

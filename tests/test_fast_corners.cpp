@@ -3,6 +3,7 @@
 #include "features.hpp"
 #include "config.hpp"
 #include "utils.hpp"
+#include "camera.hpp"
 #include "viewer.hpp"
 
 using namespace std;
@@ -16,10 +17,14 @@ int main() {
         std::cout << "Couldn't load the image" << std::endl;
     }
 
-    { 
-    
+    {
+
+    // camera
+    AbstractCamera *cam = new Pinhole(1240, 376,
+                                      718.856, 718.856,
+                                      607.1928, 185.2157);
     cv::Mat K = (cv::Mat_<float>(3, 3) << 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    Frame *frame = new Frame(0, img, K);
+    FramePtr frame(new Frame(0, img, cam));
 
     Features new_features;
     ImgPyramid pyr;
@@ -28,9 +33,10 @@ int main() {
                           img.rows,
                           Config::cell_size(),
                           Config::n_pyr_levels());
+    cout << "n_pyr_levels: " << Config::n_pyr_levels() << endl;
+    cout << "min harris score: " << Config::min_harris_corner_score() << endl;
+    cout << "Number of detected features: " << new_features.size() << endl;
     detector.detect(frame, pyr, Config::min_harris_corner_score(), new_features);
-    cout << "Numer of detected features: " << new_features.size() << endl;
-
 
     cv::cvtColor(img, img, CV_GRAY2BGR);
     std::for_each(new_features.begin(), new_features.end(), [&](Feature *ftr) {
@@ -40,9 +46,8 @@ int main() {
                                   color);
     });
     
-    delete frame;
     }
-    
+
     cv::imshow("fast corners", img);
     cv::waitKey(0);
 
