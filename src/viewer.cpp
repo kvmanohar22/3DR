@@ -61,7 +61,6 @@ void Viewer2D::draw_kps(cv::Mat &img,
       draw_point(img, kps[i].pt);
 }
 
-
 void Viewer2D::draw_kps(cv::Mat &img, 
                         std::vector<cv::Point2f> pts_l,
                         std::vector<cv::Point2f> pts_r) {
@@ -72,7 +71,7 @@ void Viewer2D::draw_kps(cv::Mat &img,
 
       cv::circle(img, pt1, 2, cv::Scalar(255, 0, 0), -1);
       cv::circle(img, pt2, 2, cv::Scalar(255, 0, 0), -1);
-      cv::line(img, pt1, pt2, cv::Scalar(0, 255, 0));
+      cv::line(img, pt1, pt2, cv::Scalar(0, 255, 0), 1, CV_AA);
    }
 }
 
@@ -88,7 +87,7 @@ void Viewer2D::draw_kps(cv::Mat &img,
 
       cv::circle(img, pt1, 2, cv::Scalar(255, 0, 0), -1);
       cv::circle(img, pt2, 2, cv::Scalar(255, 0, 0), -1);
-      cv::line(img, pt1, pt2, cv::Scalar(0, 255, 0));
+      cv::line(img, pt1, pt2, cv::Scalar(0, 255, 0), 1, CV_AA);
    }
 }
 

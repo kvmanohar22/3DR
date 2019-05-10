@@ -39,7 +39,7 @@ Result Init::add_first_frame(const FramePtr frame_ref) {
 Result Init::add_second_frame(const FramePtr frame_cur) {
     // KLT Tracker
     const int klt_win_size = 30;
-    const int klt_max_iter = 100;
+    const int klt_max_iter = 1000;
     const double klt_eps = 1e-3;
     vector<uchar> status;
     vector<float> error;
@@ -72,11 +72,6 @@ Result Init::add_second_frame(const FramePtr frame_cur) {
         ++pts_ref_itr;
     }
 
-    // Draw the matches computed from optical flow
-    Viewer2D::update(_frame_ref->_img_pyr[0],
-                      frame_cur->_img_pyr[0],
-                     _kps_ref, _kps_cur);
-
     // Compute homography
     vector<Vector2d> uv_ref(_pts_ref.size());
     vector<Vector2d> uv_cur(_pts_cur.size());
@@ -84,33 +79,47 @@ Result Init::add_second_frame(const FramePtr frame_cur) {
     for (size_t i = 0; i < _pts_ref.size(); ++i) {
         uv_ref[i] = vk::project2d(_pts_ref[i]);
         uv_cur[i] = vk::project2d(_pts_cur[i]);
-
-//        std::cout << "ref: " << uv_ref[i].transpose() << std::endl;
-//        std::cout << "cur: " << uv_cur[i].transpose() << std::endl;
-//        std::cout << "-----" << std::endl;
     }
 
     double ee = _frame_ref->_cam->error2();
     double rr = 15.0;
 
+    // Dummy vectors to visualize the correctness of the algorithm
+    vector<Vector3d> temp_pts_cur, temp_pts_ref;
+    vector<cv::Point2f> temp_kps_ref, temp_kps_cur;
+
+    const int st = 300;
+    const int ed = 350;
+    temp_pts_ref.insert(temp_pts_ref.begin(), _pts_ref.begin()+st, _pts_ref.begin()+ed);
+    temp_pts_cur.insert(temp_pts_cur.begin(), _pts_cur.begin()+st, _pts_cur.begin()+ed);
+    temp_kps_ref.insert(temp_kps_ref.begin(), _kps_ref.begin()+st, _kps_ref.begin()+ed);
+    temp_kps_cur.insert(temp_kps_cur.begin(), _kps_cur.begin()+st, _kps_cur.begin()+ed);
+
+    // Draw the matches computed from optical flow
+    Viewer2D::update(_frame_ref->_img_pyr[0],
+                     frame_cur->_img_pyr[0],
+                     temp_kps_ref, temp_kps_cur);
+
+
     vk::Homography homography(uv_ref, uv_cur, ee, rr);
     homography.computeSE3fromMatches();
     vector<int> outliers;
-    vk::computeInliers(_pts_cur, _pts_ref,
-                       homography.T_c2_from_c1.rotation_matrix(), homography.T_c2_from_c1.translation(),
+    vk::computeInliers(temp_pts_cur, temp_pts_ref,
+                       homography.T_c2_from_c1.rotation_matrix(),
+                       homography.T_c2_from_c1.translation(),
                        rr, ee,
                        _xyz_in_cur, _inliers, outliers);
 
     std::cout << "e2: " << ee << std::endl;
     std::cout << "optimization threshold: " << rr << std::endl;
     std::cout << "#inliers: " << _inliers.size() << std::endl;
-    std::cout << "#cur: " << _pts_cur.size() << std::endl;
-    std::cout << "#ref: " << _pts_ref.size() << std::endl;
+    std::cout << "#cur: " << temp_pts_cur.size() << std::endl;
+    std::cout << "#ref: " << temp_pts_ref.size() << std::endl;
 
     while (true) {
         Viewer2D::update(_frame_ref->_img_pyr[0],
                          frame_cur->_img_pyr[0],
-                         _kps_ref, _kps_cur);
+                         temp_kps_ref, temp_kps_cur);
     }
 }
 

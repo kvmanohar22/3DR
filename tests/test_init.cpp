@@ -22,7 +22,7 @@ void draw_features(Features &features, cv::Mat &img) {
 
 int main() {
     cv::Mat img1 = cv::imread("../imgs/kitti0.png", 0);
-    cv::Mat img2 = cv::imread("../imgs/kitti7.png", 0);
+    cv::Mat img2 = cv::imread("../imgs/kitti1.png", 0);
 
     if (!img1.data || !img2.data) {
         std::cout << "Couldn't load the image" << std::endl;
@@ -66,10 +66,6 @@ int main() {
     init::Init initializer;
     initializer.add_first_frame(frame_ref);
     initializer.add_second_frame(frame_cur);
-
-    cv::imshow("fast corners ref", img1);
-    cv::imshow("fast corners cur", img2);
-    cv::waitKey(0);
 
     return 0;
 }
