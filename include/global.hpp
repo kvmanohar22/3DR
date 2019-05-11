@@ -5,6 +5,7 @@
 #include <list>
 
 #include <opencv2/opencv.hpp>
+#include <opencv2/core/mat.hpp>
 
 #include <boost/shared_ptr.hpp>
 #include <Eigen/Core>

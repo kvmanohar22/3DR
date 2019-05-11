@@ -3,6 +3,7 @@
 
 #include <Eigen/Core>
 #include <iostream>
+#include <opencv2/core/mat.hpp>
 
 namespace dr3 {
 
@@ -28,6 +29,7 @@ public:
     virtual Vector3d cam2world(const double &u, const double &v) const =0;
     virtual Vector3d cam2world(const Vector2d &px) const =0;
     virtual Vector2d world2cam(const Vector3d &xyz) const =0;
+    virtual Vector2d world2cam(const Vector2d &uv) const =0;
 
     virtual double error2() const =0;
 
@@ -59,7 +61,9 @@ private:
     const double _fx, _fy;
     const double _cx, _cy;
     bool _distortion;
+    double _d[5];
     Matrix3d _K;
+    cv::Mat _cvK, _cvD;
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -73,6 +77,7 @@ public:
     Vector3d cam2world(const double &u, const double &v) const override;
     Vector3d cam2world(const Vector2d &px) const override;
     Vector2d world2cam(const Vector3d &xyz) const override;
+    Vector2d world2cam(const Vector2d &uv) const override;
 
     double error2() const override { return fabs(_fx); }
 

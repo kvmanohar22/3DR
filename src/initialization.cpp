@@ -117,6 +117,7 @@ Result Init::add_second_frame(const FramePtr frame_cur) {
 double Init::compute_inliers(const Matrix3d &R, const Vector3d &t) {
     vector<int> outliers;
     const double reprojection_threshold = Config::reprojection_threshold();
+    auto cam = (Pinhole*)_frame_ref->get_cam();
 
     const size_t size = _pts_cur.size();
     double error = 0.0f;
@@ -134,25 +135,25 @@ double Init::compute_inliers(const Matrix3d &R, const Vector3d &t) {
         Vector2d uv_cur = vk::project2d(_pts_cur[i]);
         Vector2d uv_cur_rep = vk::project2d(xyz_in_cur);
         Vector2d _e1 = uv_cur - uv_cur_rep;
-        double e1 = _e1.norm();
+        double e1 = cam->fx() * _e1.norm();
 
         // Reprojection error wrt reference frame
         Vector3d xyz_in_ref = R.transpose() * (xyz_in_cur - t);
         Vector2d uv_ref = vk::project2d(_pts_ref[i]);
         Vector2d uv_ref_rep = vk::project2d(xyz_in_ref);
         Vector2d _e2 = uv_ref - uv_ref_rep;
-        double e2 = _e2.norm();
+        double e2 = cam->fx() * _e2.norm();
 
         bool is_inlier = false;
         if (e1 < reprojection_threshold && e2 < reprojection_threshold) {
             _inliers.emplace_back(i);
             is_inlier = true;
+            error += e1 + e2;
         } else {
             outliers.emplace_back(i);
         }
 
         // Compute the coordinates in the normal image space
-        auto cam = (Pinhole*)_frame_ref->get_cam();
         uv_cur[0] = uv_cur[0] * cam->fx() + cam->cx();
         uv_cur[1] = uv_cur[1] * cam->fy() + cam->cy();
         uv_ref[0] = uv_ref[0] * cam->fx() + cam->cx();
@@ -171,8 +172,6 @@ double Init::compute_inliers(const Matrix3d &R, const Vector3d &t) {
         cout << "e2        : " << e2 << endl;
         cout << "Total     : " << e1+e2 << endl;
         cout << "-------------------" << endl;
-
-        error += (e1 + e2);
     }
     return error;
 }
