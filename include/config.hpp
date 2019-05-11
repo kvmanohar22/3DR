@@ -18,6 +18,7 @@ public:
     static int& cell_size() { return get_instance()->__cell_size; }
     static int& n_pyr_levels() { return get_instance()->__n_pyr_levels; }
     static double& min_harris_corner_score() { return get_instance()->__min_harris_corner_score; }
+    static double& reprojection_threshold() { return get_instance()->__reprojection_threshold; }
 
 private:
     Config();
@@ -30,6 +31,7 @@ private:
     int    __cell_size;
     int    __n_pyr_levels;
     double __min_harris_corner_score;
+    double __reprojection_threshold;
 };
 
 } // namespace dr3

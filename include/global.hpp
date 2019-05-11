@@ -10,6 +10,9 @@
 #include <Eigen/Core>
 #include <Eigen/StdVector>
 
+#include <sophus/se3.h>
+
+
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector3d)
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector2d)
 
@@ -17,6 +20,7 @@ namespace dr3 {
 
     using namespace std;
     using namespace Eigen;
+    using namespace Sophus;
 
     class Frame;
     class Feature;

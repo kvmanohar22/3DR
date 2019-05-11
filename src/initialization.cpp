@@ -82,34 +82,84 @@ Result Init::add_second_frame(const FramePtr frame_cur) {
     }
 
     double ee = _frame_ref->_cam->error2();
-    double rr = 15.0;
+    double rr = 30.0;
 
     // Draw the matches computed from optical flow
     Viewer2D::update(_frame_ref->_img_pyr[0],
                      frame_cur->_img_pyr[0],
                      _kps_ref, _kps_cur);
 
-
     vk::Homography homography(uv_ref, uv_cur, ee, rr);
     homography.computeSE3fromMatches();
     vector<int> outliers;
-    vk::computeInliers(_pts_cur, _pts_ref,
-                       homography.T_c2_from_c1.rotation_matrix(),
-                       homography.T_c2_from_c1.translation(),
-                       rr, ee,
-                       _xyz_in_cur, _inliers, outliers);
+//    double tot_error = vk::computeInliers(_pts_cur, _pts_ref,
+//                       homography.T_c2_from_c1.rotation_matrix(),
+//                       homography.T_c2_from_c1.translation(),
+//                       rr, ee,
+//                       _xyz_in_cur, _inliers, outliers);
+    double tot_error = compute_inliers(homography.T_c2_from_c1.rotation_matrix(),
+                                       homography.T_c2_from_c1.translation());
+    _T_cur_from_ref = homography.T_c2_from_c1;
 
-    std::cout << "e2: " << ee << std::endl;
-    std::cout << "optimization threshold: " << rr << std::endl;
     std::cout << "#inliers: " << _inliers.size() << std::endl;
-    std::cout << "#cur: " << _pts_cur.size() << std::endl;
-    std::cout << "#ref: " << _pts_ref.size() << std::endl;
+    std::cout << "reprojection error: " << tot_error << std::endl;
+    std::cout << "reprojection threshold: " << rr << std::endl;
+    std::cout << "Error multiplier: " << ee << std::endl;
 
     while (true) {
         Viewer2D::update(_frame_ref->_img_pyr[0],
                          frame_cur->_img_pyr[0],
                          _kps_ref, _kps_cur);
     }
+}
+
+double Init::compute_inliers(const Matrix3d &R, const Vector3d &t) {
+    vector<int> outliers;
+    const double reprojection_threshold = Config::reprojection_threshold();
+
+    const size_t size = _pts_cur.size();
+    double error = 0.0f;
+    _inliers.clear(); _inliers.reserve(size);
+    outliers.clear(); outliers.reserve(size);
+    _xyz_in_cur.clear(); _xyz_in_cur.reserve(size);
+
+    for (size_t i = 0; i < size; ++i) {
+        // Triangulate the point
+        _xyz_in_cur.emplace_back(vk::triangulateFeatureNonLin(R, t,
+                _pts_cur[i], _pts_ref[i]));
+
+        // Reprojection error wrt current frame
+        Vector3d xyz_in_cur = _xyz_in_cur.back();
+        Vector2d _e1 = vk::project2d(_pts_cur[i]) - vk::project2d(xyz_in_cur);
+        double e1 = _e1.norm();
+
+        // Reprojection error wrt reference frame
+        Vector3d xyz_in_ref = R.transpose() * (xyz_in_cur - t);
+        Vector2d _e2 = vk::project2d(_pts_ref[i]) - vk::project2d(xyz_in_ref);
+        double e2 = _e2.norm();
+
+        bool is_inlier = false;
+        if (e1 < reprojection_threshold && e2 < reprojection_threshold) {
+            _inliers.emplace_back(i);
+            is_inlier = true;
+        } else {
+            outliers.emplace_back(i);
+        }
+
+        cout << "idx: " << i << "      Inlier: " << is_inlier << endl;
+        cout << "cur       : " << vk::project2d(_pts_cur[i]).transpose() << endl;
+        cout << "xyz_in_cur: " << xyz_in_cur.transpose() << endl;
+        cout << "xyz_in_cur: " << vk::project2d(xyz_in_cur).transpose() << endl;
+        cout << "e1        : " << e1 << endl;
+        cout << "ref       : " << vk::project2d(_pts_ref[i]).transpose() << endl;
+        cout << "xyz_in_ref: " << vk::project2d(xyz_in_ref).transpose() << endl;
+        cout << "e2        : " << e2 << endl;
+        cout << "Total     : " << e1+e2 << endl;
+        cout << "-------------------" << endl;
+
+        error += (e1 + e2);
+    }
+    return error;
 }
 
 } // namespace init

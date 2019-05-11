@@ -29,5 +29,8 @@ tester(test_fast_corners test_fast_corners.cpp)
 # initial map estimation
 tester(test_init_map test_init.cpp)
 
+# Eigen
+tester(test_eigen test_eigen.cpp)
+
 add_subdirectory(ceres)
 add_subdirectory(slam)

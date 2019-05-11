@@ -14,6 +14,7 @@ find_package(Eigen3 REQUIRED)
 find_package(Ceres REQUIRED)
 find_package(fast REQUIRED)
 find_package(vikit_common REQUIRED)
+find_package(Sophus REQUIRED)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
@@ -26,6 +27,7 @@ include_directories(${HEADERS}
                     ${Pangolin_INCLUDE_DIRS}
                     ${CERES_INCLUDE_DIRS}
                     ${fast_INCLUDE_DIRS}
+                    ${Sophus_INCLUDE_DIRS}
                     ${vikit_common_INCLUDE_DIRS}
                     ${Eigen3_INCLUDE_DIRS})
 
@@ -54,6 +56,7 @@ list(APPEND LIBS
    ${fast_LIBRARIES}
    ${vikit_common_LIBRARIES}
    ${Eigen3_LIBS}
+   ${Sophus_LIBRARIES}
    ${CERES_LIBRARIES})
 
 function(tester target src)

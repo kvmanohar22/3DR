@@ -9,7 +9,8 @@ Config::Config() :
     __ransac_threshold(5.0f),
     __cell_size(30),
     __n_pyr_levels(3),
-    __min_harris_corner_score(20.0)
+    __min_harris_corner_score(20.0),
+    __reprojection_threshold(0.2)
 {}
 
 Config* Config::get_instance() {
