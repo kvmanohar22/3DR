@@ -70,6 +70,8 @@ public:
 
    Point* get_point(size_t idx) { return points[idx]; }
 
+   inline AbstractCamera* get_cam() { return _cam; }
+
 }; // class Frame
 
 } // namespace dr3

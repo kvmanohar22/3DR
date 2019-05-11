@@ -89,6 +89,7 @@ Result Init::add_second_frame(const FramePtr frame_cur) {
                      frame_cur->_img_pyr[0],
                      _kps_ref, _kps_cur);
 
+    // Compute homography on normalized image coordinates
     vk::Homography homography(uv_ref, uv_cur, ee, rr);
     homography.computeSE3fromMatches();
     vector<int> outliers;
@@ -130,12 +131,16 @@ double Init::compute_inliers(const Matrix3d &R, const Vector3d &t) {
 
         // Reprojection error wrt current frame
         Vector3d xyz_in_cur = _xyz_in_cur.back();
-        Vector2d _e1 = vk::project2d(_pts_cur[i]) - vk::project2d(xyz_in_cur);
+        Vector2d uv_cur = vk::project2d(_pts_cur[i]);
+        Vector2d uv_cur_rep = vk::project2d(xyz_in_cur);
+        Vector2d _e1 = uv_cur - uv_cur_rep;
         double e1 = _e1.norm();
 
         // Reprojection error wrt reference frame
         Vector3d xyz_in_ref = R.transpose() * (xyz_in_cur - t);
-        Vector2d _e2 = vk::project2d(_pts_ref[i]) - vk::project2d(xyz_in_ref);
+        Vector2d uv_ref = vk::project2d(_pts_ref[i]);
+        Vector2d uv_ref_rep = vk::project2d(xyz_in_ref);
+        Vector2d _e2 = uv_ref - uv_ref_rep;
         double e2 = _e2.norm();
 
         bool is_inlier = false;
@@ -146,13 +151,23 @@ double Init::compute_inliers(const Matrix3d &R, const Vector3d &t) {
             outliers.emplace_back(i);
         }
 
+        // Compute the coordinates in the normal image space
+        auto cam = (Pinhole*)_frame_ref->get_cam();
+        uv_cur[0] = uv_cur[0] * cam->fx() + cam->cx();
+        uv_cur[1] = uv_cur[1] * cam->fy() + cam->cy();
+        uv_ref[0] = uv_ref[0] * cam->fx() + cam->cx();
+        uv_ref[1] = uv_ref[1] * cam->fy() + cam->cy();
+        uv_cur_rep[0] = uv_cur_rep[0] * cam->fx() + cam->cx();
+        uv_cur_rep[1] = uv_cur_rep[1] * cam->fy() + cam->cy();
+        uv_ref_rep[0] = uv_ref_rep[0] * cam->fx() + cam->cx();
+        uv_ref_rep[1] = uv_ref_rep[1] * cam->fy() + cam->cy();
+
         cout << "idx: " << i << "      Inlier: " << is_inlier << endl;
-        cout << "cur       : " << vk::project2d(_pts_cur[i]).transpose() << endl;
-        cout << "xyz_in_cur: " << xyz_in_cur.transpose() << endl;
-        cout << "xyz_in_cur: " << vk::project2d(xyz_in_cur).transpose() << endl;
+        cout << "cur       : " << uv_cur.transpose() << endl;
+        cout << "xyz_in_cur: " << uv_cur_rep.transpose() << endl;
         cout << "e1        : " << e1 << endl;
-        cout << "ref       : " << vk::project2d(_pts_ref[i]).transpose() << endl;
-        cout << "xyz_in_ref: " << vk::project2d(xyz_in_ref).transpose() << endl;
+        cout << "ref       : " << uv_ref.transpose() << endl;
+        cout << "xyz_in_ref: " << uv_ref_rep.transpose() << endl;
         cout << "e2        : " << e2 << endl;
         cout << "Total     : " << e1+e2 << endl;
         cout << "-------------------" << endl;
