@@ -82,7 +82,7 @@ Result Init::add_second_frame(const FramePtr frame_cur) {
     }
 
     double ee = _frame_ref->_cam->error2();
-    double rr = 30.0;
+    double rr = Config::reprojection_threshold();
 
     // Draw the matches computed from optical flow
     Viewer2D::update(_frame_ref->_img_pyr[0],
@@ -102,10 +102,11 @@ Result Init::add_second_frame(const FramePtr frame_cur) {
                                        homography.T_c2_from_c1.translation());
     _T_cur_from_ref = homography.T_c2_from_c1;
 
-    std::cout << "#inliers: " << _inliers.size() << std::endl;
+    std::cout << "#inliers: " << _inliers.size() << "/" << _kps_cur.size() << std::endl;
     std::cout << "reprojection error: " << tot_error << std::endl;
     std::cout << "reprojection threshold: " << rr << std::endl;
     std::cout << "Error multiplier: " << ee << std::endl;
+    std::cout << "Disparity mean: " << accumulate(_disparities.begin(), _disparities.end(), 0.0) / _disparities.size() << std::endl;
 
     while (true) {
         Viewer2D::update(_frame_ref->_img_pyr[0],
@@ -144,15 +145,6 @@ double Init::compute_inliers(const Matrix3d &R, const Vector3d &t) {
         Vector2d _e2 = uv_ref - uv_ref_rep;
         double e2 = cam->fx() * _e2.norm();
 
-        bool is_inlier = false;
-        if (e1 < reprojection_threshold && e2 < reprojection_threshold) {
-            _inliers.emplace_back(i);
-            is_inlier = true;
-            error += e1 + e2;
-        } else {
-            outliers.emplace_back(i);
-        }
-
         // Compute the coordinates in the normal image space
         uv_cur[0] = uv_cur[0] * cam->fx() + cam->cx();
         uv_cur[1] = uv_cur[1] * cam->fy() + cam->cy();
@@ -162,16 +154,24 @@ double Init::compute_inliers(const Matrix3d &R, const Vector3d &t) {
         uv_cur_rep[1] = uv_cur_rep[1] * cam->fy() + cam->cy();
         uv_ref_rep[0] = uv_ref_rep[0] * cam->fx() + cam->cx();
         uv_ref_rep[1] = uv_ref_rep[1] * cam->fy() + cam->cy();
+        bool is_inlier = false;
+        if (e1 < reprojection_threshold && e2 < reprojection_threshold) {
+            _inliers.emplace_back(i);
+            is_inlier = true;
+            error += e1 + e2;
 
-        cout << "idx: " << i << "      Inlier: " << is_inlier << endl;
-        cout << "cur       : " << uv_cur.transpose() << endl;
-        cout << "xyz_in_cur: " << uv_cur_rep.transpose() << endl;
-        cout << "e1        : " << e1 << endl;
-        cout << "ref       : " << uv_ref.transpose() << endl;
-        cout << "xyz_in_ref: " << uv_ref_rep.transpose() << endl;
-        cout << "e2        : " << e2 << endl;
-        cout << "Total     : " << e1+e2 << endl;
-        cout << "-------------------" << endl;
+            cout << "idx: " << i << "      Inlier: " << is_inlier << endl;
+            cout << "cur       : " << uv_cur.transpose() << endl;
+            cout << "xyz_in_cur: " << uv_cur_rep.transpose() << endl;
+            cout << "e1        : " << e1 << endl;
+            cout << "ref       : " << uv_ref.transpose() << endl;
+            cout << "xyz_in_ref: " << uv_ref_rep.transpose() << endl;
+            cout << "e2        : " << e2 << endl;
+            cout << "Total     : " << e1+e2 << endl;
+            cout << "-------------------" << endl;
+        } else {
+            outliers.emplace_back(i);
+        }
     }
     return error;
 }

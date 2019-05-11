@@ -31,7 +31,7 @@ private:
     int    __cell_size;
     int    __n_pyr_levels;
     double __min_harris_corner_score;
-    double __reprojection_threshold;
+    double __reprojection_threshold;   // in pixels
 };
 
 } // namespace dr3

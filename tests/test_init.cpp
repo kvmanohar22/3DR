@@ -22,7 +22,7 @@ void draw_features(Features &features, cv::Mat &img) {
 
 int main() {
     cv::Mat img1 = cv::imread("../imgs/kitti0.png", 0);
-    cv::Mat img2 = cv::imread("../imgs/kitti1.png", 0);
+    cv::Mat img2 = cv::imread("../imgs/kitti5.png", 0);
 
     if (!img1.data || !img2.data) {
         std::cout << "Couldn't load the image" << std::endl;

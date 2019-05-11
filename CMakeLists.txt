@@ -49,6 +49,9 @@ set(SRCS
    src/camera.cpp)
 add_library(DR3_LIBS SHARED ${SRCS})
 
+message(">>> ${vikit_common_INCLUDE_DIRS}")
+message(">>> ${vikit_common_LIBRARIES}")
+
 list(APPEND LIBS
    DR3_LIBS
    ${OpenCV_LIBRARIES}
