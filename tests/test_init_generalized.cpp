@@ -10,6 +10,8 @@
 #include "viewer.hpp"
 #include "camera.hpp"
 #include "svo/initialization.hpp"
+#include <glog/logging.h>
+
 
 using namespace std;
 using namespace dr3;
@@ -24,7 +26,9 @@ void draw_features(Features &features, cv::Mat &img) {
     });
 }
 
-int main() {
+int main(int argc, char **argv) {
+    google::InitGoogleLogging(argv[0]);
+
     cv::Mat img1 = cv::imread("../imgs/kitti0.png", 0);
     cv::Mat img2 = cv::imread("../imgs/kitti5.png", 0);
 
@@ -63,13 +67,11 @@ int main() {
     draw_features(new_features1, img1);
     draw_features(new_features2, img2);
 
-    cout << "Ref frame feature count: " << new_features1.size() << endl;
-    cout << "Cur frame feature count: " << new_features2.size() << endl;
-
     // Initial map generator
-    init::Init initializer;
-    initializer.add_first_frame(frame_ref);
-    initializer.add_second_frame_generalized(frame_cur);
+    LOG(INFO) << "Starting initializer...";
+    init::InitMain initializer;
+    initializer.process(frame_ref);
+    initializer.process(frame_cur);
 
     return 0;
 }
