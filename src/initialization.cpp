@@ -107,12 +107,6 @@ Result Init::add_second_frame(const FramePtr frame_cur) {
     std::cout << "reprojection threshold: " << rr << std::endl;
     std::cout << "Error multiplier: " << ee << std::endl;
     std::cout << "Disparity mean: " << accumulate(_disparities.begin(), _disparities.end(), 0.0) / _disparities.size() << std::endl;
-
-    while (true) {
-        Viewer2D::update(_frame_ref->_img_pyr[0],
-                         frame_cur->_img_pyr[0],
-                         _kps_ref, _kps_cur);
-    }
 }
 
 double Init::compute_inliers(const Matrix3d &R, const Vector3d &t) {
@@ -174,6 +168,10 @@ double Init::compute_inliers(const Matrix3d &R, const Vector3d &t) {
         }
     }
     return error;
+}
+
+Result Init::add_second_frame_generalized(dr3::FramePtr frame_cur) {
+
 }
 
 } // namespace init

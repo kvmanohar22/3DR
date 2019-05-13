@@ -27,10 +27,14 @@ public:
     ~Init() =default;
 
     Result add_first_frame(FramePtr frame_ref);
-    Result add_second_frame(FramePtr frame_cur);
 
+    // This is outdated method (only fucking works for downward facing cameras)
+    Result add_second_frame(FramePtr frame_cur);
     double compute_inliers(const Matrix3d &R,
-            const Vector3d &t);
+                           const Vector3d &t);
+
+    // More generalized method
+    Result add_second_frame_generalized(FramePtr frame_cur);
 
 protected:
     vector<cv::Point2f> _kps_ref;        // keypoints in the ref frame
