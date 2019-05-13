@@ -85,6 +85,9 @@ public:
     inline double fy() const { return _fy; }
     inline double cx() const { return _cx; }
     inline double cy() const { return _cy; }
+
+    inline cv::Mat K() { return _cvK.clone(); }
+
 };
 
 } // namespace dr3

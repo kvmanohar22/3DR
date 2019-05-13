@@ -72,6 +72,7 @@ public:
 
    inline AbstractCamera* get_cam() { return _cam; }
 
+   bool compute_features();
 }; // class Frame
 
 } // namespace dr3

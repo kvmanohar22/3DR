@@ -1,3 +1,4 @@
+#include <features.hpp>
 #include "frame.hpp"
 
 namespace dr3 {
@@ -46,6 +47,21 @@ void Frame::update_poses() {
 
 void Frame::add_observation(Point *point, size_t idx) {
    points[idx] = point;
+}
+
+bool Frame::compute_features() {
+    // Detect the corners
+    feature_detection::FastDetector detector(_img_pyr[0].cols,
+                                             _img_pyr[0].rows,
+                                             Config::cell_size(),
+                                             Config::n_pyr_levels());
+    detector.detect((FramePtr)this, _img_pyr,
+                    Config::min_harris_corner_score(),
+                    _fts);
+
+    if (_fts.size() < 100)
+        return false;
+    return true;
 }
 
 } // namespace dr3
