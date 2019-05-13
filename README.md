@@ -43,6 +43,7 @@ cd scripts/
 - [ ] Reduce the number of points for graph optimization
 ### Semi-Direct Visual Odometry
 - [ ] ~~opencv's `calcOpticalFlowPyrLK` doesn't seem to work that good on forward motion camera~~ Compute inliers from vikit seems to be doing it wrong! Fix it!
+- [ ] Correspondance point estimation is noisy (probably). Currently using optical flow to estimate corresponding points. 
 
 
 ## Requirements
