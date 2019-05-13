@@ -15,6 +15,8 @@
 
 #include <sophus/se3.h>
 
+#include <glog/logging.h>
+
 
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector3d)
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector2d)

@@ -5,6 +5,8 @@ Collection of tools ranging from image alignment, panorama generation, point clo
 Tracking camera (without Bundle Adjustment). Video: (KITTI `sequence/00`)
 
 ## Usage
+*Note*: By default, build type is Debug, to change to Release, edit in `CMakeLists.txt` file
+
 1. Build all the executables
 ```bash
 git clone git@github.com:kvmanohar22/3DR.git
@@ -50,6 +52,7 @@ cd scripts/
 - ceres-solver (for Bundle Adjustment)
 - Pangolin (for 3D viewer)
 - [fast](https://github.com/uzh-rpg/fast.git) (for fast corner detection)
+- GLOG
 
 ## References
 1. M. Uyttendaele, A. Eden, and R. Szeliski.

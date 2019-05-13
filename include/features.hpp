@@ -40,7 +40,7 @@ public:
     int level;        // level from which this was extracted
     Point *point;     // 3D point in the world
 
-    Feature(FramePtr frame, const Vector2d &px, int level) :
+    Feature(FramePtr &frame, const Vector2d &px, int level) :
         type(FeatureType::CORNER),
         frame(frame),
         px(px),

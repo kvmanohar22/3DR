@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 3.0)
 
 project(3DR)
+set(CMAKE_BUILD_TYPE DEBUG)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(OpenCV_DIR /usr/local/share/OpenCV)
 set(Pangolin_DIR /usr/local/share/Pangolin/)
 set(vikit_DIR /home/kv/slam/svo/rpg_vikit/vikit_common/build)
+
 find_package(OpenCV REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(Pangolin REQUIRED)
@@ -48,9 +50,6 @@ set(SRCS
    src/features.cpp
    src/camera.cpp)
 add_library(DR3_LIBS SHARED ${SRCS})
-
-message(">>> ${vikit_common_INCLUDE_DIRS}")
-message(">>> ${vikit_common_LIBRARIES}")
 
 list(APPEND LIBS
    DR3_LIBS
