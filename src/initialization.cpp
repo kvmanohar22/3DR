@@ -182,12 +182,10 @@ InitHelper::InitHelper(const FramePtr &frame_ref, float sigma, int iterations) {
     auto cam = (Pinhole*)frame_ref->get_cam();
     mK = cam->K();
 
-    // TODO: Are these normalized keypoints?
     mvKeys1.clear(); mvKeys1.reserve(frame_ref->_fts.size());
     std::for_each(frame_ref->_fts.begin(), frame_ref->_fts.end(), [&](Feature *ftr) {
         cv::Point2f kpt(ftr->px[0], ftr->px[1]);
         mvKeys1.emplace_back(cv::KeyPoint(kpt, 2.0));
-        delete ftr;
     });
 
     mSigma = sigma;
@@ -203,7 +201,6 @@ bool InitHelper::Initialize(const FramePtr &frame_cur, const vector<int> &vMatch
     std::for_each(frame_cur->_fts.begin(), frame_cur->_fts.end(), [&](Feature *ftr) {
         cv::Point2f kpt(ftr->px[0], ftr->px[1]);
         mvKeys2.emplace_back(cv::KeyPoint(kpt, 2.0));
-        delete ftr;
     });
 
     mvMatches12.clear();
@@ -217,6 +214,9 @@ bool InitHelper::Initialize(const FramePtr &frame_cur, const vector<int> &vMatch
             mvbMatched1[i]=false;
         }
     }
+    DLOG(INFO) << "Ref frame key points count: " << mvKeys1.size();
+    DLOG(INFO) << "Cur frame key points count: " << mvKeys2.size();
+    DLOG(INFO) << "Initial number of matches : " << mvMatches12.size();
 
     const int N = mvMatches12.size();
 
@@ -233,8 +233,8 @@ bool InitHelper::Initialize(const FramePtr &frame_cur, const vector<int> &vMatch
 
     // TODO: Change to C++11 random library
     struct timeval _time;
-    gettimeofday(&_time, NULL);
-    srand(time(NULL));
+    gettimeofday(&_time, nullptr);
+    srand(time(nullptr));
     for(int it=0; it<mMaxIterations; it++) {
         vAvailableIndices = vAllIndices;
         // Select a minimum set
@@ -248,13 +248,14 @@ bool InitHelper::Initialize(const FramePtr &frame_cur, const vector<int> &vMatch
     }
 
     // Launch threads to compute in parallel a fundamental matrix and a homography
-    vector<bool> vbMatchesInliersH, vbMatchesInliersF;
-    float SH, SF;
-    cv::Mat H, F;
+    vector<bool> vbMatchesInliersF;
+    float SF;
+    cv::Mat F;
 
-    thread threadF(&InitHelper::FindFundamental,this,ref(vbMatchesInliersF), ref(SF), ref(F));
+    DLOG(INFO) << "Estimating fundamental matrix";
     FindFundamental(ref(vbMatchesInliersF), ref(SF), ref(F));
 
+    DLOG(INFO) << "Generating 3D points for the inliers";
     return ReconstructF(vbMatchesInliersF,F,mK,R21,t21,vP3D,vbTriangulated,1.0,50);
 }
 
@@ -426,7 +427,7 @@ bool InitHelper::ReconstructF(vector<bool> &vbMatchesInliers, cv::Mat &F21, cv::
                                cv::Mat &R21, cv::Mat &t21, vector<cv::Point3f> &vP3D, vector<bool> &vbTriangulated, float minParallax, int minTriangulated)
 {
     int N=0;
-    for(size_t i=0, iend = vbMatchesInliers.size() ; i<iend; i++)
+    for (size_t i=0, iend = vbMatchesInliers.size() ; i<iend; i++)
         if(vbMatchesInliers[i])
             N++;
 
@@ -442,6 +443,7 @@ bool InitHelper::ReconstructF(vector<bool> &vbMatchesInliers, cv::Mat &F21, cv::
     cv::Mat t2=-t;
 
     // Reconstruct with the 4 hyphoteses and check
+    DLOG(INFO) << "Generating 4 hypothesis for initial camera estimation";
     vector<cv::Point3f> vP3D1, vP3D2, vP3D3, vP3D4;
     vector<bool> vbTriangulated1,vbTriangulated2,vbTriangulated3, vbTriangulated4;
     float parallax1,parallax2, parallax3, parallax4;
@@ -469,16 +471,18 @@ bool InitHelper::ReconstructF(vector<bool> &vbMatchesInliers, cv::Mat &F21, cv::
         nsimilar++;
 
     // If there is not a clear winner or not enough triangulated points reject initialization
-    if(maxGood<nMinGood || nsimilar>1)
-    {
+    if(maxGood<nMinGood) {
+        LOG(WARNING) << "Not enough triangulated points [min: " << nMinGood << "] obtained: [" << maxGood << "]";
+        return false;
+    }
+    if(nsimilar>1) {
+        LOG(WARNING) << "Not enough parallax between the two views";
         return false;
     }
 
     // If best reconstruction has enough parallax initialize
-    if(maxGood==nGood1)
-    {
-        if(parallax1>minParallax)
-        {
+    if(maxGood==nGood1) {
+        if(parallax1>minParallax) {
             vP3D = vP3D1;
             vbTriangulated = vbTriangulated1;
 
@@ -486,10 +490,8 @@ bool InitHelper::ReconstructF(vector<bool> &vbMatchesInliers, cv::Mat &F21, cv::
             t1.copyTo(t21);
             return true;
         }
-    }else if(maxGood==nGood2)
-    {
-        if(parallax2>minParallax)
-        {
+    } else if(maxGood==nGood2) {
+        if(parallax2>minParallax) {
             vP3D = vP3D2;
             vbTriangulated = vbTriangulated2;
 
@@ -497,10 +499,8 @@ bool InitHelper::ReconstructF(vector<bool> &vbMatchesInliers, cv::Mat &F21, cv::
             t1.copyTo(t21);
             return true;
         }
-    }else if(maxGood==nGood3)
-    {
-        if(parallax3>minParallax)
-        {
+    } else if(maxGood==nGood3) {
+        if(parallax3>minParallax) {
             vP3D = vP3D3;
             vbTriangulated = vbTriangulated3;
 
@@ -508,10 +508,8 @@ bool InitHelper::ReconstructF(vector<bool> &vbMatchesInliers, cv::Mat &F21, cv::
             t2.copyTo(t21);
             return true;
         }
-    }else if(maxGood==nGood4)
-    {
-        if(parallax4>minParallax)
-        {
+    } else if(maxGood==nGood4) {
+        if(parallax4>minParallax) {
             vP3D = vP3D4;
             vbTriangulated = vbTriangulated4;
 
@@ -521,6 +519,7 @@ bool InitHelper::ReconstructF(vector<bool> &vbMatchesInliers, cv::Mat &F21, cv::
         }
     }
 
+    LOG(WARNING) << "No solution could be recovered";
     return false;
 }
 
@@ -723,7 +722,11 @@ InitMain::InitMain() : initializer(nullptr) {
 Result InitMain::process(FramePtr &frame) {
     bool success = frame->compute_features();
     if (!success) {
-        std::cerr << "Very few features are detected. Re-run in more texture area";
+        if (!initializer) {
+            LOG(WARNING) << "NOT ENOUGH FEATURES ARE DETECTED IN REFERENCE FRAME";
+        } else {
+            LOG(WARNING) << "NOT ENOUGH FEATURES ARE DETECTED IN CURRENT FRAME";
+        }
 
         initializer = static_cast<InitHelper*>(nullptr);
         fill(mvIniMatches.begin(), mvIniMatches.end(), -1);
@@ -733,19 +736,86 @@ Result InitMain::process(FramePtr &frame) {
     if (!initializer) {
         // Add the reference frame
         frame_ref = frame;
+
+        _kps_ref.clear(); _kps_ref.reserve(frame_ref->_fts.size());
+        _pts_ref.clear(); _pts_ref.reserve(frame_ref->_fts.size());
         mvbPrevMatched.clear(); mvbPrevMatched.reserve(frame->_fts.size());
+        kpts_ref.clear(); kpts_ref.reserve(frame_ref->_fts.size());
+        DLOG(INFO) << "Features detected in reference frame: " << frame->_fts.size();
         std::for_each(frame->_fts.begin(), frame->_fts.end(), [&](Feature *ftr) {
             cv::Point2f kpt(ftr->px[0], ftr->px[1]);
-            mvbPrevMatched.emplace_back(cv::KeyPoint(kpt, 2.0));
-            delete ftr;
+            _kps_ref.emplace_back(kpt);
+            _pts_ref.push_back(ftr->f);
+            mvbPrevMatched.emplace_back(kpt);
+            kpts_ref.emplace_back(cv::KeyPoint(kpt, 2.0));
         });
 
+        _kps_cur.insert(_kps_cur.begin(), _kps_ref.begin(), _kps_ref.end());
         initializer = new InitHelper(frame, 1.0f, 200);
+        mvIniMatches.reserve(frame->_fts.size());
         fill(mvIniMatches.begin(), mvIniMatches.end(), -1);
+
         return Result::SUCCESS;
     } else {
         // Add the current frame and generate the initial map
         frame_cur = frame;
+        DLOG(INFO) << "Features detected in current frame: " << frame->_fts.size();
+        std::for_each(frame->_fts.begin(), frame->_fts.end(), [&](Feature *ftr) {
+            cv::Point2f kpt(ftr->px[0], ftr->px[1]);
+            kpts_cur.emplace_back(cv::KeyPoint(kpt, 2.0));
+        });
+
+        const int klt_win_size = 30;
+        const int klt_max_iter = 1000;
+        const double klt_eps = 1e-3;
+        vector<uchar> status;
+        vector<float> error;
+        cv::TermCriteria termcrit(cv::TermCriteria::COUNT+cv::TermCriteria::EPS,
+                                  klt_max_iter, klt_eps);
+        cv::calcOpticalFlowPyrLK(frame_ref->_img_pyr[0],
+                                 frame_cur->_img_pyr[0],
+                                 _kps_ref, _kps_cur,
+                                 status, error,
+                                 cv::Size2i(klt_win_size, klt_win_size),
+                                 4, termcrit, cv::OPTFLOW_USE_INITIAL_FLOW);
+
+        auto kps_ref_itr = _kps_ref.begin();
+        auto kps_cur_itr = _kps_cur.begin();
+        auto pts_ref_itr = _pts_ref.begin();
+        auto match_idx_itr = mvIniMatches.begin();
+        _disparities.clear(); _disparities.reserve(_kps_cur.size());
+        _pts_cur.clear(); _pts_cur.reserve(_kps_cur.size());
+        for (size_t i = 0; kps_ref_itr != _kps_ref.end(); ++i) {
+            if (!status[i]) {
+                kps_ref_itr = _kps_ref.erase(kps_ref_itr);
+                kps_cur_itr = _kps_cur.erase(kps_cur_itr);
+                pts_ref_itr = _pts_ref.erase(pts_ref_itr);
+                continue;
+            }
+            _disparities.push_back(Vector2d(kps_ref_itr->x - kps_cur_itr->x,
+                                            kps_ref_itr->y - kps_cur_itr->y).norm());
+            _pts_cur.push_back(frame_cur->_cam->cam2world(kps_cur_itr->x, kps_cur_itr->y));
+            mvIniMatches.emplace_back(i);
+            ++kps_ref_itr;
+            ++kps_cur_itr;
+            ++pts_ref_itr;
+            ++match_idx_itr;
+        }
+
+
+
+        DLOG(INFO) << "Average disparity: " << accumulate(_disparities.begin(), _disparities.end(), 0.0) / _disparities.size() << "px";
+        DLOG(INFO) << "Total matches between ref and cur frames: " << mvIniMatches.size();
+
+        if (mvIniMatches.size() < 100) {
+            LOG(WARNING) << "Very few matches (<100) detected";
+        }
+
+        cv::Mat R, t;
+        vector<bool> triangulated;
+        if (initializer->Initialize(frame_cur, mvIniMatches, R, t, mvIniP3D, triangulated)) {
+            DLOG(INFO) << "Successfully estimated initial map with " << mvIniP3D.size() << " points";
+        }
 
     }
 }
