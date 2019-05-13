@@ -41,9 +41,27 @@ cv::Mat Viewer2D::update(cv::Mat img_l, cv::Mat img_r,
    return new_img.clone();
 }
 
+cv::Mat Viewer2D::update(cv::Mat img_l, cv::Mat img_r,
+                         std::vector<cv::KeyPoint> kpts_l,
+                         std::vector<cv::KeyPoint> kpts_r) {
+    size_t new_h, new_w;
+    new_h = img_l.rows + img_r.rows;
+    new_w = img_l.cols;
+
+    cv::Mat new_img(cv::Size(new_w, new_h), img_l.type());
+    img_l.copyTo(new_img.rowRange(cv::Range(0, img_l.rows)));
+    img_r.copyTo(new_img.rowRange(cv::Range(img_l.rows, img_l.rows+img_r.rows)));
+
+    cv::cvtColor(new_img, new_img, CV_GRAY2BGR);
+    Viewer2D::draw_kps(new_img, kpts_l, kpts_r);
+    update(new_img);
+    return new_img.clone();
+}
+
+
 void Viewer2D::update(cv::Mat &img) {
    cv::imshow("Viewer2D - SLAM", img);
-   cv::waitKey(20);
+   cv::waitKey(0);
 }
 
 void Viewer2D::update(cv::Mat &img,
@@ -75,7 +93,21 @@ void Viewer2D::draw_kps(cv::Mat &img,
    }
 }
 
-void Viewer2D::draw_kps(cv::Mat &img, 
+void Viewer2D::draw_kps(cv::Mat &img,
+                        std::vector<cv::KeyPoint> kpts_l,
+                        std::vector<cv::KeyPoint> kpts_r) {
+   const int n_matches = kpts_l.size();
+   for (int i = 0; i < n_matches; ++i) {
+      cv::Point2f pt1 = kpts_l[i].pt;
+      cv::Point2f pt2 = kpts_r[i].pt + cv::Point2f(cv::Size(0, img.rows/2));
+
+      cv::circle(img, pt1, 2, cv::Scalar(255, 0, 0), -1);
+      cv::circle(img, pt2, 2, cv::Scalar(255, 0, 0), -1);
+      cv::line(img, pt1, pt2, cv::Scalar(0, 255, 0), 1, CV_AA);
+   }
+}
+
+void Viewer2D::draw_kps(cv::Mat &img,
                         std::vector<cv::KeyPoint> kps_l,
                         std::vector<unsigned int> idxs_l,
                         std::vector<cv::KeyPoint> kps_r,

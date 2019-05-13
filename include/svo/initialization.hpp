@@ -33,6 +33,9 @@ public:
     bool Initialize(const FramePtr &CurrentFrame, const vector<int> &vMatches12,
                     cv::Mat &R21, cv::Mat &t21, vector<cv::Point3f> &vP3D, vector<bool> &vbTriangulated);
 
+    inline vector<cv::KeyPoint>& mutable_keys_ref() { return mvKeys1; }
+    inline vector<cv::KeyPoint>& mutable_keys_cur() { return mvKeys2; }
+
 private:
     void FindFundamental(vector<bool> &vbInliers, float &score, cv::Mat &F21);
     cv::Mat ComputeF21(const vector<cv::Point2f> &vP1, const vector<cv::Point2f> &vP2);

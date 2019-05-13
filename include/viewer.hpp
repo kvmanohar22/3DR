@@ -36,6 +36,10 @@ public:
                   std::vector<cv::Point2f> pts_l,
                   std::vector<cv::Point2f> pts_r);
 
+   static cv::Mat update(cv::Mat img_l, cv::Mat img_r,
+                  std::vector<cv::KeyPoint> kpts_l,
+                  std::vector<cv::KeyPoint> kpts_r);
+
    static void update(cv::Mat &img);
    static void update(cv::Mat &img, const std::vector<cv::KeyPoint> &kps);
 
@@ -51,6 +55,10 @@ public:
    static void draw_kps(cv::Mat &img,
                  std::vector<cv::Point2f> pts_l,
                  std::vector<cv::Point2f> pts_r);
+
+   static void draw_kps(cv::Mat &img,
+                 std::vector<cv::KeyPoint> kpts_l,
+                 std::vector<cv::KeyPoint> kpts_r);
 
    static void draw_point(cv::Mat &img,
                    cv::KeyPoint pt,
