@@ -208,7 +208,7 @@ bool InitHelper::Initialize(const FramePtr &frame_cur, const vector<int> &vMatch
     vector<cv::KeyPoint> tkeys1, tkeys2;
     tkeys1.reserve(mvMatches12.size());
     tkeys2.reserve(mvMatches12.size());
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < mvMatches12.size(); ++i) {
         tkeys1.emplace_back(mvKeys1[mvMatches12[i].first]);
         tkeys2.emplace_back(mvKeys2[mvMatches12[i].second]);
     }
