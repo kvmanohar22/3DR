@@ -5,7 +5,12 @@ Collection of tools ranging from image alignment, panorama generation, point clo
 Tracking camera (without Bundle Adjustment). Video: (KITTI `sequence/00`)
 
 ## Usage
-*Note*: By default, build type is Debug, to change to Release, edit in `CMakeLists.txt` file
+- *Note*: By default, build type is Debug, to change to Release, edit in `CMakeLists.txt` file
+- To get log printed to screen, export the environment variable `GLOG_logtostderr` as;
+
+```
+export GLOG_logtostderr=1
+```
 
 1. Build all the executables
 ```bash
@@ -42,8 +47,8 @@ cd scripts/
 - [ ] Add only KeyFrames for graph optimization
 - [ ] Reduce the number of points for graph optimization
 ### Semi-Direct Visual Odometry
-- [ ] ~~opencv's `calcOpticalFlowPyrLK` doesn't seem to work that good on forward motion camera~~ Compute inliers from vikit seems to be doing it wrong! Fix it!
-- [ ] Correspondance point estimation is noisy (probably). Currently using optical flow to estimate corresponding points. 
+- [x] ~~opencv's `calcOpticalFlowPyrLK` doesn't seem to work that good on forward motion camera~~ Compute inliers from vikit seems to be doing it wrong! Fix it!
+- [x] Correspondance point estimation is noisy (probably). Currently using optical flow to estimate corresponding points.
 
 
 ## Requirements
@@ -53,7 +58,7 @@ cd scripts/
 - ceres-solver (for Bundle Adjustment)
 - Pangolin (for 3D viewer)
 - [fast](https://github.com/uzh-rpg/fast.git) (for fast corner detection)
-- GLOG
+- GLOG (for logging)
 
 ## References
 1. M. Uyttendaele, A. Eden, and R. Szeliski.
