@@ -178,10 +178,11 @@ Result Init::add_second_frame_generalized(dr3::FramePtr frame_cur) {
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-InitHelper::InitHelper(const FramePtr &frame_ref, float sigma, int iterations) {
-    auto cam = (Pinhole*)frame_ref->get_cam();
+InitHelper::InitHelper(const FramePtr &_frame_ref, float sigma, int iterations) {
+    auto cam = (Pinhole*)_frame_ref->get_cam();
     mK = cam->K();
 
+    frame_ref = _frame_ref;
     mSigma = sigma;
     mSigma2 = sigma*sigma;
     mMaxIterations = iterations;
@@ -204,9 +205,22 @@ bool InitHelper::Initialize(const FramePtr &frame_cur, const vector<int> &vMatch
         }
     }
 
+    vector<cv::KeyPoint> tkeys1, tkeys2;
+    tkeys1.reserve(mvMatches12.size());
+    tkeys2.reserve(mvMatches12.size());
+    for (int i = 0; i < 100; ++i) {
+        tkeys1.emplace_back(mvKeys1[mvMatches12[i].first]);
+        tkeys2.emplace_back(mvKeys2[mvMatches12[i].second]);
+    }
+
     DLOG(INFO) << "Ref frame key points (mvKeys1) count: " << mvKeys1.size();
     DLOG(INFO) << "Cur frame key points (mvKeys2) count: " << mvKeys2.size();
     DLOG(INFO) << "Initial number of matches : " << mvMatches12.size();
+
+    // Draw the matches computed from optical flow
+    Viewer2D::update(frame_ref->_img_pyr[0],
+                     frame_cur->_img_pyr[0],
+                     tkeys1, tkeys2);
 
     const int N = mvMatches12.size();
 
@@ -226,6 +240,7 @@ bool InitHelper::Initialize(const FramePtr &frame_cur, const vector<int> &vMatch
     gettimeofday(&_time, nullptr);
     srand(time(nullptr));
     for(int it=0; it<mMaxIterations; it++) {
+//        DLOG(INFO) << "Iter: " << it;
         vAvailableIndices = vAllIndices;
         // Select a minimum set
         for(size_t j=0; j<8; j++) {
@@ -235,6 +250,9 @@ bool InitHelper::Initialize(const FramePtr &frame_cur, const vector<int> &vMatch
             vAvailableIndices[randi] = vAvailableIndices.back();
             vAvailableIndices.pop_back();
         }
+//        DLOG(INFO) << "indices: " << mvSets[it][0] << " " << mvSets[it][1]
+//            << " " <<mvSets[it][2] << " " << mvSets[it][3] << " " <<mvSets[it][4]
+//            << " " << mvSets[it][5] << " " << mvSets[it][6] << " " << mvSets[it][7];
     }
 
     vector<bool> vbMatchesInliersF;
@@ -259,8 +277,8 @@ void InitHelper::FindFundamental(vector<bool> &vbMatchesInliers, float &score, c
     // Normalize coordinates
     vector<cv::Point2f> vPn1, vPn2;
     cv::Mat T1, T2;
-    Normalize(mvKeys1,vPn1, T1);
-    Normalize(mvKeys2,vPn2, T2);
+    Normalize(mvKeys1, vPn1, T1);
+    Normalize(mvKeys2, vPn2, T2);
     cv::Mat T2t = T2.t();
 
     // Best Results variables
@@ -274,9 +292,14 @@ void InitHelper::FindFundamental(vector<bool> &vbMatchesInliers, float &score, c
     vector<bool> vbCurrentInliers(N,false);
     float currentScore;
 
+    DLOG(INFO) << "T1 : " << T1;
+    DLOG(INFO) << "T2t: " << T2t;
+
     // Perform all RANSAC iterations and save the solution with highest score
     DLOG(INFO) << "Performing " << mMaxIterations << " RANSAC iters to estimate F";
     for(int it=0; it<mMaxIterations; it++) {
+        DLOG(INFO) << "RANSAC iter: " << it;
+
         // Select a minimum set
         for(int j=0; j<8; j++) {
             int idx = mvSets[it][j];
@@ -285,7 +308,17 @@ void InitHelper::FindFundamental(vector<bool> &vbMatchesInliers, float &score, c
             vPn2i[j] = vPn2[mvMatches12[idx].second];
         }
 
-        // Estimate F
+//        DLOG(INFO) << "points: \n"
+//            << "1: " << vPn1i[0].x << " " << vPn1i[0].y << " | " << vPn2i[0].x << " " << vPn2i[0].y << "\n"
+//            << "2: " << vPn1i[1].x << " " << vPn1i[1].y << " | " << vPn2i[1].x << " " << vPn2i[1].y << "\n"
+//            << "3: " << vPn1i[2].x << " " << vPn1i[2].y << " | " << vPn2i[2].x << " " << vPn2i[2].y << "\n"
+//            << "4: " << vPn1i[3].x << " " << vPn1i[3].y << " | " << vPn2i[3].x << " " << vPn2i[3].y << "\n"
+//            << "5: " << vPn1i[4].x << " " << vPn1i[4].y << " | " << vPn2i[4].x << " " << vPn2i[4].y << "\n"
+//            << "6: " << vPn1i[5].x << " " << vPn1i[5].y << " | " << vPn2i[5].x << " " << vPn2i[5].y << "\n"
+//            << "7: " << vPn1i[6].x << " " << vPn1i[6].y << " | " << vPn2i[6].x << " " << vPn2i[6].y << "\n"
+//            << "8: " << vPn1i[7].x << " " << vPn1i[7].y << " | " << vPn2i[7].x << " " << vPn2i[7].y << "\n";
+
+            // Estimate F
         cv::Mat Fn = ComputeF21(vPn1i,vPn2i);
 
         if (!Fn.data) {
@@ -294,6 +327,8 @@ void InitHelper::FindFundamental(vector<bool> &vbMatchesInliers, float &score, c
 
         // Count the number of inliers
         F21i = T2t*Fn*T1;
+//        DLOG(INFO) << "F: \n" << Fn;
+//        DLOG(INFO) << "F: \n" << F21i;
         currentScore = CheckFundamental(F21i, vbCurrentInliers, mSigma);
         DLOG(INFO) << "RANSAC iter: " << it << "/" << mMaxIterations << ", score: "
             << currentScore << ", max score: " << score;
@@ -344,9 +379,8 @@ cv::Mat InitHelper::ComputeF21(const vector<cv::Point2f> &vP1,const vector<cv::P
 }
 
 float InitHelper::CheckFundamental(const cv::Mat &F21, vector<bool> &vbMatchesInliers, float sigma) {
-    const int N = mvMatches12.size();
 
-    DLOG(INFO) << "F: \n" << F21;
+    const int N = mvMatches12.size();
 
     const float f11 = F21.at<float>(0,0);
     const float f12 = F21.at<float>(0,1);
@@ -360,6 +394,18 @@ float InitHelper::CheckFundamental(const cv::Mat &F21, vector<bool> &vbMatchesIn
 
     vbMatchesInliers.resize(N);
 
+//    DLOG(INFO) << "sigma:  " << sigma;
+//    DLOG(INFO) << "F:  " << F21;
+//    DLOG(INFO) << "f11: " << f11 << " "
+//               << "f12: " << f12 << " "
+//               << "f13: " << f13 << " "
+//               << "f21: " << f21 << " "
+//               << "f22: " << f22 << " "
+//               << "f23: " << f23 << " "
+//               << "f31: " << f31 << " "
+//               << "f32: " << f32 << " "
+//               << "f33: " << f33;
+
     float score = 0;
 
     const float th = 3.841;
@@ -367,6 +413,7 @@ float InitHelper::CheckFundamental(const cv::Mat &F21, vector<bool> &vbMatchesIn
 
     const float invSigmaSquare = 1.0/(sigma*sigma);
 
+    DLOG(INFO) << "Counting the total number of inliers";
     for(int i=0; i<N; i++)
     {
         bool bIn = true;
@@ -414,6 +461,16 @@ float InitHelper::CheckFundamental(const cv::Mat &F21, vector<bool> &vbMatchesIn
             bIn = false;
         else
             score += thScore - chiSquare2;
+
+        DLOG(INFO) << "idx: " << i << "/" << N << " "
+                << "2->1: chisquare: " << chiSquare1 << " "
+                << "1->2: chisquare: " << chiSquare2 << " "
+                << "Inlier: " << bIn << " "
+                << "score: " << score << " "
+                << "line 1->2: " << a1*a1+b1*b1 << " "
+                << "num: " << num1*num1 << " "
+                << "line 2->1: " << a2*a2+b2*b2 << " "
+                << "num: " << num2*num2;
 
         if(bIn)
             vbMatchesInliers[i]=true;
@@ -787,7 +844,6 @@ Result InitMain::process(FramePtr &frame) {
         auto kps_ref_itr = _kps_ref.begin();
         auto kps_cur_itr = _kps_cur.begin();
         auto pts_ref_itr = _pts_ref.begin();
-        auto match_idx_itr = mvIniMatches.begin();
         _disparities.clear(); _disparities.reserve(_kps_cur.size());
         _pts_cur.clear(); _pts_cur.reserve(_kps_cur.size());
         size_t outlier_count = 0;
@@ -802,11 +858,9 @@ Result InitMain::process(FramePtr &frame) {
             _disparities.push_back(Vector2d(kps_ref_itr->x - kps_cur_itr->x,
                                             kps_ref_itr->y - kps_cur_itr->y).norm());
             _pts_cur.push_back(frame_cur->_cam->cam2world(kps_cur_itr->x, kps_cur_itr->y));
-            mvIniMatches.emplace_back(i);
             ++kps_ref_itr;
             ++kps_cur_itr;
             ++pts_ref_itr;
-            ++match_idx_itr;
         }
 
         // Update the frame's keypoints
@@ -820,6 +874,9 @@ Result InitMain::process(FramePtr &frame) {
         std::for_each(_kps_cur.begin(), _kps_cur.end(), [&](cv::Point2f pt) {
             mvKeys2.emplace_back(cv::KeyPoint(pt, 2.0));
         });
+        mvIniMatches.reserve(mvKeys1.size());
+        for (size_t i = 0; i < mvKeys1.size(); ++i)
+            mvIniMatches.emplace_back(i);
 
         DLOG(INFO) << "Outlier count from optical flow: " << outlier_count;
         DLOG(INFO) << "Average disparity: " << accumulate(_disparities.begin(), _disparities.end(), 0.0) / _disparities.size() << "px";
@@ -827,6 +884,11 @@ Result InitMain::process(FramePtr &frame) {
         if (mvIniMatches.size() < 100) {
             LOG(WARNING) << "Very few matches (<100) detected";
         }
+
+//        // Draw the matches computed from optical flow
+//        Viewer2D::update(frame_ref->_img_pyr[0],
+//                         frame_cur->_img_pyr[0],
+//                         mvKeys1, mvKeys2);
 
         cv::Mat R, t;
         vector<bool> triangulated;

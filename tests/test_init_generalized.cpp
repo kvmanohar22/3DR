@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     google::InitGoogleLogging(argv[0]);
 
     cv::Mat img1 = cv::imread("../imgs/kitti0.png", 0);
-    cv::Mat img2 = cv::imread("../imgs/kitti5.png", 0);
+    cv::Mat img2 = cv::imread("../imgs/kitti2.png", 0);
 
     if (!img1.data || !img2.data) {
         std::cout << "Couldn't load the image" << std::endl;
