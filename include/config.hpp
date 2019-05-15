@@ -19,6 +19,7 @@ public:
     static int& n_pyr_levels() { return get_instance()->__n_pyr_levels; }
     static double& min_harris_corner_score() { return get_instance()->__min_harris_corner_score; }
     static double& reprojection_threshold() { return get_instance()->__reprojection_threshold; }
+    static double& map_scale() { return get_instance()->__map_scale; }
 
 private:
     Config();
@@ -32,6 +33,7 @@ private:
     int    __n_pyr_levels;
     double __min_harris_corner_score;
     double __reprojection_threshold;   // in pixels
+    double __map_scale;                // Scene depth for initial map estimation
 };
 
 } // namespace dr3

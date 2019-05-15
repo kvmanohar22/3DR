@@ -48,6 +48,15 @@ public:
         level(level),
         point(nullptr)
     {}
+
+    Feature(FramePtr &frame, Point *point, const Vector2d &px, const Vector3d &f, int lvl) :
+        type(FeatureType::CORNER),
+        frame(frame),
+        point(point),
+        px(px),
+        f(f),
+        level(lvl)
+    {}
 };
 
 // Various feature detectors

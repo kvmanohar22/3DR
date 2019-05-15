@@ -10,7 +10,8 @@ Config::Config() :
     __cell_size(30),
     __n_pyr_levels(3),
     __min_harris_corner_score(20.0),
-    __reprojection_threshold(5)
+    __reprojection_threshold(5),
+    __map_scale(1.0)
 {}
 
 Config* Config::get_instance() {

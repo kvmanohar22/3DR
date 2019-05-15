@@ -21,58 +21,69 @@ class Point;
 
 class Frame {
 public:
-   // Unique frame index
-   long unsigned int idx;
+    // Unique frame index
+    long unsigned int idx;
 
-   // Redundant as of now (remove)
-   cv::Mat K;
-   std::vector<cv::KeyPoint> kps;
-   cv::Mat des;
+    // Redundant as of now (remove)
+    cv::Mat K;
+    std::vector<cv::KeyPoint> kps;
+    cv::Mat des;
 
 
-   AbstractCamera*  _cam;     // camera
-   ImgPyramid       _img_pyr; // image pyramid
-   Features         _fts;     // frame features
-   cv::Mat          pose_w2c; // world  -> camera
-   cv::Mat          pose_c2w; // camera -> world
-   cv::Mat          center;   // camera center in world coordinates
+    AbstractCamera*  _cam;     // camera
+    ImgPyramid       _img_pyr; // image pyramid
+    Features         _fts;     // frame features
+    Sophus::SE3      _T_f_w;   // world -> frame
+    cv::Mat          pose_w2c; // world  -> camera
+    cv::Mat          pose_c2w; // camera -> world
+    cv::Mat          center;   // camera center in world coordinates
 
-   // Points projected from this Frame onto 3D world
-   std::vector<Point*> points;
 
-   Frame();
-   Frame(Frame &frame);
-   Frame(const long unsigned int idx,
+    // Points projected from this Frame onto 3D world
+    std::vector<Point*> points;
+
+    Frame();
+    Frame(Frame &frame);
+    Frame(const long unsigned int idx,
          const cv::Mat &img, AbstractCamera *cam);
 
-   inline const long unsigned int get_idx() const { return idx; }
-   inline const std::vector<cv::KeyPoint> get_kps() const { return kps; }
-   inline cv::KeyPoint get_kpt(size_t idx) const { return kps[idx]; }
-   inline const cv::Mat get_des() const { return des; }
+    inline const long unsigned int get_idx() const { return idx; }
+    inline const std::vector<cv::KeyPoint> get_kps() const { return kps; }
+    inline cv::KeyPoint get_kpt(size_t idx) const { return kps[idx]; }
+    inline const cv::Mat get_des() const { return des; }
 
-   // camera poses
-   inline cv::Mat get_pose_w2c() const { return pose_w2c.clone(); }
-   inline cv::Mat get_pose_c2w() const { return pose_c2w.clone(); }
-   inline cv::Mat get_center()   const { return center.clone();   }
-   
-   // Set the pose of the matrix (world -> camera)
-   void set_pose(cv::Mat pose);
-   void update_poses();
+    // camera poses
+    inline cv::Mat get_pose_w2c() const { return pose_w2c.clone(); }
+    inline cv::Mat get_pose_c2w() const { return pose_c2w.clone(); }
+    inline cv::Mat get_center()   const { return center.clone();   }
 
-   // Compute keypoints of the given image
-   void compute_kps(const cv::Mat &img);
+    // Set the pose of the matrix (world -> camera)
+    void set_pose(cv::Mat pose);
+    void update_poses();
 
-   // add observation (point corresponds to kps[idx])
-   void add_observation(Point *point, size_t idx);
+    // Compute keypoints of the given image
+    void compute_kps(const cv::Mat &img);
 
-   // Checks if a 3D point at `idx` is not back projected
-   bool fresh_point(size_t idx) { return points[idx] == NULL; }
+    // add observation (point corresponds to kps[idx])
+    void add_observation(Point *point, size_t idx);
 
-   Point* get_point(size_t idx) { return points[idx]; }
+    // Checks if a 3D point at `idx` is not back projected
+    bool fresh_point(size_t idx) { return points[idx] == NULL; }
 
-   inline AbstractCamera* get_cam() { return _cam; }
+    Point* get_point(size_t idx) { return points[idx]; }
 
-   bool compute_features();
+    /// Camera instance
+    inline AbstractCamera* get_cam() { return _cam; }
+
+    /// Return the pose of the frame in the (w)orld coordinate frame.
+    inline Vector3d pos() const { return _T_f_w.inverse().translation(); }
+
+    /// Compute features
+    bool compute_features(Features &features);
+
+    /// Add a new observation
+    void add_observation(Feature *feature);
+
 }; // class Frame
 
 } // namespace dr3

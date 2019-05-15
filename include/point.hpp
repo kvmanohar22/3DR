@@ -13,30 +13,37 @@ class Frame;
 class Point {
 private:
 
-   // unique point idx
-   unsigned int idx;
+    // unique point idx
+    unsigned int idx;
 
-   /* Position in the world
+    /* Position in the world
 
       Access the point as:
       x -> xyz.at<float>(0);
       y -> xyz.at<float>(1);
       z -> xyz.at<float>(2);
-   */
-   cv::Mat xyz;
+    */
+    cv::Mat xyz;
+
+    Vector3d _xyz;
+    vector<FramePtr> _frames;
 
    // Frames observing this point and their (keypoint) indices
    std::vector<Frame*> frames;
    std::vector<unsigned int> idxs;
 
 public:
-   Point() {}
+   Point() =default;
    Point(cv::Mat xyz, unsigned int idx);
+   Point(Vector3d xyz) : _xyz(xyz) {}
 
    inline unsigned int get_idx() { return idx; }
 
-   // Add a new observation
+   /// Add a new observation
    void add_observation(Frame *frame, unsigned int idx);
+
+   /// Add a new observation
+   void add_observation(FramePtr frame);
 
    inline bool is_valid() { return !xyz.empty(); }
    inline cv::Mat get_xyz() { return xyz.clone(); }

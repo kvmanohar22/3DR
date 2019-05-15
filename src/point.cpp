@@ -13,4 +13,8 @@ void Point::add_observation(Frame *frame,
    this->idxs.push_back(idx);
 }
 
+void Point::add_observation(FramePtr frame) {
+   _frames.push_back(frame);
+}
+
 } // namespace dr3

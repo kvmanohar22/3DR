@@ -18,6 +18,7 @@ Frame::Frame(const long unsigned int idx,
 
     utils::create_img_pyramid(img, Config::n_pyr_levels(), _img_pyr);
     points = std::vector<Point*>(kps.size(), nullptr);
+    _T_f_w = SE3();
 }
 
 void Frame::compute_kps(const cv::Mat &img) {
@@ -49,7 +50,7 @@ void Frame::add_observation(Point *point, size_t idx) {
    points[idx] = point;
 }
 
-bool Frame::compute_features() {
+bool Frame::compute_features(Features &features) {
     // Detect the corners
     feature_detection::FastDetector detector(_img_pyr[0].cols,
                                              _img_pyr[0].rows,
@@ -57,11 +58,15 @@ bool Frame::compute_features() {
                                              Config::n_pyr_levels());
     detector.detect((FramePtr)this, _img_pyr,
                     Config::min_harris_corner_score(),
-                    _fts);
+                    features);
 
-    if (_fts.size() < 100)
+    if (features.size() < 100)
         return false;
     return true;
+}
+
+void Frame::add_observation(dr3::Feature *feature) {
+    _fts.push_back(feature);
 }
 
 } // namespace dr3
