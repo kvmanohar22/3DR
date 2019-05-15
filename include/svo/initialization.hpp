@@ -69,9 +69,6 @@ private:
     // Standard Deviation and Variance
     float mSigma, mSigma2;
 
-    // reference frame
-    FramePtr frame_ref;
-
     // Ransac max iterations
     int mMaxIterations;
 
