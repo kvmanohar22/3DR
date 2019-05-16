@@ -33,7 +33,7 @@ public:
     AbstractCamera*  _cam;     // camera
     ImgPyramid       _img_pyr; // image pyramid
     Features         _fts;     // frame features
-    Sophus::SE3      _T_f_w;   // world -> frame
+    Sophus::SE3      _T_f_w;   // world frame -> camera frame
     cv::Mat          pose_w2c; // world  -> camera
     cv::Mat          pose_c2w; // camera -> world
     cv::Mat          center;   // camera center in world coordinates

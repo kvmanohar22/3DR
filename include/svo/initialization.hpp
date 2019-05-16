@@ -26,7 +26,7 @@ public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     // Fix the reference frame
-    InitHelper(const FramePtr &ReferenceFrame, float sigma = 1.0, int iterations = 200);
+    explicit InitHelper(const FramePtr &ReferenceFrame, float sigma = 1.0, int iterations = 200);
 
     // Computes in parallel a fundamental matrix and a homography
     // Selects a model and tries to recover the motion and the structure from motion
@@ -84,7 +84,6 @@ public:
     ~Init() = default;
 
     // Initialization Variables
-    std::vector<int> mvIniLastMatches;
     std::vector<int> mvIniMatches;
     std::vector<cv::Point2f> mvbPrevMatched;
     std::vector<cv::Point3f> mvIniP3D;
@@ -93,9 +92,6 @@ public:
     FramePtr   frame_ref;
     FramePtr   frame_cur;
 
-    vector<cv::KeyPoint> kpts_ref;
-    vector<cv::KeyPoint> kpts_cur;
-
     Result process(FramePtr &frame);
 
 protected:
@@ -103,7 +99,7 @@ protected:
     vector<cv::Point2f> _kps_cur;        // keypoints in the cur frame
     vector<Vector3d>    _pts_ref;        // bearing vectors in the ref frame
     vector<Vector3d>    _pts_cur;        // bearing vectors in the cur frame
-    vector<Vector3d>    _xyz_in_cur;     // 3D points after fundamental matrix
+    vector<Vector3d>    _xyz_in_world;     // 3D points after fundamental matrix
     vector<double>      _disparities;    // Disparities for each matching point
     vector<int>         _inliers;        // inlier indices
     SE3                 _T_cur_from_ref; // Transformation matrix (ref -> cur)

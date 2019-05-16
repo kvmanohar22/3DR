@@ -71,8 +71,8 @@ int main(int argc, char **argv) {
     LOG(INFO) << "Starting initializer...";
     init::Init initializer;
     initializer.process(frame_ref);
-    if (initializer.process(frame_cur) == init::Result::SUCCESS) {
-        LOG(INFO) << "Successfully generated the initial map!";
+    if (initializer.process(frame_cur) == init::Result::FAILED) {
+        LOG(INFO) << "Initial map not generated!";
     }
 
     return 0;

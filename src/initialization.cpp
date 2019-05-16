@@ -572,19 +572,17 @@ Result Init::process(FramePtr &frame) {
         _kps_ref.clear(); _kps_ref.reserve(new_features.size());
         _pts_ref.clear(); _pts_ref.reserve(new_features.size());
         mvbPrevMatched.clear(); mvbPrevMatched.reserve(new_features.size());
-        kpts_ref.clear(); kpts_ref.reserve(new_features.size());
         std::for_each(new_features.begin(), new_features.end(), [&](Feature *ftr) {
             cv::Point2f kpt(ftr->px[0], ftr->px[1]);
             _kps_ref.emplace_back(kpt);
             _pts_ref.push_back(ftr->f);
             mvbPrevMatched.emplace_back(kpt);
-            kpts_ref.emplace_back(cv::KeyPoint(kpt, 2.0));
             delete ftr;
         });
 
         _kps_cur.insert(_kps_cur.begin(), _kps_ref.begin(), _kps_ref.end());
         initializer = new InitHelper(frame, 1.0f, 200);
-        mvIniMatches.reserve(kpts_ref.size());
+        mvIniMatches.reserve(_kps_ref.size());
         fill(mvIniMatches.begin(), mvIniMatches.end(), -1);
 
         return Result::SUCCESS;
@@ -674,8 +672,7 @@ Result Init::process(FramePtr &frame) {
             LOG(WARNING) << "< 100 inliers are triangulated";
             return Result::FAILED;
         }
-        LOG(INFO) << "Successfully estimated initial map with " << triangulated_count << " points";
-        _xyz_in_cur.reserve(triangulated.size());
+        _xyz_in_world.reserve(triangulated.size());
         for (int i = 0; i < triangulated.size(); ++i) {
             if (!triangulated[i]) {
                 continue;
@@ -684,7 +681,7 @@ Result Init::process(FramePtr &frame) {
                 pt(0) = mvIniP3D[i].x;
                 pt(1) = mvIniP3D[i].y;
                 pt(2) = mvIniP3D[i].z;
-                _xyz_in_cur.emplace_back(pt);
+                _xyz_in_world.emplace_back(pt);
             }
         }
 
@@ -715,7 +712,7 @@ Result Init::process(FramePtr &frame) {
         }
 
         double scene_depth_median = vk::getMedian(depth_vec);
-        double scale = Config::map_scale()/ scene_depth_median;
+        double scale = Config::map_scale() / scene_depth_median;
 
         frame_cur->_T_f_w = _T_cur_from_ref * frame_ref->_T_f_w;
         frame_cur->_T_f_w.translation() =
@@ -723,13 +720,15 @@ Result Init::process(FramePtr &frame) {
 
         // Create a 3D point and add the observations
         SE3 T_world_cur = frame_cur->_T_f_w.inverse();
+        size_t count = 0;
         for (auto itr: _inliers) {
             Vector2d px_cur(_kps_cur[itr].x, _kps_cur[itr].y);
             Vector2d px_ref(_kps_ref[itr].x, _kps_ref[itr].y);
             if (frame_ref->_cam->is_in_frame(px_cur.cast<int>(), 10) &&
                 frame_ref->_cam->is_in_frame(px_ref.cast<int>(), 10) &&
-                _xyz_in_cur[itr].z() > 0) {
-                Vector3d pos = T_world_cur * (_xyz_in_cur[itr]*scale);
+                _xyz_in_world[itr].z() > 0) {
+                // not necessary? (_xyz_in_cur in world?)
+                Vector3d pos = _xyz_in_world[itr]*scale; // TODO: correct? no transformation?
                 auto new_point = new Point(pos);
 
                 auto ftr_cur(new Feature(frame_cur, new_point, px_cur, _pts_cur[itr], 0));
@@ -739,8 +738,10 @@ Result Init::process(FramePtr &frame) {
                 auto ftr_ref(new Feature(frame_ref, new_point, px_ref, _pts_ref[itr], 0));
                 frame_ref->add_observation(ftr_ref);
                 new_point->add_observation(frame_ref);
+                ++count;
             }
         }
+        LOG(INFO) << "Generated initial map with " << count << " points";
         return Result::SUCCESS;
     }
 }
