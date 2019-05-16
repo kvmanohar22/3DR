@@ -92,7 +92,8 @@ public:
     FramePtr   frame_ref;
     FramePtr   frame_cur;
 
-    Result process(FramePtr &frame);
+    Result process_first_frame(FramePtr &frame);
+    Result process_second_frame(FramePtr &frame);
 
 protected:
     vector<cv::Point2f> _kps_ref;        // keypoints in the ref frame

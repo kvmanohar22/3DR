@@ -31,7 +31,7 @@ namespace dr3 {
     class Feature;
     typedef boost::shared_ptr<Frame> FramePtr;
     typedef std::vector<cv::Mat> ImgPyramid;
-
+    typedef long long unsigned int llui;
 } // namespace dr3
 
 #endif // _GLOBAL_HPP_

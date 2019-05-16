@@ -70,8 +70,8 @@ int main(int argc, char **argv) {
     // Initial map generator
     LOG(INFO) << "Starting initializer...";
     init::Init initializer;
-    initializer.process(frame_ref);
-    if (initializer.process(frame_cur) == init::Result::FAILED) {
+    initializer.process_first_frame(frame_ref);
+    if (initializer.process_second_frame(frame_cur) == init::Result::FAILED) {
         LOG(INFO) << "Initial map not generated!";
     }
 

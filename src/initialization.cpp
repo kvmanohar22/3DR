@@ -543,7 +543,7 @@ void InitHelper::DecomposeE(const cv::Mat &E, cv::Mat &R1, cv::Mat &R2, cv::Mat 
 Init::Init() : initializer(nullptr) {
 }
 
-Result Init::process(FramePtr &frame) {
+Result Init::process_first_frame(dr3::FramePtr &frame) {
     Features new_features;
     feature_detection::FastDetector detector(frame->_img_pyr[0].cols,
                                              frame->_img_pyr[0].rows,
@@ -554,12 +554,7 @@ Result Init::process(FramePtr &frame) {
                     new_features);
 
     if (new_features.size() < 100) {
-        if (!initializer) {
-            LOG(WARNING) << "NOT ENOUGH FEATURES ARE DETECTED IN REFERENCE FRAME";
-        } else {
-            LOG(WARNING) << "NOT ENOUGH FEATURES ARE DETECTED IN CURRENT FRAME";
-        }
-
+        LOG(WARNING) << "NOT ENOUGH FEATURES ARE DETECTED IN REFERENCE FRAME";
         initializer = static_cast<InitHelper*>(nullptr);
         fill(mvIniMatches.begin(), mvIniMatches.end(), -1);
         return Result::FAILED;
@@ -586,164 +581,163 @@ Result Init::process(FramePtr &frame) {
         fill(mvIniMatches.begin(), mvIniMatches.end(), -1);
 
         return Result::SUCCESS;
-    } else {
-        // Add the current frame and generate the initial map
-        frame_cur = frame;
-        DLOG(INFO) << "Features detected in reference frame: " << _kps_ref.size();
-        DLOG(INFO) << "Features detected in current frame: " << _kps_cur.size();
-        std::for_each(new_features.begin(), new_features.end(), [&](Feature *ftr) {
-            delete ftr;
-        });
-
-        const int klt_win_size = 30;
-        const int klt_max_iter = 1000;
-        const double klt_eps = 1e-3;
-        vector<uchar> status;
-        vector<float> error;
-        cv::TermCriteria termcrit(cv::TermCriteria::COUNT+cv::TermCriteria::EPS,
-                                  klt_max_iter, klt_eps);
-
-        if (!frame_ref->_img_pyr[0].data) {
-            LOG(WARNING) << "Invalid reference image";
-        }
-        if (!frame_cur->_img_pyr[0].data) {
-            LOG(WARNING) << "Invalid current image";
-        }
-
-        cv::calcOpticalFlowPyrLK(frame_ref->_img_pyr[0],
-                                 frame_cur->_img_pyr[0],
-                                 _kps_ref, _kps_cur,
-                                 status, error,
-                                 cv::Size2i(klt_win_size, klt_win_size),
-                                 4, termcrit, cv::OPTFLOW_USE_INITIAL_FLOW);
-
-        auto kps_ref_itr = _kps_ref.begin();
-        auto kps_cur_itr = _kps_cur.begin();
-        auto pts_ref_itr = _pts_ref.begin();
-        _disparities.clear(); _disparities.reserve(_kps_cur.size());
-        _pts_cur.clear(); _pts_cur.reserve(_kps_cur.size());
-        size_t outlier_count = 0;
-        for (size_t i = 0; kps_ref_itr != _kps_ref.end(); ++i) {
-            if (!status[i]) {
-                kps_ref_itr = _kps_ref.erase(kps_ref_itr);
-                kps_cur_itr = _kps_cur.erase(kps_cur_itr);
-                pts_ref_itr = _pts_ref.erase(pts_ref_itr);
-                ++outlier_count;
-                continue;
-            }
-            _disparities.push_back(Vector2d(kps_ref_itr->x - kps_cur_itr->x,
-                                            kps_ref_itr->y - kps_cur_itr->y).norm());
-            _pts_cur.push_back(frame_cur->_cam->cam2world(kps_cur_itr->x, kps_cur_itr->y));
-            ++kps_ref_itr;
-            ++kps_cur_itr;
-            ++pts_ref_itr;
-        }
-
-        // Update the frame's keypoints
-        vector<cv::KeyPoint> &mvKeys1 = initializer->mutable_keys_ref();
-        mvKeys1.clear(); mvKeys1.reserve(_kps_ref.size());
-        std::for_each(_kps_ref.begin(), _kps_ref.end(), [&](cv::Point2f pt) {
-            mvKeys1.emplace_back(cv::KeyPoint(pt, 2.0));
-        });
-        vector<cv::KeyPoint> &mvKeys2 = initializer->mutable_keys_cur();
-        mvKeys2.clear(); mvKeys2.reserve(_kps_cur.size());
-        std::for_each(_kps_cur.begin(), _kps_cur.end(), [&](cv::Point2f pt) {
-            mvKeys2.emplace_back(cv::KeyPoint(pt, 2.0));
-        });
-        mvIniMatches.reserve(mvKeys1.size());
-        for (size_t i = 0; i < mvKeys1.size(); ++i)
-            mvIniMatches.emplace_back(i);
-
-        DLOG(INFO) << "Outlier count from optical flow: " << outlier_count;
-        DLOG(INFO) << "Average disparity: " << accumulate(_disparities.begin(), _disparities.end(), 0.0) / _disparities.size() << "px";
-        DLOG(INFO) << "Total matches between ref and cur frames: " << mvIniMatches.size();
-        if (mvIniMatches.size() < 100) {
-            LOG(WARNING) << "Very few matches (<100) detected";
-        }
-
-        cv::Mat R, t;
-        vector<bool> triangulated;
-        if (!initializer->Initialize(frame_cur, mvIniMatches, R, t, mvIniP3D, triangulated)) {
-            return Result::FAILED;
-        }
-
-        int triangulated_count = accumulate(triangulated.begin(), triangulated.end(), 0);
-        if (triangulated_count < 100) {
-            LOG(WARNING) << "< 100 inliers are triangulated";
-            return Result::FAILED;
-        }
-        _xyz_in_world.reserve(triangulated.size());
-        for (int i = 0; i < triangulated.size(); ++i) {
-            if (!triangulated[i]) {
-                continue;
-            } else {
-                Vector3d pt;
-                pt(0) = mvIniP3D[i].x;
-                pt(1) = mvIniP3D[i].y;
-                pt(2) = mvIniP3D[i].z;
-                _xyz_in_world.emplace_back(pt);
-            }
-        }
-
-        Matrix3d _R; Vector3d _t;
-        _R(0, 0) = R.at<float>(0, 0);
-        _R(0, 1) = R.at<float>(0, 1);
-        _R(0, 2) = R.at<float>(0, 2);
-        _R(1, 0) = R.at<float>(1, 0);
-        _R(1, 1) = R.at<float>(1, 1);
-        _R(1, 2) = R.at<float>(1, 2);
-        _R(2, 0) = R.at<float>(2, 0);
-        _R(2, 1) = R.at<float>(2, 1);
-        _R(2, 2) = R.at<float>(2, 2);
-        _t(0) = t.at<float>(0);
-        _t(1) = t.at<float>(1);
-        _t(2) = t.at<float>(2);
-        _T_cur_from_ref = Sophus::SE3(_R, _t); // TODO: T or T.inv()?
-
-        _inliers.reserve(triangulated.size());
-        for (size_t i = 0; i < triangulated.size(); ++i)
-            if (triangulated[i])
-                _inliers.emplace_back(i);
-
-        // Rescale the map such that the mean scene depth is equal to the specified scale
-        vector<double> depth_vec;
-        for (auto itr: mvIniP3D) {
-            depth_vec.push_back(itr.z);
-        }
-
-        double scene_depth_median = vk::getMedian(depth_vec);
-        double scale = Config::map_scale() / scene_depth_median;
-
-        frame_cur->_T_f_w = _T_cur_from_ref * frame_ref->_T_f_w;
-        frame_cur->_T_f_w.translation() =
-                -frame_cur->_T_f_w.rotation_matrix()*(frame_ref->pos() + scale*(frame_cur->pos() - frame_ref->pos()));
-
-        // Create a 3D point and add the observations
-        SE3 T_world_cur = frame_cur->_T_f_w.inverse();
-        size_t count = 0;
-        for (auto itr: _inliers) {
-            Vector2d px_cur(_kps_cur[itr].x, _kps_cur[itr].y);
-            Vector2d px_ref(_kps_ref[itr].x, _kps_ref[itr].y);
-            if (frame_ref->_cam->is_in_frame(px_cur.cast<int>(), 10) &&
-                frame_ref->_cam->is_in_frame(px_ref.cast<int>(), 10) &&
-                _xyz_in_world[itr].z() > 0) {
-                // not necessary? (_xyz_in_cur in world?)
-                Vector3d pos = _xyz_in_world[itr]*scale; // TODO: correct? no transformation?
-                auto new_point = new Point(pos);
-
-                auto ftr_cur(new Feature(frame_cur, new_point, px_cur, _pts_cur[itr], 0));
-                frame_cur->add_observation(ftr_cur);
-                new_point->add_observation(frame_cur);
-
-                auto ftr_ref(new Feature(frame_ref, new_point, px_ref, _pts_ref[itr], 0));
-                frame_ref->add_observation(ftr_ref);
-                new_point->add_observation(frame_ref);
-                ++count;
-            }
-        }
-        LOG(INFO) << "Generated initial map with " << count << " points";
-        return Result::SUCCESS;
     }
+}
+
+Result Init::process_second_frame(dr3::FramePtr &frame) {
+    // Add the current frame and generate the initial map
+    frame_cur = frame;
+    DLOG(INFO) << "Features detected in reference frame: " << _kps_ref.size();
+    DLOG(INFO) << "Features detected in current frame: " << _kps_cur.size();
+
+    const int klt_win_size = 30;
+    const int klt_max_iter = 1000;
+    const double klt_eps = 1e-3;
+    vector<uchar> status;
+    vector<float> error;
+    cv::TermCriteria termcrit(cv::TermCriteria::COUNT+cv::TermCriteria::EPS,
+                              klt_max_iter, klt_eps);
+
+    if (!frame_ref->_img_pyr[0].data) {
+        LOG(WARNING) << "Invalid reference image";
+    }
+    if (!frame_cur->_img_pyr[0].data) {
+        LOG(WARNING) << "Invalid current image";
+    }
+
+    cv::calcOpticalFlowPyrLK(frame_ref->_img_pyr[0],
+                             frame_cur->_img_pyr[0],
+                             _kps_ref, _kps_cur,
+                             status, error,
+                             cv::Size2i(klt_win_size, klt_win_size),
+                             4, termcrit, cv::OPTFLOW_USE_INITIAL_FLOW);
+
+    auto kps_ref_itr = _kps_ref.begin();
+    auto kps_cur_itr = _kps_cur.begin();
+    auto pts_ref_itr = _pts_ref.begin();
+    _disparities.clear(); _disparities.reserve(_kps_cur.size());
+    _pts_cur.clear(); _pts_cur.reserve(_kps_cur.size());
+    size_t outlier_count = 0;
+    for (size_t i = 0; kps_ref_itr != _kps_ref.end(); ++i) {
+        if (!status[i]) {
+            kps_ref_itr = _kps_ref.erase(kps_ref_itr);
+            kps_cur_itr = _kps_cur.erase(kps_cur_itr);
+            pts_ref_itr = _pts_ref.erase(pts_ref_itr);
+            ++outlier_count;
+            continue;
+        }
+        _disparities.push_back(Vector2d(kps_ref_itr->x - kps_cur_itr->x,
+                                        kps_ref_itr->y - kps_cur_itr->y).norm());
+        _pts_cur.push_back(frame_cur->_cam->cam2world(kps_cur_itr->x, kps_cur_itr->y));
+        ++kps_ref_itr;
+        ++kps_cur_itr;
+        ++pts_ref_itr;
+    }
+
+    // Update the frame's keypoints
+    vector<cv::KeyPoint> &mvKeys1 = initializer->mutable_keys_ref();
+    mvKeys1.clear(); mvKeys1.reserve(_kps_ref.size());
+    std::for_each(_kps_ref.begin(), _kps_ref.end(), [&](cv::Point2f pt) {
+        mvKeys1.emplace_back(cv::KeyPoint(pt, 2.0));
+    });
+    vector<cv::KeyPoint> &mvKeys2 = initializer->mutable_keys_cur();
+    mvKeys2.clear(); mvKeys2.reserve(_kps_cur.size());
+    std::for_each(_kps_cur.begin(), _kps_cur.end(), [&](cv::Point2f pt) {
+        mvKeys2.emplace_back(cv::KeyPoint(pt, 2.0));
+    });
+    mvIniMatches.reserve(mvKeys1.size());
+    for (size_t i = 0; i < mvKeys1.size(); ++i)
+        mvIniMatches.emplace_back(i);
+
+    DLOG(INFO) << "Outlier count from optical flow: " << outlier_count;
+    DLOG(INFO) << "Average disparity: " << accumulate(_disparities.begin(), _disparities.end(), 0.0) / _disparities.size() << "px";
+    DLOG(INFO) << "Total matches between ref and cur frames: " << mvIniMatches.size();
+    if (mvIniMatches.size() < 100) {
+        LOG(WARNING) << "Very few matches (<100) detected";
+    }
+
+    cv::Mat R, t;
+    vector<bool> triangulated;
+    if (!initializer->Initialize(frame_cur, mvIniMatches, R, t, mvIniP3D, triangulated)) {
+        return Result::FAILED;
+    }
+
+    int triangulated_count = accumulate(triangulated.begin(), triangulated.end(), 0);
+    if (triangulated_count < 100) {
+        LOG(WARNING) << "< 100 inliers are triangulated";
+        return Result::FAILED;
+    }
+    _xyz_in_world.reserve(triangulated.size());
+    for (int i = 0; i < triangulated.size(); ++i) {
+        if (!triangulated[i]) {
+            continue;
+        } else {
+            Vector3d pt;
+            pt(0) = mvIniP3D[i].x;
+            pt(1) = mvIniP3D[i].y;
+            pt(2) = mvIniP3D[i].z;
+            _xyz_in_world.emplace_back(pt);
+        }
+    }
+
+    Matrix3d _R; Vector3d _t;
+    _R(0, 0) = R.at<float>(0, 0);
+    _R(0, 1) = R.at<float>(0, 1);
+    _R(0, 2) = R.at<float>(0, 2);
+    _R(1, 0) = R.at<float>(1, 0);
+    _R(1, 1) = R.at<float>(1, 1);
+    _R(1, 2) = R.at<float>(1, 2);
+    _R(2, 0) = R.at<float>(2, 0);
+    _R(2, 1) = R.at<float>(2, 1);
+    _R(2, 2) = R.at<float>(2, 2);
+    _t(0) = t.at<float>(0);
+    _t(1) = t.at<float>(1);
+    _t(2) = t.at<float>(2);
+    _T_cur_from_ref = Sophus::SE3(_R, _t); // TODO: T or T.inv()?
+
+    _inliers.reserve(triangulated.size());
+    for (size_t i = 0; i < triangulated.size(); ++i)
+        if (triangulated[i])
+            _inliers.emplace_back(i);
+
+    // Rescale the map such that the mean scene depth is equal to the specified scale
+    vector<double> depth_vec;
+    for (auto itr: mvIniP3D) {
+        depth_vec.push_back(itr.z);
+    }
+
+    double scene_depth_median = vk::getMedian(depth_vec);
+    double scale = Config::map_scale() / scene_depth_median;
+
+    frame_cur->_T_f_w = _T_cur_from_ref * frame_ref->_T_f_w;
+    frame_cur->_T_f_w.translation() =
+            -frame_cur->_T_f_w.rotation_matrix()*(frame_ref->pos() + scale*(frame_cur->pos() - frame_ref->pos()));
+
+    // Create a 3D point and add the observations
+    SE3 T_world_cur = frame_cur->_T_f_w.inverse();
+    size_t count = 0;
+    for (auto itr: _inliers) {
+        Vector2d px_cur(_kps_cur[itr].x, _kps_cur[itr].y);
+        Vector2d px_ref(_kps_ref[itr].x, _kps_ref[itr].y);
+        if (frame_ref->_cam->is_in_frame(px_cur.cast<int>(), 10) &&
+            frame_ref->_cam->is_in_frame(px_ref.cast<int>(), 10) &&
+            _xyz_in_world[itr].z() > 0) {
+            // not necessary? (_xyz_in_cur in world?)
+            Vector3d pos = _xyz_in_world[itr]*scale; // TODO: correct? no transformation?
+            auto new_point = new Point(pos);
+
+            auto ftr_cur(new Feature(frame_cur, new_point, px_cur, _pts_cur[itr], 0));
+            frame_cur->add_observation(ftr_cur);
+            new_point->add_observation(frame_cur);
+
+            auto ftr_ref(new Feature(frame_ref, new_point, px_ref, _pts_ref[itr], 0));
+            frame_ref->add_observation(ftr_ref);
+            new_point->add_observation(frame_ref);
+            ++count;
+        }
+    }
+    LOG(INFO) << "Generated initial map with " << count << " points";
+    return Result::SUCCESS;
 }
 
 } // namespace init
