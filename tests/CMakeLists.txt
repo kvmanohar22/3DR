@@ -29,6 +29,7 @@ tester(test_fast_corners test_fast_corners.cpp)
 # initial map estimation
 tester(test_init_map test_init.cpp)
 tester(test_init_map_generalized test_init_generalized.cpp)
+tester(test_pipeline test_pipeline.cpp)
 
 # Eigen
 tester(test_eigen test_eigen.cpp)
