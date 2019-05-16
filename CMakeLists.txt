@@ -38,15 +38,14 @@ set(SRCS
    src/utils.cpp
    src/stitch.cpp
    src/panorama.cpp
-   src/slam.cpp
    src/frame.cpp
    src/point.cpp
    src/map.cpp
    src/timer.cpp
-   src/optimizer.cpp
    src/viewer.cpp
    src/config.cpp
    src/initialization.cpp
+   src/handler.cpp
    src/features.cpp
    src/camera.cpp)
 add_library(DR3_LIBS SHARED ${SRCS})

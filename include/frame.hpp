@@ -29,23 +29,26 @@ public:
     std::vector<cv::KeyPoint> kps;
     cv::Mat des;
 
+    AbstractCamera*  _cam;         // camera
+    ImgPyramid       _img_pyr;     // image pyramid
+    Features         _fts;         // frame features
+    Sophus::SE3      _T_f_w;       // world frame -> camera frame
+    bool             _is_keyframe; // is frame this keyframe?
+    double           _time_stamp;  // Timestamp of when the image was acquired
 
-    AbstractCamera*  _cam;     // camera
-    ImgPyramid       _img_pyr; // image pyramid
-    Features         _fts;     // frame features
-    Sophus::SE3      _T_f_w;   // world frame -> camera frame
+    /// Will be removed in the future
     cv::Mat          pose_w2c; // world  -> camera
     cv::Mat          pose_c2w; // camera -> world
     cv::Mat          center;   // camera center in world coordinates
 
-
     // Points projected from this Frame onto 3D world
     std::vector<Point*> points;
 
-    Frame();
+    Frame() =default;
     Frame(Frame &frame);
     Frame(const long unsigned int idx,
-         const cv::Mat &img, AbstractCamera *cam);
+         const cv::Mat &img, AbstractCamera *cam,
+         double time_stamp);
 
     inline const long unsigned int get_idx() const { return idx; }
     inline const std::vector<cv::KeyPoint> get_kps() const { return kps; }
@@ -83,6 +86,11 @@ public:
 
     /// Add a new observation
     void add_observation(Feature *feature);
+
+    /// Is the current frame a keyframe?
+    void set_keyframe() { _is_keyframe = true; }
+
+    bool is_keyframe() { return _is_keyframe; }
 
 }; // class Frame
 

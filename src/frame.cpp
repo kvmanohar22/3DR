@@ -3,8 +3,6 @@
 
 namespace dr3 {
 
-Frame::Frame() {}
-
 Frame::Frame(Frame &frame)
    : idx(frame.get_idx()), kps(frame.get_kps()),
      des(frame.get_des()),
@@ -13,12 +11,12 @@ Frame::Frame(Frame &frame)
      center(frame.get_center()) {}
 
 Frame::Frame(const long unsigned int idx,
-             const cv::Mat &img, AbstractCamera *cam) 
-   : idx(idx), _cam(cam) {
+             const cv::Mat &img, AbstractCamera *cam,
+             double timestamp)
+   : idx(idx), _cam(cam), _time_stamp(timestamp), _is_keyframe(false) {
 
     utils::create_img_pyramid(img, Config::n_pyr_levels(), _img_pyr);
     points = std::vector<Point*>(kps.size(), nullptr);
-    _T_f_w = SE3();
 }
 
 void Frame::compute_kps(const cv::Mat &img) {

@@ -6,28 +6,28 @@
 
 #include <vector>
 #include <set>
+#include <list>
 
 namespace dr3 {
 
 class Map {
 protected:
-   std::vector<Point*> points;
-   std::vector<Frame*> frames;
+   list<Point*>   _points; // All the converged points in the map
+   list<FramePtr> _frames; // All the keyframes
 
 public:
-   Map() {}
+   Map() =default;
 
    void add_point(Point *point);
-   void add_frame(Frame *frame);
+   void add_frame(FramePtr frame);
 
-   std::vector<Frame*> get_frames();
-   std::vector<Point*> get_points();
+   vector<FramePtr> get_frames();
+   vector<Point*> get_points();
 
-   size_t n_frames() { return frames.size(); }
-   size_t n_points() { return points.size(); }
-  
+   size_t n_frames() { return _frames.size(); }
+   size_t n_points() { return _points.size(); }
+
    size_t n_observations();
-
 }; // class Map
 
 } // namespace dr3

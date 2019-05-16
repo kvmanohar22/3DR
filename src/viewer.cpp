@@ -241,7 +241,7 @@ void Viewer3D::update() {
       draw_axes();
 
       // Render cameras
-      const std::vector<Frame*> frames = mapp->get_frames();
+      const std::vector<FramePtr> frames = mapp->get_frames();
       for (auto &itr : frames) {
          cv::Mat pose = itr->get_pose_c2w();
             draw_camera(pose, green);

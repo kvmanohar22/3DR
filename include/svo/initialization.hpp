@@ -77,11 +77,9 @@ private:
 };
 
 class Init {
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 public:
     Init();
-    ~Init() = default;
+    ~Init() =default;
 
     // Initialization Variables
     std::vector<int> mvIniMatches;
